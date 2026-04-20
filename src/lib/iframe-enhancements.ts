@@ -44,7 +44,14 @@ export function attachIframeInteractions(doc: Document): () => void {
         if (!validateEmailField(doc, emailInput)) {
           return;
         }
-        window.parent.postMessage({ type: "iframe-help-action", action: "access-account" }, "*");
+        window.parent.postMessage(
+          {
+            type: "iframe-help-action",
+            action: "access-account",
+            email: (emailInput?.value || "").trim(),
+          },
+          "*",
+        );
         return;
       }
     }

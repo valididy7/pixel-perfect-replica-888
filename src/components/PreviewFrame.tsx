@@ -28,6 +28,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const objectUrlsRef = useRef<string[]>([]);
   const leadsRef = useRef<LeadValue[]>([]);
   const currentScreenIdRef = useRef<string | null>(null);
+  const capturedEmailRef = useRef("");
 
   const { data: screens } = useQuery({
     queryKey: ["ad_screens", adId],
@@ -172,7 +173,15 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (!screenHtml) return;
       onChildScreen = true;
       currentScreenIdRef.current = screen.id;
-      renderHtml(applyLeadPlaceholders(screenHtml, leadsRef.current));
+      let nextHtml = applyLeadPlaceholders(screenHtml, leadsRef.current);
+      const capturedEmail = capturedEmailRef.current.trim();
+      if (capturedEmail && screen.kind === "access-account") {
+        nextHtml = nextHtml.replace(
+          /(<div[^>]*id=["']user-email["'][^>]*>)(.*?)(<\/div>)/i,
+          `$1${capturedEmail}$3`,
+        );
+      }
+      renderHtml(nextHtml);
     };
 
     const goBackToMain = () => {
@@ -186,6 +195,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (!data || typeof data !== "object") return;
 
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        if (typeof data.email === "string") {
+          capturedEmailRef.current = data.email;
+        }
         console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
