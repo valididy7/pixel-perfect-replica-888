@@ -21,8 +21,8 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
   .email-pill{display:block;width:100%;padding:14px 20px;border:1px solid #d0d0d0;border-radius:9999px;text-align:center;font-size:15px;color:#1a1a1a;background:#fff;margin:0 0 28px}
   .option{display:flex;align-items:center;gap:18px;width:100%;padding:20px 18px;border:1px solid #e0e0e0;border-radius:12px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:inherit;margin:0 0 16px;transition:background .15s,border-color .15s}
   .option:hover{background:#fafafa;border-color:#c8c8c8}
-  .option-icon{flex-shrink:0;width:72px;height:72px;border-radius:50%;background:#f3ebff;display:flex;align-items:center;justify-content:center}
-  .option-icon svg{width:56px;height:56px;display:block}
+  .option-icon{flex-shrink:0;width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+  .option-icon svg{width:48px;height:48px;display:block}
   .option-body{flex:1;min-width:0}
   .option-title{display:block;font-size:18px;font-weight:600;margin:0 0 4px;color:#1a1a1a}
   .option-sub{display:block;font-size:14px;color:#6b6b6b;line-height:1.4}
