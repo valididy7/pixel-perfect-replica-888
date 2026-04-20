@@ -61,14 +61,6 @@ export default function EditorPage() {
     setPreviewHtml(html);
     setTitle(ad.title);
     setPrice(ad.price || "");
-    const adAny = ad as Ad & {
-      help_reactivate_url?: string | null;
-      help_forgot_password_url?: string | null;
-      help_passwordless_url?: string | null;
-    };
-    setHelpReactivateUrl(adAny.help_reactivate_url || "");
-    setHelpForgotPasswordUrl(adAny.help_forgot_password_url || "");
-    setHelpPasswordlessUrl(adAny.help_passwordless_url || "");
     const parsed = parseAdHTML(html);
     setFields(parsed.fields);
     setImageUrls(parsed.imageUrls);
