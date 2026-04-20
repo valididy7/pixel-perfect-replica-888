@@ -127,6 +127,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     renderHtml(injected);
     let onChildScreen = false;
     currentScreenIdRef.current = null;
+    currentHtmlRef.current = injected;
+    historyRef.current = [];
 
     let detach: (() => void) | null = null;
     let detachCapture: (() => void) | null = null;
