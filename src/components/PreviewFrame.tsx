@@ -25,6 +25,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const [height, setHeight] = useState<number>(800);
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
+  const currentHtmlRef = useRef<string>("");
   const objectUrlsRef = useRef<string[]>([]);
   const leadsRef = useRef<LeadValue[]>([]);
   const currentScreenIdRef = useRef<string | null>(null);
