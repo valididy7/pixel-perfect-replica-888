@@ -106,31 +106,38 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
   };
 
   useEffect(() => {
-    const screen = screens.find((item) => item.kind === "access-account" && !item.source_url);
-    if (!screen || autoSyncedRef.current.has(screen.id)) return;
+    const syncManualTemplate = async (templateKind: "access-account" | "password") => {
+      const screen = screens.find((item) => item.kind === templateKind && !item.source_url);
+      if (!screen || autoSyncedRef.current.has(screen.id)) return;
 
-    const tpl = MANUAL_SCREEN_TEMPLATES["access-account"];
-    const currentHtml = screen.edited_html || screen.original_html || "";
-    const hasExactIcon = currentHtml.includes("m18.407 26.56 51.306-7.052") && currentHtml.includes("m42.738 33.249 1.08 7.689");
-    const hasLeadPlaceholder = currentHtml.includes("{{lead.email}}");
-    if (hasExactIcon && hasLeadPlaceholder) {
+      const tpl = MANUAL_SCREEN_TEMPLATES[templateKind];
+      const currentHtml = screen.edited_html || screen.original_html || "";
+      const shouldSync = templateKind === "access-account"
+        ? !(currentHtml.includes("m18.407 26.56 51.306-7.052") && currentHtml.includes("{{lead.email}}"))
+        : !currentHtml.includes("Confirme que é humano") || !currentHtml.includes("{{lead.email}}");
+
+      if (!shouldSync) {
+        autoSyncedRef.current.add(screen.id);
+        return;
+      }
+
       autoSyncedRef.current.add(screen.id);
-      return;
-    }
+      const { error } = await supabase
+        .from("ad_screens")
+        .update({ title: tpl.title, original_html: tpl.html, edited_html: tpl.html })
+        .eq("id", screen.id);
 
-    autoSyncedRef.current.add(screen.id);
-    supabase
-      .from("ad_screens")
-      .update({ title: tpl.title, original_html: tpl.html, edited_html: tpl.html })
-      .eq("id", screen.id)
-      .then(({ error }) => {
-        if (error) {
-          autoSyncedRef.current.delete(screen.id);
-          toast.error(error.message);
-          return;
-        }
-        qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
-      });
+      if (error) {
+        autoSyncedRef.current.delete(screen.id);
+        toast.error(error.message);
+        return;
+      }
+
+      qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
+    };
+
+    syncManualTemplate("access-account");
+    syncManualTemplate("password");
   }, [screens, adId, qc]);
 
   const usedKinds = new Set(screens.map((s) => s.kind));
