@@ -22,7 +22,7 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
   html,body{margin:0;padding:0;background:#fff;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
   .topbar{padding:18px 20px;border-bottom:1px solid #e8e8e8}
   .logo{display:inline-block}
-  .logo svg{display:block;height:40px;width:40px}
+  .logo svg{display:block;height:48px;width:48px}
   main{max-width:480px;margin:0 auto;padding:48px 24px 32px}
   h1{font-size:26px;font-weight:600;text-align:center;margin:0 0 28px;letter-spacing:-.2px}
   .lead{font-size:16px;text-align:center;margin:0 0 18px;color:#1a1a1a}
@@ -126,7 +126,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
   html,body{margin:0;padding:0;background:#fff;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
   .topbar{padding:18px 20px;border-bottom:1px solid #e8e8e8}
   .logo{display:inline-block}
-  .logo svg{display:block;height:40px;width:40px}
+  .logo svg{display:block;height:48px;width:48px}
   main{max-width:480px;margin:0 auto;padding:48px 24px 32px}
   h1{font-size:26px;font-weight:600;text-align:center;margin:0 0 28px;letter-spacing:-.2px}
   .email-pill{display:block;width:100%;padding:14px 20px;border:1px solid #d0d0d0;border-radius:9999px;text-align:center;font-size:15px;color:#1a1a1a;background:#fff;margin:0 0 28px}
@@ -265,7 +265,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   html,body{margin:0;padding:0;background:#fff;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
   .topbar{padding:18px 20px;border-bottom:1px solid #e8e8e8}
   .logo{display:inline-block}
-  .logo svg{display:block;height:40px;width:40px}
+  .logo svg{display:block;height:48px;width:48px}
   .divider{height:0;border:0;border-top:1px solid #e8e8e8;margin:64px 0 0}
   main{max-width:480px;margin:0 auto;padding:32px 24px 32px}
   h1{font-size:22px;font-weight:600;text-align:center;margin:0 0 24px;letter-spacing:-.2px;line-height:1.2}
