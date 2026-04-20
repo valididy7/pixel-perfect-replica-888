@@ -178,8 +178,8 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-1 truncate text-xs text-muted-foreground" title={s.source_url || ""}>
-                {s.source_url}
+              <p className="mt-1 truncate text-xs text-muted-foreground" title={s.source_url || s.title}>
+                {s.source_url || <em>Tela manual: {s.title}</em>}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
