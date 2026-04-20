@@ -134,7 +134,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
   .input-wrap input{width:100%;padding:16px 48px 16px 16px;border:1px solid #d0d0d0;border-radius:12px;font:inherit;font-size:16px;color:#1a1a1a;background:#fff;outline:none;transition:border-color .15s}
   .input-wrap input:focus{border-color:#6E0AD6}
   .toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;padding:4px;color:#6E0AD6;display:flex;align-items:center;justify-content:center}
-  .cf-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:6px;background:#fafafa;font-size:14px;color:#1a1a1a;max-width:303px;width:100%;margin:0 0 24px;min-height:65px}
+  .cf-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:6px;background:#fafafa;font-size:14px;color:#1a1a1a;max-width:303px;width:100%;margin:0 auto 24px;min-height:65px}
   .cf-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
   .cf-right{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
   .cf-right span{font-size:9px;color:#999;line-height:1}
