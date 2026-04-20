@@ -115,7 +115,6 @@ export type Database = {
       ads: {
         Row: {
           created_at: string
-          download_url: string | null
           edited_html: string | null
           expires_at: string | null
           help_forgot_password_url: string | null
@@ -135,7 +134,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          download_url?: string | null
           edited_html?: string | null
           expires_at?: string | null
           help_forgot_password_url?: string | null
@@ -155,7 +153,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          download_url?: string | null
           edited_html?: string | null
           expires_at?: string | null
           help_forgot_password_url?: string | null
