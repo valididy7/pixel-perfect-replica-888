@@ -94,6 +94,23 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
     iframe.addEventListener("load", onLoad);
 
+    const normalizeUrl = (raw: string): string => {
+      try {
+        const u = new URL(raw);
+        return (u.origin + u.pathname.replace(/\/+$/, "")).toLowerCase();
+      } catch {
+        return raw.toLowerCase();
+      }
+    };
+
+    const navigateToScreen = (screen: AdScreen) => {
+      const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
+      if (!screenHtml) return;
+      const currentSrc = iframe.contentDocument?.documentElement?.outerHTML;
+      if (currentSrc) historyRef.current.push(currentSrc);
+      renderHtml(wrapWithBackBar(screenHtml));
+    };
+
     const onMessage = (e: MessageEvent) => {
       const data = e.data;
       if (!data || typeof data !== "object") return;
@@ -104,12 +121,21 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           window.parent.postMessage({ type: "iframe-help-missing", action: data.action }, "*");
           return;
         }
-        const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
-        if (!screenHtml) return;
-        // Empilha estado atual e renderiza tela filha com botão voltar
-        const currentSrc = iframe.contentDocument?.documentElement?.outerHTML;
-        if (currentSrc) historyRef.current.push(currentSrc);
-        renderHtml(wrapWithBackBar(screenHtml));
+        navigateToScreen(screen);
+        return;
+      }
+
+      if (data.type === "iframe-link-click" && typeof data.url === "string") {
+        const target = normalizeUrl(data.url);
+        const match = screensRef.current.find(
+          (s) => s.source_url && normalizeUrl(s.source_url) === target,
+        );
+        if (match) {
+          navigateToScreen(match);
+        } else {
+          console.info("[PreviewFrame] Sem tela vinculada para:", data.url);
+        }
+        return;
       }
 
       if (data.type === "iframe-back") {
