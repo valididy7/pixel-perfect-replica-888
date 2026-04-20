@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CloneUrlDialog } from "@/components/CloneUrlDialog";
+import { EmailsReceivedPanel } from "@/components/EmailsReceivedPanel";
 import { Eye, ExternalLink, LogOut, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { Ad } from "@/types/ad";
 import { toast } from "sonner";
