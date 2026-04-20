@@ -126,9 +126,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (!data || typeof data !== "object") return;
 
       if (data.type === "iframe-help-action") {
+        console.info("[PreviewFrame] help-action recebido. adId=", adId, "telas=", screensRef.current.length, screensRef.current);
         const screen = screensRef.current[0];
         if (!screen) {
-          console.warn("[PreviewFrame] Nenhuma tela vinculada cadastrada");
+          console.warn("[PreviewFrame] Nenhuma tela vinculada cadastrada (adId=" + adId + ")");
           return;
         }
         navigateToScreen(screen);
