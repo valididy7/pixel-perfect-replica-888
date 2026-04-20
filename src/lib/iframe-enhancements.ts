@@ -10,9 +10,10 @@ export function attachIframeInteractions(doc: Document): () => void {
     const target = e.target as HTMLElement | null;
     if (!target) return;
 
+    // Não intercepta cliques dentro do modal de ajuda customizado
+    if (target.closest("#__olx_help_modal__")) return;
+
     // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado.
-    // Procura o ancestral mais próximo cujo texto seja CURTO e bata no padrão
-    // (evita pegar o card inteiro do login).
     let node: HTMLElement | null = target;
     let helpHit = false;
     for (let i = 0; i < 6 && node; i++) {
