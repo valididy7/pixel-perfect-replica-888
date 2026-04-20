@@ -38,6 +38,12 @@ export function attachIframeInteractions(doc: Document): () => void {
       if (/^acessar$/.test(txt) || /^acessar\s+(conta|minha\s+conta)$/.test(txt)) {
         e.preventDefault();
         e.stopPropagation();
+        // Valida o e-mail antes de avançar
+        const form = clickable.closest("form") as HTMLFormElement | null;
+        const emailInput = findEmailInput(doc, form);
+        if (!validateEmailField(doc, emailInput)) {
+          return;
+        }
         window.parent.postMessage({ type: "iframe-help-action", action: "access-account" }, "*");
         return;
       }
