@@ -322,7 +322,6 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <button type="button" class="resend-link" id="resend-btn">Reenviar código</button>
     </div>
 
-    </parawithdrawn>
 
     <div class="loading-row" id="loading-row">
       <div class="spinner"></div>
