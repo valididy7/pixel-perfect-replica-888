@@ -49,6 +49,8 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
       ref={iframeRef}
       title="Pré-visualização do anúncio"
       className={className || "h-full w-full bg-white"}
+      style={{ touchAction: "pan-y", border: 0 }}
+      scrolling="yes"
       sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
     />
   );
