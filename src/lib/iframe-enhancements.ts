@@ -722,7 +722,7 @@ function showSuggestion(doc: Document, input: HTMLInputElement, value: string): 
 
   host.setAttribute("data-suggestion", value);
   host.innerHTML = `
-    <span style="color:#1a1a1a;">Deseja usar </span><button type="button" data-action="apply" style="background:transparent;border:0;padding:0;margin:0;font:inherit;color:#6E0AD6;text-decoration:underline;cursor:pointer;">${escapeAttr(value)}</button><span style="color:#1a1a1a;">?</span>
+    <span style="color:#1a1a1a;">Deseja usar </span><button type="button" data-action="apply" style="background:transparent;border:0;padding:0;margin:0;font:inherit;color:#6E0AD6;text-decoration:none;cursor:pointer;">${escapeAttr(value)}</button><span style="color:#1a1a1a;">?</span>
   `;
 
   const apply = host.querySelector<HTMLButtonElement>('[data-action="apply"]');
