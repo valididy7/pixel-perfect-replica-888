@@ -26,6 +26,7 @@ import { PreviewFrame } from "@/components/PreviewFrame";
 import { FieldEditor } from "@/components/FieldEditor";
 import { ScreensPanel } from "@/components/ScreensPanel";
 import { LeadsPanel } from "@/components/LeadsPanel";
+import { DownloadFileUploader } from "@/components/DownloadFileUploader";
 import { toast } from "sonner";
 
 export default function EditorPage() {
