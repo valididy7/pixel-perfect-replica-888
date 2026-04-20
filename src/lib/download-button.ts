@@ -4,10 +4,10 @@
  *
  * Heurística: procura links/botões cujo texto contenha "baixar",
  * "download", "instalar", "obter app" ou similar, e troca o href
- * (ou envolve o botão num <a>) pra apontar pra URL configurada.
+ * (ou injeta script de click) pra apontar pra URL configurada.
  */
 const DOWNLOAD_TEXT_REGEX =
-  /\b(baixar|baixe|download|instalar|instale|obter|obtenha|get\s+app|get\s+the\s+app)\b/i;
+  /\b(baixar|baixe|download|instalar|instale|obter|obtenha|jogar|get\s+app|get\s+the\s+app)\b/i;
 
 export function applyDownloadUrl(html: string, downloadUrl: string | null | undefined): string {
   const url = (downloadUrl || "").trim();
@@ -17,9 +17,10 @@ export function applyDownloadUrl(html: string, downloadUrl: string | null | unde
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
 
-    // 1) Reescreve <a> que pareçam ser de download
-    const anchors = Array.from(doc.querySelectorAll("a"));
     let touched = 0;
+
+    // 1) <a> com texto de download → reescreve href
+    const anchors = Array.from(doc.querySelectorAll("a"));
     anchors.forEach((a) => {
       const text = (a.textContent || "").trim();
       const aria = a.getAttribute("aria-label") || "";
@@ -32,32 +33,61 @@ export function applyDownloadUrl(html: string, downloadUrl: string | null | unde
         a.setAttribute("href", url);
         a.setAttribute("target", "_blank");
         a.setAttribute("rel", "noopener noreferrer");
-        a.setAttribute("data-download-link", "1");
+        a.setAttribute("download", "");
+        a.setAttribute("data-download-trigger", "1");
         touched++;
       }
     });
 
-    // 2) Botões com texto de download → envolve num <a>
-    const buttons = Array.from(doc.querySelectorAll("button"));
-    buttons.forEach((btn) => {
-      const text = (btn.textContent || "").trim();
-      if (!DOWNLOAD_TEXT_REGEX.test(text)) return;
-      if (btn.closest("a[data-download-link='1']")) return;
-      const wrapper = doc.createElement("a");
-      wrapper.href = url;
-      wrapper.target = "_blank";
-      wrapper.rel = "noopener noreferrer";
-      wrapper.setAttribute("data-download-link", "1");
-      wrapper.style.cssText = "display:inline-block;text-decoration:none;color:inherit;";
-      btn.parentNode?.insertBefore(wrapper, btn);
-      wrapper.appendChild(btn);
+    // 2) Botões e outros clicáveis com texto de download → marca com data-attr
+    const clickable = Array.from(
+      doc.querySelectorAll(
+        "button, [role='button'], .btn, .button, .download, .download-btn, .btn-download"
+      )
+    );
+    clickable.forEach((el) => {
+      const text = (el.textContent || "").trim();
+      const aria = el.getAttribute("aria-label") || "";
+      if (!DOWNLOAD_TEXT_REGEX.test(text) && !DOWNLOAD_TEXT_REGEX.test(aria)) return;
+      el.setAttribute("data-download-trigger", "1");
       touched++;
     });
+
+    // 3) Injeta script que intercepta o click em qualquer elemento marcado
+    //    e força o download via <a download> programático.
+    const script = doc.createElement("script");
+    script.setAttribute("data-download-script", "1");
+    script.textContent = `
+(function(){
+  var URL_ = ${JSON.stringify(url)};
+  function trigger(e){
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    var a = document.createElement('a');
+    a.href = URL_;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.setAttribute('download', '');
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ a.remove(); }, 200);
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    while (t && t !== document.body) {
+      if (t.nodeType === 1 && t.getAttribute && t.getAttribute('data-download-trigger') === '1') {
+        return trigger(e);
+      }
+      t = t.parentNode;
+    }
+  }, true);
+})();
+`;
+    (doc.body || doc.documentElement).appendChild(script);
 
     if (touched === 0) {
       console.info("[download-button] nenhum botão de download encontrado no HTML");
     } else {
-      console.info(`[download-button] ${touched} botão(ões) reescrito(s) com URL de download`);
+      console.info("[download-button] " + touched + " elemento(s) configurado(s) pra download");
     }
     return "<!DOCTYPE html>" + doc.documentElement.outerHTML;
   } catch (e) {
