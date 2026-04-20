@@ -249,6 +249,9 @@ function enhanceForms(doc: Document): void {
     if (["text", "email", "tel", "search", "url", "password"].includes(type) && !input.hasAttribute("maxlength")) {
       input.setAttribute("maxlength", "120");
     }
+    if (type === "email" || /e-?mail/.test(`${input.name} ${input.id} ${input.placeholder} ${input.getAttribute("aria-label") || ""}`.toLowerCase())) {
+      attachEmailDomainSuggest(doc, input);
+    }
     (input as any).dataset.olxEnhanced = "1";
   });
 
@@ -595,4 +598,168 @@ function clearEmailError(doc: Document, input: HTMLInputElement): void {
   doc.querySelectorAll("#__olx_email_error__").forEach((el) => {
     if (el.previousElementSibling === wrapper) el.remove();
   });
+}
+
+// =====================================================================
+// Sugestão de domínio de e-mail (gmail.com / hotmail.com / outlook.com / etc)
+// Aparece um chipinho "Deseja usar <local>@<dominio>?" abaixo do input.
+// =====================================================================
+const EMAIL_DOMAIN_MAP: Record<string, string> = {
+  g: "gmail.com",
+  h: "hotmail.com",
+  o: "outlook.com",
+  y: "yahoo.com.br",
+  i: "icloud.com",
+  l: "live.com",
+  u: "uol.com.br",
+  b: "bol.com.br",
+  t: "terra.com.br",
+  p: "protonmail.com",
+};
+
+function attachEmailDomainSuggest(doc: Document, input: HTMLInputElement): void {
+  if ((input as any).__olxEmailSuggest) return;
+  (input as any).__olxEmailSuggest = true;
+
+  const onInput = () => {
+    const raw = input.value || "";
+    const at = raw.indexOf("@");
+    // Sem @ ainda → some
+    if (at < 0 || at === 0) return removeSuggestion(doc, input);
+    const local = raw.slice(0, at);
+    const partial = raw.slice(at + 1).toLowerCase();
+
+    // Já digitou algo válido (gmail.com inteiro etc.) → some
+    if (partial.includes(".") && partial.split(".").pop()!.length >= 2) {
+      return removeSuggestion(doc, input);
+    }
+
+    // Nada depois do @ → some
+    if (!partial) return removeSuggestion(doc, input);
+
+    const firstChar = partial[0];
+    const candidate = EMAIL_DOMAIN_MAP[firstChar];
+    if (!candidate || !candidate.startsWith(partial)) {
+      return removeSuggestion(doc, input);
+    }
+
+    showSuggestion(doc, input, `${local}@${candidate}`);
+  };
+
+  const onBlur = () => {
+    // dá tempo do click no chip ser registrado
+    setTimeout(() => removeSuggestion(doc, input), 150);
+  };
+
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === "Tab" || e.key === "Enter") {
+      const sug = currentSuggestion(doc, input);
+      if (sug) {
+        e.preventDefault();
+        applySuggestion(doc, input, sug);
+      }
+    } else if (e.key === "Escape") {
+      removeSuggestion(doc, input);
+    }
+  };
+
+  input.addEventListener("input", onInput);
+  input.addEventListener("blur", onBlur);
+  input.addEventListener("keydown", onKey);
+}
+
+function suggestionId(input: HTMLInputElement): string {
+  // ID único por input baseado em referência
+  let id = (input as any).__olxSuggestId as string | undefined;
+  if (!id) {
+    id = `__olx_email_suggest_${Math.random().toString(36).slice(2, 9)}`;
+    (input as any).__olxSuggestId = id;
+  }
+  return id;
+}
+
+function suggestionAnchor(input: HTMLInputElement): HTMLElement | null {
+  const wrapper =
+    (input.closest(".olx-text-input") as HTMLElement | null) ||
+    (input.closest('[data-ds-component="DS-TextInput"]') as HTMLElement | null) ||
+    (input.closest(".olx-form-control") as HTMLElement | null) ||
+    (input.closest(".olx-text-input__input-container") as HTMLElement | null) ||
+    input.parentElement;
+  return wrapper;
+}
+
+function currentSuggestion(doc: Document, input: HTMLInputElement): string | null {
+  const id = suggestionId(input);
+  const node = doc.getElementById(id);
+  return node?.getAttribute("data-suggestion") || null;
+}
+
+function showSuggestion(doc: Document, input: HTMLInputElement, value: string): void {
+  const id = suggestionId(input);
+  const wrapper = suggestionAnchor(input);
+  if (!wrapper || !wrapper.parentElement) return;
+
+  let host = doc.getElementById(id);
+  if (!host) {
+    host = doc.createElement("div");
+    host.id = id;
+    host.setAttribute(
+      "style",
+      [
+        "display:flex",
+        "align-items:center",
+        "gap:8px",
+        "margin-top:6px",
+        "padding:8px 10px",
+        "border:1px solid #e0d4f7",
+        "background:#f7f1ff",
+        "border-radius:8px",
+        "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+        "font-size:13px",
+        "color:#1a1a1a",
+        "line-height:1.3",
+      ].join(";"),
+    );
+    wrapper.insertAdjacentElement("afterend", host);
+  }
+
+  host.setAttribute("data-suggestion", value);
+  host.innerHTML = `
+    <span style="color:#6b6b6b;flex-shrink:0;">Deseja usar</span>
+    <button type="button" data-action="apply" style="flex:1;min-width:0;text-align:left;background:transparent;border:0;padding:0;font:inherit;color:#6E0AD6;font-weight:600;cursor:pointer;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${escapeAttr(value)}?</button>
+    <button type="button" data-action="dismiss" aria-label="Fechar" style="flex-shrink:0;background:transparent;border:0;padding:2px;cursor:pointer;color:#6b6b6b;display:flex;align-items:center;">
+      <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M13.06 12l5.47 5.47a.75.75 0 0 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 1.06-1.06L12 10.94l5.47-5.47a.75.75 0 0 1 1.06 1.06L13.06 12z"/></svg>
+    </button>
+  `;
+
+  const apply = host.querySelector<HTMLButtonElement>('[data-action="apply"]');
+  const dismiss = host.querySelector<HTMLButtonElement>('[data-action="dismiss"]');
+  apply?.addEventListener("mousedown", (e) => e.preventDefault()); // não tira foco do input
+  apply?.addEventListener("click", () => applySuggestion(doc, input, value));
+  dismiss?.addEventListener("mousedown", (e) => e.preventDefault());
+  dismiss?.addEventListener("click", () => removeSuggestion(doc, input));
+}
+
+function applySuggestion(doc: Document, input: HTMLInputElement, value: string): void {
+  input.value = value;
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+  removeSuggestion(doc, input);
+  // Limpa erro se estava marcado
+  clearEmailError(doc, input);
+  try {
+    input.focus();
+    input.setSelectionRange(value.length, value.length);
+  } catch {
+    /* ignore */
+  }
+}
+
+function removeSuggestion(doc: Document, input: HTMLInputElement): void {
+  const id = suggestionId(input);
+  doc.getElementById(id)?.remove();
+}
+
+function escapeAttr(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
