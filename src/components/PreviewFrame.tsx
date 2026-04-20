@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
+import { navigateIframeTo, popIframeHistory } from "@/lib/iframe-navigation";
 
 interface PreviewFrameProps {
   html: string;
@@ -7,8 +8,13 @@ interface PreviewFrameProps {
   className?: string;
 }
 
+const HELP_ACTION_URLS: Record<string, string> = {
+  reactivate: "https://conta.olx.com.br/reativacao-conta",
+};
+
 export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const currentHtmlRef = useRef<string>("");
   const [height, setHeight] = useState<number>(800);
 
   useEffect(() => {
@@ -22,6 +28,7 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
         (m) => `${m}\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
       );
     }
+    currentHtmlRef.current = injected;
 
     const blob = new Blob([injected], { type: "text/html" });
     const url = URL.createObjectURL(blob);
@@ -57,8 +64,26 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
     };
     iframe.addEventListener("load", onLoad);
 
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data;
+      if (!data || typeof data !== "object") return;
+      if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        const url = HELP_ACTION_URLS[data.action];
+        if (url) {
+          navigateIframeTo(iframe, url, currentHtmlRef.current);
+        } else {
+          console.warn("[PreviewFrame] sem URL pra ação:", data.action);
+        }
+      }
+      if (data.type === "iframe-back") {
+        popIframeHistory(iframe);
+      }
+    };
+    window.addEventListener("message", onMessage);
+
     return () => {
       iframe.removeEventListener("load", onLoad);
+      window.removeEventListener("message", onMessage);
       if (detach) detach();
       if (resizeObs) resizeObs.disconnect();
       URL.revokeObjectURL(url);
