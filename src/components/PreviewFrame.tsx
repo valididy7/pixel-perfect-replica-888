@@ -63,7 +63,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
 
     renderHtml(injected);
-    let baseHtml = injected;
+    let onChildScreen = false;
 
     let detach: (() => void) | null = null;
     let resizeObs: ResizeObserver | null = null;
