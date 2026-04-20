@@ -134,7 +134,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const measure = () => {
       const doc = iframe.contentDocument;
       if (!doc) return;
-      const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
+      const contentHeight = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
+      const parentHeight = iframe.parentElement?.clientHeight ?? 0;
+      const h = Math.max(contentHeight, parentHeight);
       if (!h) return;
       setHeight((prev) => (Math.abs(h - prev) > 4 ? h : prev));
     };
