@@ -61,7 +61,7 @@ export function applyDownloadUrl(html: string, downloadUrl: string | null | unde
 (function(){
   var URL_ = ${JSON.stringify(url)};
   function trigger(e){
-    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (e) { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
     var a = document.createElement('a');
     a.href = URL_;
     a.target = '_blank';

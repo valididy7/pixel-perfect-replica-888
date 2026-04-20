@@ -13,6 +13,9 @@ export function attachIframeInteractions(doc: Document): () => void {
     // Não intercepta cliques dentro do modal de ajuda customizado
     if (target.closest("#__olx_help_modal__")) return;
 
+    // Libera cliques de download injetados no HTML clonado
+    if (target.closest('[data-download-trigger="1"]')) return;
+
     // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado.
     let node: HTMLElement | null = target;
     let helpHit = false;
