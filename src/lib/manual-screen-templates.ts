@@ -288,6 +288,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
     </div>
   </header>
 
+  <hr class="divider">
+
   <main>
     <h1>Acesse sua conta</h1>
     <p class="lead">
