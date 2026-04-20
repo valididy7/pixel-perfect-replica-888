@@ -52,6 +52,10 @@ export function DownloadFileUploader({ adId, currentUrl, onUploaded }: Props) {
           cacheControl: "3600",
           upsert: false,
           contentType: file.type || "application/octet-stream",
+          metadata: {
+            // força o navegador a baixar em vez de tentar abrir
+            contentDisposition: `attachment; filename="${file.name.replace(/"/g, "")}"`,
+          } as any,
         });
       if (error) throw error;
       const { data } = supabase.storage.from("ad-downloads").getPublicUrl(path);

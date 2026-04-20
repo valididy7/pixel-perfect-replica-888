@@ -24,14 +24,14 @@ export function attachIframeInteractions(doc: Document): () => void {
         e.preventDefault();
         e.stopPropagation();
         if ((e as any).stopImmediatePropagation) (e as any).stopImmediatePropagation();
-        const a = doc.createElement("a");
-        a.href = href;
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.setAttribute("download", "");
-        doc.body.appendChild(a);
-        a.click();
-        setTimeout(() => a.remove(), 200);
+        // Navega no mesmo contexto pra forçar download (sem about:blank).
+        // O Supabase Storage responde com Content-Disposition e o navegador
+        // detecta o tipo e baixa direto, sem abrir aba branca.
+        try {
+          (doc.defaultView ?? window).location.assign(href);
+        } catch {
+          window.location.assign(href);
+        }
       }
       return;
     }
