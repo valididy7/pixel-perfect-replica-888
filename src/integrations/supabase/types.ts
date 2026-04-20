@@ -19,6 +19,9 @@ export type Database = {
           created_at: string
           edited_html: string | null
           expires_at: string | null
+          help_forgot_password_url: string | null
+          help_passwordless_url: string | null
+          help_reactivate_url: string | null
           id: string
           original_html: string | null
           owner_id: string
@@ -35,6 +38,9 @@ export type Database = {
           created_at?: string
           edited_html?: string | null
           expires_at?: string | null
+          help_forgot_password_url?: string | null
+          help_passwordless_url?: string | null
+          help_reactivate_url?: string | null
           id?: string
           original_html?: string | null
           owner_id: string
@@ -51,6 +57,9 @@ export type Database = {
           created_at?: string
           edited_html?: string | null
           expires_at?: string | null
+          help_forgot_password_url?: string | null
+          help_passwordless_url?: string | null
+          help_reactivate_url?: string | null
           id?: string
           original_html?: string | null
           owner_id?: string

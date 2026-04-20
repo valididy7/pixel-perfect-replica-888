@@ -6,16 +6,19 @@ interface PreviewFrameProps {
   html: string;
   mode?: "mobile" | "desktop";
   className?: string;
+  helpUrls?: Partial<Record<"reactivate" | "forgot-password" | "passwordless", string>>;
 }
 
-const HELP_ACTION_URLS: Record<string, string> = {
-  reactivate: "https://conta.olx.com.br/reativacao-conta",
-};
-
-export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameProps) {
+export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const currentHtmlRef = useRef<string>("");
+  const helpUrlsRef = useRef(helpUrls);
   const [height, setHeight] = useState<number>(800);
+
+  // Mantém ref atualizada sem recriar o iframe
+  useEffect(() => {
+    helpUrlsRef.current = helpUrls;
+  }, [helpUrls]);
 
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -68,11 +71,11 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
       const data = e.data;
       if (!data || typeof data !== "object") return;
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
-        const url = HELP_ACTION_URLS[data.action];
-        if (url) {
-          navigateIframeTo(iframe, url, currentHtmlRef.current);
+        const url = helpUrlsRef.current?.[data.action as "reactivate" | "forgot-password" | "passwordless"];
+        if (url && url.trim()) {
+          navigateIframeTo(iframe, url.trim(), currentHtmlRef.current);
         } else {
-          console.warn("[PreviewFrame] sem URL pra ação:", data.action);
+          console.warn("[PreviewFrame] sem URL configurada para ação:", data.action);
         }
       }
       if (data.type === "iframe-back") {
