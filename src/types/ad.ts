@@ -11,7 +11,6 @@ export interface Ad {
   edited_html: string | null;
   thumbnail_url: string | null;
   source_url: string | null;
-  download_url: string | null;
   view_count: number;
   expires_at: string | null;
   created_at: string;

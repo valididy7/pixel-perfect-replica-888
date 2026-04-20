@@ -1,16 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { AdScreen } from "@/types/screen";
-import {
-  applyLeadPlaceholders,
-  attachLeadCapture,
-  fetchSessionLeads,
-  getSessionId,
-  LeadValue,
-} from "@/lib/lead-capture";
 
 interface PreviewFrameProps {
   html: string;
@@ -25,57 +17,19 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const [height, setHeight] = useState<number>(800);
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
-  const objectUrlsRef = useRef<string[]>([]);
-  const leadsRef = useRef<LeadValue[]>([]);
-  const currentScreenIdRef = useRef<string | null>(null);
-  const capturedEmailRef = useRef("");
 
-  const { data: screens } = useQuery({
-    queryKey: ["ad_screens", adId],
-    enabled: !!adId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ad_screens")
-        .select("*")
-        .eq("ad_id", adId!);
-      if (error) {
-        console.error("[PreviewFrame] erro carregando telas:", error);
-        throw error;
-      }
-      console.info("[PreviewFrame] telas carregadas:", data?.length, data?.map((s) => s.kind));
-      return (data ?? []) as AdScreen[];
-    },
-  });
-
-  // Mantém o ref sincronizado pra closures dos handlers do iframe
-  useEffect(() => {
-    screensRef.current = screens ?? [];
-  }, [screens]);
-
-  // Hidrata leads da sessão atual (pra placeholders {{lead.email}}) + escuta realtime.
+  // Carrega telas filhas
   useEffect(() => {
     if (!adId) return;
-    const sessionId = getSessionId();
     let cancelled = false;
-    fetchSessionLeads(adId, sessionId).then((rows) => {
-      if (!cancelled) leadsRef.current = rows;
-    });
-    const channel = supabase
-      .channel(`lead-self-${adId}-${sessionId}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "ad_leads", filter: `ad_id=eq.${adId}` },
-        (payload) => {
-          const row = payload.new as { session_id: string; field_name: string; value: string };
-          if (row.session_id !== sessionId) return;
-          leadsRef.current = [...leadsRef.current, { field_name: row.field_name, value: row.value }];
-        },
-      )
-      .subscribe();
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(channel);
-    };
+    (async () => {
+      const { data } = await supabase
+        .from("ad_screens")
+        .select("*")
+        .eq("ad_id", adId);
+      if (!cancelled && data) screensRef.current = data as AdScreen[];
+    })();
+    return () => { cancelled = true; };
   }, [adId]);
 
   useEffect(() => {
@@ -89,49 +43,45 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         (m) => `${m}\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
       );
     }
-    injected = applyLeadPlaceholders(injected, leadsRef.current);
 
     const renderHtml = (src: string) => {
-      setHeight(800);
       const blob = new Blob([src], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      objectUrlsRef.current.push(url);
       iframe.src = url;
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     };
 
     renderHtml(injected);
-    let onChildScreen = false;
-    currentScreenIdRef.current = null;
+    let baseHtml = injected;
 
     let detach: (() => void) | null = null;
-    let detachCapture: (() => void) | null = null;
     let resizeObs: ResizeObserver | null = null;
 
     const measure = () => {
       const doc = iframe.contentDocument;
       if (!doc) return;
       const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
-      if (!h) return;
-      setHeight((prev) => (Math.abs(h - prev) > 4 ? h : prev));
+      if (h && Math.abs(h - height) > 4) setHeight(h);
+    };
+
+    const wrapWithBackBar = (rawHtml: string) => {
+      const bar = `<div style="position:sticky;top:0;left:0;right:0;z-index:2147483646;background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 14px;display:flex;align-items:center;gap:10px;font-family:'Open Sans',sans-serif;">
+        <button onclick="parent.postMessage({type:'iframe-back'},'*')" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;cursor:pointer;font-size:14px;color:#6E0AD6;font-weight:600;padding:4px 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#6E0AD6" d="M15.5 6.5c.3.3.3.8 0 1.1L11 12l4.5 4.5c.3.3.3.8 0 1.1s-.8.3-1.1 0l-5-5c-.3-.3-.3-.8 0-1.1l5-5c.3-.3.8-.3 1.1 0z"/></svg>
+          Voltar
+        </button>
+      </div>`;
+      if (/<body[^>]*>/i.test(rawHtml)) {
+        return rawHtml.replace(/<body[^>]*>/i, (m) => `${m}${bar}`);
+      }
+      return bar + rawHtml;
     };
 
     const onLoad = () => {
       const doc = iframe.contentDocument;
       if (doc) {
-        try {
-          iframe.contentWindow?.scrollTo(0, 0);
-        } catch {
-          // ignore
-        }
         if (detach) detach();
         detach = attachIframeInteractions(doc);
-        if (detachCapture) detachCapture();
-        if (adId) {
-          detachCapture = attachLeadCapture(doc, {
-            adId,
-            screenId: currentScreenIdRef.current,
-          });
-        }
         measure();
         const tries = [200, 600, 1200, 2500, 4000];
         tries.forEach((t) => setTimeout(measure, t));
@@ -144,122 +94,41 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
     iframe.addEventListener("load", onLoad);
 
-    const handleViewportRestore = () => {
-      const doc = iframe.contentDocument;
-      doc?.getElementById("__olx_help_modal_host__")?.remove();
-      const tries = [0, 80, 200, 400, 800].map((t) => setTimeout(measure, t));
-      return () => tries.forEach(clearTimeout);
-    };
-
-    let clearRestoreTimers: (() => void) | null = null;
-    const onPageShow = () => {
-      clearRestoreTimers?.();
-      clearRestoreTimers = handleViewportRestore();
-    };
-    window.addEventListener("pageshow", onPageShow);
-    window.addEventListener("popstate", onPageShow);
-
-    const normalizeUrl = (raw: string): string => {
-      try {
-        const u = new URL(raw);
-        return (u.origin + u.pathname.replace(/\/+$/, "")).toLowerCase();
-      } catch {
-        return raw.toLowerCase();
-      }
-    };
-
-    const navigateToScreen = (screen: AdScreen) => {
-      const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
-      if (!screenHtml) return;
-      onChildScreen = true;
-      currentScreenIdRef.current = screen.id;
-      let nextHtml = applyLeadPlaceholders(screenHtml, leadsRef.current);
-      const capturedEmail = capturedEmailRef.current.trim();
-      if (capturedEmail && (screen.kind === "access-account" || screen.kind === "password")) {
-        nextHtml = nextHtml.replace(
-          /(<div[^>]*id=["']user-email["'][^>]*>)(.*?)(<\/div>)/i,
-          `$1${capturedEmail}$3`,
-        );
-      }
-      renderHtml(nextHtml);
-    };
-
-    const goBackToMain = () => {
-      onChildScreen = false;
-      currentScreenIdRef.current = null;
-      renderHtml(injected);
-    };
-
     const onMessage = (e: MessageEvent) => {
       const data = e.data;
       if (!data || typeof data !== "object") return;
 
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
-        if (typeof data.email === "string") {
-          capturedEmailRef.current = data.email;
-        }
-        // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
-        if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
-          const sessionId = getSessionId();
-          supabase
-            .from("ad_leads")
-            .insert({
-              ad_id: adId,
-              screen_id: currentScreenIdRef.current,
-              session_id: sessionId,
-              field_name: "email_submitted",
-              value: data.email.trim(),
-              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-            })
-            .then(({ error }) => {
-              if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
-            });
-        }
-        console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
-          console.warn("[PreviewFrame] Nenhuma tela vinculada com kind=", data.action);
+          window.parent.postMessage({ type: "iframe-help-missing", action: data.action }, "*");
           return;
         }
-        navigateToScreen(screen);
-        return;
+        const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
+        if (!screenHtml) return;
+        // Empilha estado atual e renderiza tela filha com botão voltar
+        const currentSrc = iframe.contentDocument?.documentElement?.outerHTML;
+        if (currentSrc) historyRef.current.push(currentSrc);
+        renderHtml(wrapWithBackBar(screenHtml));
       }
 
-      if (data.type === "iframe-link-click" && typeof data.url === "string") {
-        if (onChildScreen) {
-          goBackToMain();
-          return;
-        }
-        const target = normalizeUrl(data.url);
-        const match = screensRef.current.find(
-          (s) => s.source_url && normalizeUrl(s.source_url) === target,
-        );
-        if (match) {
-          navigateToScreen(match);
-        } else {
-          console.info("[PreviewFrame] Sem tela vinculada para:", data.url);
-        }
-        return;
+      if (data.type === "iframe-back") {
+        const prev = historyRef.current.pop();
+        if (prev) renderHtml(prev);
+        else renderHtml(baseHtml);
       }
-
     };
     window.addEventListener("message", onMessage);
 
     return () => {
       iframe.removeEventListener("load", onLoad);
       window.removeEventListener("message", onMessage);
-      window.removeEventListener("pageshow", onPageShow);
-      window.removeEventListener("popstate", onPageShow);
-      clearRestoreTimers?.();
       if (detach) detach();
-      if (detachCapture) detachCapture();
       if (resizeObs) resizeObs.disconnect();
-      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-      objectUrlsRef.current = [];
       historyRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [html, mode, adId]);
+  }, [html, mode]);
 
   return (
     <iframe

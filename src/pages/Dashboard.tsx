@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CloneUrlDialog } from "@/components/CloneUrlDialog";
-import { EmailsReceivedPanel } from "@/components/EmailsReceivedPanel";
 import { Eye, ExternalLink, LogOut, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { Ad } from "@/types/ad";
 import { toast } from "sonner";
@@ -74,12 +73,6 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-10">
-        <div className="mb-8">
-          <EmailsReceivedPanel
-            adTitles={Object.fromEntries((ads ?? []).map((a) => [a.id, a.title]))}
-          />
-        </div>
-
         <div className="mb-10 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Seus anúncios</h1>

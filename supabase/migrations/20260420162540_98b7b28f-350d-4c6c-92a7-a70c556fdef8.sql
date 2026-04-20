@@ -1,1 +1,0 @@
-ALTER TABLE public.ads ADD COLUMN IF NOT EXISTS download_url text;
