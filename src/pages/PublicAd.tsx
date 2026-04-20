@@ -60,7 +60,7 @@ export default function PublicAd() {
 
   return (
     <div className="h-screen w-screen bg-white">
-      <PreviewFrame html={html} mode="mobile" className="h-full w-full bg-white" />
+      <PreviewFrame html={html} mode="mobile" className="h-full w-full bg-white" adId={ad.id} />
     </div>
   );
 }

@@ -177,7 +177,7 @@ export default function ScreenEditorPage() {
             }`}
             style={{ minHeight: "calc(100vh - 56px - 48px)" }}
           >
-            <PreviewFrame html={previewHtml} mode={mode} className="block w-full rounded-xl bg-white" />
+            <PreviewFrame html={previewHtml} mode={mode} className="block w-full rounded-xl bg-white" adId={adId} />
           </div>
         </main>
       </div>
