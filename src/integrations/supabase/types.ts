@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_screens: {
+        Row: {
+          ad_id: string
+          created_at: string
+          edited_html: string | null
+          id: string
+          kind: string
+          original_html: string | null
+          position: number
+          source_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          edited_html?: string | null
+          id?: string
+          kind?: string
+          original_html?: string | null
+          position?: number
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          edited_html?: string | null
+          id?: string
+          kind?: string
+          original_html?: string | null
+          position?: number
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_screens_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ads: {
         Row: {
           created_at: string
