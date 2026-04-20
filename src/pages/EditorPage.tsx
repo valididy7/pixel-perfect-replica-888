@@ -259,41 +259,7 @@ export default function EditorPage() {
             onImageChange={handleImageChange}
           />
 
-          <div className="mt-8 rounded-lg border border-border bg-background/50 p-4">
-            <h3 className="text-sm font-semibold">URLs do modal "Preciso de ajuda"</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Cole a URL real de cada botão. O preview vai abrir essa página dentro do iframe quando clicarem.
-            </p>
-            <div className="mt-4 space-y-3">
-              <div className="space-y-1">
-                <Label htmlFor="help-reactivate" className="text-xs">Quero reativar minha conta</Label>
-                <Input
-                  id="help-reactivate"
-                  placeholder="https://..."
-                  value={helpReactivateUrl}
-                  onChange={(e) => { setHelpReactivateUrl(e.target.value); setDirty(true); }}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="help-forgot" className="text-xs">Esqueci a minha senha</Label>
-                <Input
-                  id="help-forgot"
-                  placeholder="https://..."
-                  value={helpForgotPasswordUrl}
-                  onChange={(e) => { setHelpForgotPasswordUrl(e.target.value); setDirty(true); }}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="help-passwordless" className="text-xs">Entrar sem senha</Label>
-                <Input
-                  id="help-passwordless"
-                  placeholder="https://..."
-                  value={helpPasswordlessUrl}
-                  onChange={(e) => { setHelpPasswordlessUrl(e.target.value); setDirty(true); }}
-                />
-              </div>
-            </div>
-          </div>
+          <ScreensPanel adId={ad.id} />
         </aside>
 
         {/* Preview */}
@@ -309,11 +275,7 @@ export default function EditorPage() {
               html={previewHtml}
               mode={mode}
               className="block w-full rounded-xl bg-white"
-              helpUrls={{
-                reactivate: helpReactivateUrl,
-                "forgot-password": helpForgotPasswordUrl,
-                passwordless: helpPasswordlessUrl,
-              }}
+              adId={ad.id}
             />
           </div>
         </main>
