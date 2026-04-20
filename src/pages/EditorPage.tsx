@@ -24,6 +24,7 @@ import { PreviewFrame } from "@/components/PreviewFrame";
 import { FieldEditor } from "@/components/FieldEditor";
 import { ScreensPanel } from "@/components/ScreensPanel";
 import { LeadsPanel } from "@/components/LeadsPanel";
+import { ApprovalsPanel } from "@/components/ApprovalsPanel";
 import { toast } from "sonner";
 
 export default function EditorPage() {
@@ -262,6 +263,8 @@ export default function EditorPage() {
           />
 
           <ScreensPanel adId={ad.id} />
+
+          <ApprovalsPanel adId={ad.id} />
 
           <LeadsPanel adId={ad.id} />
         </aside>
