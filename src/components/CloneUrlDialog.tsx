@@ -12,8 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { generateUniqueSlug } from "@/lib/slug";
-import { compressStoredHtml } from "@/lib/ad-html-storage";
 import { toast } from "sonner";
 import { Loader2, Link as LinkIcon, Sparkles } from "lucide-react";
 
