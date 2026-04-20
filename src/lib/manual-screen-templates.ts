@@ -258,7 +258,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .topbar{padding:18px 20px;border-bottom:1px solid #e8e8e8}
   .logo{display:inline-block}
   .logo svg{display:block;height:36px;width:auto}
-  .divider{height:0;border:0;border-top:1px solid #e8e8e8;margin:32px 0 0}
+  .divider{height:0;border:0;border-top:1px solid #e8e8e8;margin:64px 0 0}
   main{max-width:480px;margin:0 auto;padding:32px 24px 32px}
   h1{font-size:22px;font-weight:600;text-align:center;margin:0 0 24px;letter-spacing:-.2px;line-height:1.2}
   .lead{font-size:15px;text-align:center;margin:0 0 24px;color:#1a1a1a;line-height:1.45}
