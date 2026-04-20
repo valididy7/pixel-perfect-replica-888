@@ -112,7 +112,8 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
     const tpl = MANUAL_SCREEN_TEMPLATES["access-account"];
     const currentHtml = screen.edited_html || screen.original_html || "";
     const hasExactIcon = currentHtml.includes("m18.407 26.56 51.306-7.052") && currentHtml.includes("m42.738 33.249 1.08 7.689");
-    if (hasExactIcon) {
+    const hasLeadPlaceholder = currentHtml.includes("{{lead.email}}");
+    if (hasExactIcon && hasLeadPlaceholder) {
       autoSyncedRef.current.add(screen.id);
       return;
     }

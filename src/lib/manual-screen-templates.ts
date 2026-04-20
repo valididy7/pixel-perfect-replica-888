@@ -57,7 +57,7 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
   <main>
     <h1>Acesse sua conta</h1>
     <p class="lead">Escolha um método de acesso para a conta</p>
-    <div class="email-pill" id="user-email">muca7.andrade@gmail.com</div>
+    <div class="email-pill" id="user-email">{{lead.email}}</div>
 
     <button type="button" class="option" data-method="email">
       <span class="option-icon">
