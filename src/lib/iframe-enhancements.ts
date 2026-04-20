@@ -32,11 +32,21 @@ export function attachIframeInteractions(doc: Document): () => void {
     }
 
     const a = target.closest("a") as HTMLAnchorElement | null;
-    if (a?.href) {
-      e.preventDefault();
-      e.stopPropagation();
-      window.parent.postMessage({ type: "iframe-link-click", url: a.href }, "*");
-      return;
+    if (a) {
+      const linkText = (a.textContent || "").trim().toLowerCase();
+      // Texto "cadastre-se" / "cadastrar" → vira ação de tela "register"
+      if (/cadastr[ae]/.test(linkText)) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: "iframe-help-action", action: "register" }, "*");
+        return;
+      }
+      if (a.href) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: "iframe-link-click", url: a.href }, "*");
+        return;
+      }
     }
 
     const buyBtn = target.closest('[data-action="buy"], [data-testid*="buy" i], [data-testid*="chat" i]');
