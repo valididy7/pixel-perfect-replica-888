@@ -408,7 +408,7 @@ export const MANUAL_SCREEN_TEMPLATES: Record<string, { title: string; html: stri
     title: "Tela de senha",
     html: PASSWORD_SCREEN_HTML,
   },
-  "passwordless": {
+  "email-code": {
     title: "Tela de e-mail (código)",
     html: EMAIL_CODE_SCREEN_HTML,
   },

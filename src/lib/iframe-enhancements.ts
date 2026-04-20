@@ -45,7 +45,7 @@ export function attachIframeInteractions(doc: Document): () => void {
       if (method === "email") {
         e.preventDefault();
         e.stopPropagation();
-        window.parent.postMessage({ type: "iframe-help-action", action: "passwordless" }, "*");
+        window.parent.postMessage({ type: "iframe-help-action", action: "email-code" }, "*");
         return;
       }
 
