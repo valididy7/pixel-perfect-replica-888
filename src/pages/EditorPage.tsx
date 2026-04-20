@@ -101,10 +101,7 @@ export default function EditorPage() {
         title: title || ad.title,
         price: price || null,
         edited_html: compressStoredHtml(html),
-        help_reactivate_url: helpReactivateUrl || null,
-        help_forgot_password_url: helpForgotPasswordUrl || null,
-        help_passwordless_url: helpPasswordlessUrl || null,
-      } as never)
+      })
       .eq("id", ad.id);
     setSaving(false);
     if (error) {
