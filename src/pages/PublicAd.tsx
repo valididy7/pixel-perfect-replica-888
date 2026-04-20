@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Ad } from "@/types/ad";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
+import { applyDownloadUrl } from "@/lib/download-button";
 import { PreviewFrame } from "@/components/PreviewFrame";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -56,7 +57,8 @@ export default function PublicAd() {
     );
   }
 
-  const html = decompressStoredHtml(ad.edited_html || ad.original_html);
+  const rawHtml = decompressStoredHtml(ad.edited_html || ad.original_html);
+  const html = applyDownloadUrl(rawHtml, ad.download_url);
 
   return (
     <div className="h-screen w-screen bg-white">
