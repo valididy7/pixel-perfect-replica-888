@@ -45,8 +45,7 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
       if (doc) {
         detach = attachIframeInteractions(doc);
         measure();
-        // Re-mede algumas vezes (imagens carregando, fontes etc.)
-        const tries = [200, 600, 1200, 2500];
+        const tries = [200, 600, 1200, 2500, 4000];
         tries.forEach((t) => setTimeout(measure, t));
         try {
           resizeObs = new ResizeObserver(() => measure());
