@@ -71,11 +71,11 @@ export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: Pre
       const data = e.data;
       if (!data || typeof data !== "object") return;
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
-        const url = HELP_ACTION_URLS[data.action];
-        if (url) {
-          navigateIframeTo(iframe, url, currentHtmlRef.current);
+        const url = helpUrlsRef.current?.[data.action as "reactivate" | "forgot-password" | "passwordless"];
+        if (url && url.trim()) {
+          navigateIframeTo(iframe, url.trim(), currentHtmlRef.current);
         } else {
-          console.warn("[PreviewFrame] sem URL pra ação:", data.action);
+          console.warn("[PreviewFrame] sem URL configurada para ação:", data.action);
         }
       }
       if (data.type === "iframe-back") {
