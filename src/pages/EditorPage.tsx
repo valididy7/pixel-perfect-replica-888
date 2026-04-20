@@ -34,9 +34,6 @@ export default function EditorPage() {
   const [originalHtml, setOriginalHtml] = useState<string>("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [helpReactivateUrl, setHelpReactivateUrl] = useState("");
-  const [helpForgotPasswordUrl, setHelpForgotPasswordUrl] = useState("");
-  const [helpPasswordlessUrl, setHelpPasswordlessUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [dirty, setDirty] = useState(false);
