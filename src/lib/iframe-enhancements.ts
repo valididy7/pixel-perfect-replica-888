@@ -32,8 +32,8 @@ export function attachIframeInteractions(doc: Document): () => void {
         "display:inline-flex",
         "align-items:center",
         "justify-content:center",
-        "width:50px",
-        "height:50px",
+        "width:40px",
+        "height:40px",
         "border-radius:9999px",
         "background:#fff",
         "border:1px solid #dadce0",
@@ -48,11 +48,11 @@ export function attachIframeInteractions(doc: Document): () => void {
     const img = doc.createElement("img");
     img.src = fallbackLogoUrl;
     img.alt = "Google";
-    img.width = 28;
-    img.height = 28;
+    img.width = 22;
+    img.height = 22;
     img.setAttribute(
       "style",
-      "display:block;width:28px;height:28px;object-fit:contain;",
+      "display:block;width:22px;height:22px;object-fit:contain;",
     );
     wrapper.appendChild(img);
     return wrapper;
