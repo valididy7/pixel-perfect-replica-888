@@ -20,14 +20,23 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
   // Carrega telas filhas
   useEffect(() => {
-    if (!adId) return;
+    if (!adId) {
+      console.info("[PreviewFrame] adId ausente — telas vinculadas desativadas");
+      return;
+    }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("ad_screens")
         .select("*")
         .eq("ad_id", adId);
-      if (!cancelled && data) screensRef.current = data as AdScreen[];
+      if (cancelled) return;
+      if (error) {
+        console.error("[PreviewFrame] erro carregando telas:", error);
+        return;
+      }
+      console.info("[PreviewFrame] telas carregadas:", data?.length, data?.map((s: AdScreen) => s.kind));
+      if (data) screensRef.current = data as AdScreen[];
     })();
     return () => { cancelled = true; };
   }, [adId]);
