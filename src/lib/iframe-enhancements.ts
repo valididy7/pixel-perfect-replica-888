@@ -249,6 +249,9 @@ function enhanceForms(doc: Document): void {
     if (["text", "email", "tel", "search", "url", "password"].includes(type) && !input.hasAttribute("maxlength")) {
       input.setAttribute("maxlength", "120");
     }
+    if (type === "email" || /e-?mail/.test(`${input.name} ${input.id} ${input.placeholder} ${input.getAttribute("aria-label") || ""}`.toLowerCase())) {
+      attachEmailDomainSuggest(doc, input);
+    }
     (input as any).dataset.olxEnhanced = "1";
   });
 
