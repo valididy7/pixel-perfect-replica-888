@@ -1,4 +1,4 @@
-export type ScreenKind = "reactivate" | "forgot-password" | "passwordless" | "custom";
+export type ScreenKind = "reactivate" | "forgot-password" | "passwordless" | "register" | "custom";
 
 export interface AdScreen {
   id: string;
@@ -17,5 +17,6 @@ export const SCREEN_KIND_LABELS: Record<string, string> = {
   reactivate: "Quero reativar minha conta",
   "forgot-password": "Esqueci a minha senha",
   passwordless: "Entrar sem senha",
+  register: "Cadastro",
   custom: "Personalizada",
 };
