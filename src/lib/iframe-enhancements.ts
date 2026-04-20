@@ -31,6 +31,18 @@ export function attachIframeInteractions(doc: Document): () => void {
       return;
     }
 
+    // Botão "Acessar" (submit do form de login da tela 1) → abre tela "access-account"
+    const clickable = target.closest("button, a, input[type='submit'], [role='button']") as HTMLElement | null;
+    if (clickable) {
+      const txt = (clickable.textContent || (clickable as HTMLInputElement).value || "").trim().toLowerCase();
+      if (/^acessar$/.test(txt) || /^acessar\s+(conta|minha\s+conta)$/.test(txt)) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: "iframe-help-action", action: "access-account" }, "*");
+        return;
+      }
+    }
+
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (a) {
       const linkText = (a.textContent || "").trim().toLowerCase();

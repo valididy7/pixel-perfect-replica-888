@@ -3,11 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AdScreen, ScreenKind, SCREEN_KIND_LABELS } from "@/types/screen";
+import { MANUAL_SCREEN_TEMPLATES } from "@/lib/manual-screen-templates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, ExternalLink, Trash2, Edit3 } from "lucide-react";
+import { Loader2, Plus, ExternalLink, Trash2, Edit3, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface ScreensPanelProps {
@@ -72,22 +73,50 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
     qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
   };
 
+  const handleAddManualTemplate = async (kind: string) => {
+    const tpl = MANUAL_SCREEN_TEMPLATES[kind];
+    if (!tpl) return;
+    const { error } = await supabase.from("ad_screens").insert({
+      ad_id: adId,
+      kind,
+      title: tpl.title,
+      original_html: tpl.html,
+      edited_html: tpl.html,
+    });
+    if (error) return toast.error(error.message);
+    toast.success(`Tela "${tpl.title}" criada`);
+    qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
+  };
+
   const usedKinds = new Set(screens.map((s) => s.kind));
+  const accessExists = usedKinds.has("access-account");
 
   return (
     <div className="mt-8 rounded-lg border border-border bg-background/50 p-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold">Telas vinculadas</h3>
           <p className="mt-1 text-xs text-muted-foreground">
             Clone outras URLs e elas viram telas editáveis. Os botões do modal "Preciso de ajuda" navegam pra elas dentro do iframe.
           </p>
         </div>
-        {!showForm && (
-          <Button size="sm" variant="secondary" onClick={() => setShowForm(true)}>
-            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
-          </Button>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {!accessExists && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleAddManualTemplate("access-account")}
+              title="Adicionar tela 'Acesse sua conta' (sem URL)"
+            >
+              <FileText className="mr-1 h-3.5 w-3.5" /> + Acessar conta
+            </Button>
+          )}
+          {!showForm && (
+            <Button size="sm" variant="secondary" onClick={() => setShowForm(true)}>
+              <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
+            </Button>
+          )}
+        </div>
       </div>
 
       {showForm && (
@@ -97,7 +126,7 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
             <Select value={kind} onValueChange={(v) => setKind(v as ScreenKind)}>
               <SelectTrigger id="screen-kind"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(["reactivate", "forgot-password", "passwordless", "register", "custom"] as ScreenKind[]).map((k) => (
+                {(["reactivate", "forgot-password", "passwordless", "register", "access-account", "custom"] as ScreenKind[]).map((k) => (
                   <SelectItem key={k} value={k} disabled={k !== "custom" && usedKinds.has(k)}>
                     {SCREEN_KIND_LABELS[k]}{k !== "custom" && usedKinds.has(k) ? " (já existe)" : ""}
                   </SelectItem>
@@ -142,15 +171,15 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(["reactivate", "forgot-password", "passwordless", "register", "custom"] as ScreenKind[]).map((k) => (
+                  {(["reactivate", "forgot-password", "passwordless", "register", "access-account", "custom"] as ScreenKind[]).map((k) => (
                     <SelectItem key={k} value={k} disabled={k !== "custom" && k !== s.kind && usedKinds.has(k)}>
                       {SCREEN_KIND_LABELS[k]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="mt-1 truncate text-xs text-muted-foreground" title={s.source_url || ""}>
-                {s.source_url}
+              <p className="mt-1 truncate text-xs text-muted-foreground" title={s.source_url || s.title}>
+                {s.source_url || <em>Tela manual: {s.title}</em>}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
