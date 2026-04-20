@@ -33,7 +33,9 @@ export function attachIframeInteractions(doc: Document): () => void {
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (a?.href) {
       e.preventDefault();
+      e.stopPropagation();
       window.parent.postMessage({ type: "iframe-link-click", url: a.href }, "*");
+      return;
     }
 
     const buyBtn = target.closest('[data-action="buy"], [data-testid*="buy" i], [data-testid*="chat" i]');
