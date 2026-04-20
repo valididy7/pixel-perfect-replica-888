@@ -1,24 +1,36 @@
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
-import { navigateIframeTo, popIframeHistory } from "@/lib/iframe-navigation";
+import { decompressStoredHtml } from "@/lib/ad-html-storage";
+import { AdScreen } from "@/types/screen";
 
 interface PreviewFrameProps {
   html: string;
   mode?: "mobile" | "desktop";
   className?: string;
-  helpUrls?: Partial<Record<"reactivate" | "forgot-password" | "passwordless", string>>;
+  /** Quando definido, busca telas filhas no banco e usa pra navegação. */
+  adId?: string;
 }
 
-export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: PreviewFrameProps) {
+export function PreviewFrame({ html, mode = "mobile", className, adId }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const currentHtmlRef = useRef<string>("");
-  const helpUrlsRef = useRef(helpUrls);
   const [height, setHeight] = useState<number>(800);
+  const screensRef = useRef<AdScreen[]>([]);
+  const historyRef = useRef<string[]>([]);
 
-  // Mantém ref atualizada sem recriar o iframe
+  // Carrega telas filhas
   useEffect(() => {
-    helpUrlsRef.current = helpUrls;
-  }, [helpUrls]);
+    if (!adId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("ad_screens")
+        .select("*")
+        .eq("ad_id", adId);
+      if (!cancelled && data) screensRef.current = data as AdScreen[];
+    })();
+    return () => { cancelled = true; };
+  }, [adId]);
 
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -31,11 +43,16 @@ export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: Pre
         (m) => `${m}\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
       );
     }
-    currentHtmlRef.current = injected;
 
-    const blob = new Blob([injected], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    iframe.src = url;
+    const renderHtml = (src: string) => {
+      const blob = new Blob([src], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      iframe.src = url;
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    };
+
+    renderHtml(injected);
+    let baseHtml = injected;
 
     let detach: (() => void) | null = null;
     let resizeObs: ResizeObserver | null = null;
@@ -43,26 +60,36 @@ export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: Pre
     const measure = () => {
       const doc = iframe.contentDocument;
       if (!doc) return;
-      const h = Math.max(
-        doc.documentElement.scrollHeight,
-        doc.body?.scrollHeight ?? 0,
-      );
+      const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
       if (h && Math.abs(h - height) > 4) setHeight(h);
+    };
+
+    const wrapWithBackBar = (rawHtml: string) => {
+      const bar = `<div style="position:sticky;top:0;left:0;right:0;z-index:2147483646;background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 14px;display:flex;align-items:center;gap:10px;font-family:'Open Sans',sans-serif;">
+        <button onclick="parent.postMessage({type:'iframe-back'},'*')" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;cursor:pointer;font-size:14px;color:#6E0AD6;font-weight:600;padding:4px 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#6E0AD6" d="M15.5 6.5c.3.3.3.8 0 1.1L11 12l4.5 4.5c.3.3.3.8 0 1.1s-.8.3-1.1 0l-5-5c-.3-.3-.3-.8 0-1.1l5-5c.3-.3.8-.3 1.1 0z"/></svg>
+          Voltar
+        </button>
+      </div>`;
+      if (/<body[^>]*>/i.test(rawHtml)) {
+        return rawHtml.replace(/<body[^>]*>/i, (m) => `${m}${bar}`);
+      }
+      return bar + rawHtml;
     };
 
     const onLoad = () => {
       const doc = iframe.contentDocument;
       if (doc) {
+        if (detach) detach();
         detach = attachIframeInteractions(doc);
         measure();
         const tries = [200, 600, 1200, 2500, 4000];
         tries.forEach((t) => setTimeout(measure, t));
         try {
+          if (resizeObs) resizeObs.disconnect();
           resizeObs = new ResizeObserver(() => measure());
           if (doc.body) resizeObs.observe(doc.body);
-        } catch {
-          // ignore
-        }
+        } catch { /* ignore */ }
       }
     };
     iframe.addEventListener("load", onLoad);
@@ -70,16 +97,25 @@ export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: Pre
     const onMessage = (e: MessageEvent) => {
       const data = e.data;
       if (!data || typeof data !== "object") return;
+
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
-        const url = helpUrlsRef.current?.[data.action as "reactivate" | "forgot-password" | "passwordless"];
-        if (url && url.trim()) {
-          navigateIframeTo(iframe, url.trim(), currentHtmlRef.current);
-        } else {
-          console.warn("[PreviewFrame] sem URL configurada para ação:", data.action);
+        const screen = screensRef.current.find((s) => s.kind === data.action);
+        if (!screen) {
+          window.parent.postMessage({ type: "iframe-help-missing", action: data.action }, "*");
+          return;
         }
+        const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
+        if (!screenHtml) return;
+        // Empilha estado atual e renderiza tela filha com botão voltar
+        const currentSrc = iframe.contentDocument?.documentElement?.outerHTML;
+        if (currentSrc) historyRef.current.push(currentSrc);
+        renderHtml(wrapWithBackBar(screenHtml));
       }
+
       if (data.type === "iframe-back") {
-        popIframeHistory(iframe);
+        const prev = historyRef.current.pop();
+        if (prev) renderHtml(prev);
+        else renderHtml(baseHtml);
       }
     };
     window.addEventListener("message", onMessage);
@@ -89,7 +125,7 @@ export function PreviewFrame({ html, mode = "mobile", className, helpUrls }: Pre
       window.removeEventListener("message", onMessage);
       if (detach) detach();
       if (resizeObs) resizeObs.disconnect();
-      URL.revokeObjectURL(url);
+      historyRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html, mode]);
