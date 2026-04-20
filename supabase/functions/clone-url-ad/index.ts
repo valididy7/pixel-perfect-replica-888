@@ -197,7 +197,7 @@ async function scrapeWithFirecrawl(
     },
     body: JSON.stringify({
       url,
-      formats: ["html", "markdown"],
+      formats: ["rawHtml", "html", "markdown"],
       onlyMainContent: false,
     }),
   });
@@ -280,7 +280,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const rawHtml = scrapeResult.html || scrapeResult.rawHtml || "";
+    const rawHtml = scrapeResult.rawHtml || scrapeResult.html || "";
     if (!rawHtml) {
       return jsonResponse(
         { error: "Não foi possível extrair o HTML da página" },
