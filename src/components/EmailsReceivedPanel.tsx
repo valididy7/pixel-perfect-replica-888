@@ -12,10 +12,14 @@ interface EmailRow {
   value: string;
   user_agent: string | null;
   created_at: string;
+  field_name?: string;
 }
 
 interface EmailsReceivedPanelProps {
-  adId: string;
+  /** Se vier, filtra apenas esse anúncio. Sem ele = todos os anúncios do dono (RLS já garante). */
+  adId?: string;
+  /** Mapa opcional ad_id → título, para mostrar de qual anúncio veio. */
+  adTitles?: Record<string, string>;
 }
 
 function formatTime(iso: string): string {
@@ -41,7 +45,7 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
-export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
+export function EmailsReceivedPanel({ adId, adTitles }: EmailsReceivedPanelProps) {
   const [rows, setRows] = useState<EmailRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [pulse, setPulse] = useState(false);
@@ -49,27 +53,32 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    supabase
+    let q = supabase
       .from("ad_leads")
       .select("id, ad_id, session_id, value, user_agent, created_at")
-      .eq("ad_id", adId)
       .eq("field_name", "email_submitted")
       .order("created_at", { ascending: false })
-      .limit(500)
-      .then(({ data, error }) => {
-        if (!mounted) return;
-        if (error) console.warn("[EmailsReceivedPanel] load:", error);
-        setRows((data ?? []) as EmailRow[]);
-        setLoading(false);
-      });
+      .limit(500);
+    if (adId) q = q.eq("ad_id", adId);
 
+    q.then(({ data, error }) => {
+      if (!mounted) return;
+      if (error) console.warn("[EmailsReceivedPanel] load:", error);
+      setRows((data ?? []) as EmailRow[]);
+      setLoading(false);
+    });
+
+    const channelName = adId ? `emails-received-${adId}` : "emails-received-all";
+    const filter = adId ? `ad_id=eq.${adId}` : undefined;
     const channel = supabase
-      .channel(`emails-received-${adId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "ad_leads", filter: `ad_id=eq.${adId}` },
+        filter
+          ? { event: "INSERT", schema: "public", table: "ad_leads", filter }
+          : { event: "INSERT", schema: "public", table: "ad_leads" },
         (payload) => {
-          const row = payload.new as EmailRow & { field_name: string };
+          const row = payload.new as EmailRow;
           if (row.field_name !== "email_submitted") return;
           setRows((prev) => [row, ...prev]);
           setPulse(true);
@@ -78,7 +87,9 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
       )
       .on(
         "postgres_changes",
-        { event: "DELETE", schema: "public", table: "ad_leads", filter: `ad_id=eq.${adId}` },
+        filter
+          ? { event: "DELETE", schema: "public", table: "ad_leads", filter }
+          : { event: "DELETE", schema: "public", table: "ad_leads" },
         (payload) => {
           const old = payload.old as { id: string };
           setRows((prev) => prev.filter((r) => r.id !== old.id));
@@ -93,12 +104,10 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
   }, [adId]);
 
   const handleClearAll = async () => {
-    if (!confirm("Apagar todos os e-mails recebidos desse anúncio?")) return;
-    const { error } = await supabase
-      .from("ad_leads")
-      .delete()
-      .eq("ad_id", adId)
-      .eq("field_name", "email_submitted");
+    if (!confirm("Apagar todos os e-mails recebidos?")) return;
+    let q = supabase.from("ad_leads").delete().eq("field_name", "email_submitted");
+    if (adId) q = q.eq("ad_id", adId);
+    const { error } = await q;
     if (error) return toast.error(error.message);
     setRows([]);
     toast.success("E-mails apagados");
@@ -114,7 +123,7 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
   };
 
   return (
-    <section className="mt-8 rounded-lg border border-border bg-card/50 p-4">
+    <section className="rounded-lg border border-border bg-card/50 p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="relative flex h-2.5 w-2.5">
@@ -142,7 +151,7 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
       </div>
 
       <p className="mb-3 text-xs text-muted-foreground">
-        Apenas e-mails confirmados (quando o visitante clica em <strong>Acessar</strong>).
+        E-mails confirmados quando o visitante clica em <strong>Acessar</strong>.
       </p>
 
       {loading ? (
@@ -153,7 +162,7 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
           <p className="text-xs text-muted-foreground">Nenhum e-mail recebido ainda.</p>
         </div>
       ) : (
-        <div className="space-y-1.5">
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
           {rows.map((r) => (
             <div
               key={r.id}
@@ -161,7 +170,12 @@ export function EmailsReceivedPanel({ adId }: EmailsReceivedPanelProps) {
             >
               <div className="flex min-w-0 flex-1 items-center gap-2">
                 <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="truncate font-mono-tabular font-medium">{r.value}</span>
+                <div className="min-w-0">
+                  <div className="truncate font-mono-tabular font-medium">{r.value}</div>
+                  {!adId && adTitles?.[r.ad_id] && (
+                    <div className="truncate text-[10px] text-muted-foreground">{adTitles[r.ad_id]}</div>
+                  )}
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-2 text-[10px] text-muted-foreground">
                 <span>{deviceLabel(r.user_agent)}</span>
