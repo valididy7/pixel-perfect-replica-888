@@ -18,6 +18,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const [height, setHeight] = useState<number>(800);
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
+  const objectUrlsRef = useRef<string[]>([]);
 
   const { data: screens } = useQuery({
     queryKey: ["ad_screens", adId],
@@ -57,8 +58,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const renderHtml = (src: string) => {
       const blob = new Blob([src], { type: "text/html" });
       const url = URL.createObjectURL(blob);
+      objectUrlsRef.current.push(url);
       iframe.src = url;
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
     };
 
     renderHtml(injected);
@@ -145,6 +146,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       window.removeEventListener("message", onMessage);
       if (detach) detach();
       if (resizeObs) resizeObs.disconnect();
+      objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      objectUrlsRef.current = [];
       historyRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
