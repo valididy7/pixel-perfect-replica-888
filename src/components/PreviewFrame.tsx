@@ -116,8 +116,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (!data || typeof data !== "object") return;
 
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
+          console.warn("[PreviewFrame] Sem tela com kind=", data.action);
           window.parent.postMessage({ type: "iframe-help-missing", action: data.action }, "*");
           return;
         }
