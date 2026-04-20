@@ -307,8 +307,6 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <span class="email" id="user-email">{{lead.email}}</span>
     </p>
 
-    <p class="code-error-top" id="code-error-top">Código inválido</p>
-
     <div class="code-wrap" id="code-wrap">
       <input id="input-pincode-0" type="tel" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Código de verificação da 1ª posição de 6 posições">
       <input id="input-pincode-1" type="tel" inputmode="numeric" maxlength="1" aria-label="Código de verificação da 2ª posição de 6 posições">
@@ -317,6 +315,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <input id="input-pincode-4" type="tel" inputmode="numeric" maxlength="1" aria-label="Código de verificação da 5ª posição de 6 posições">
       <input id="input-pincode-5" type="tel" inputmode="numeric" maxlength="1" aria-label="Código de verificação da 6ª posição de 6 posições">
     </div>
+
+    <p class="code-error-top" id="code-error-top">Código inválido</p>
 
     <div class="resend-row">
       <button type="button" class="resend-link" id="resend-btn">Reenviar código</button>
