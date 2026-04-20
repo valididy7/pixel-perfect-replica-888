@@ -175,7 +175,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       currentScreenIdRef.current = screen.id;
       let nextHtml = applyLeadPlaceholders(screenHtml, leadsRef.current);
       const capturedEmail = capturedEmailRef.current.trim();
-      if (capturedEmail && (screen.kind === "access-account" || screen.kind === "password")) {
+      if (capturedEmail && (screen.kind === "access-account" || screen.kind === "password" || screen.kind === "passwordless")) {
         nextHtml = nextHtml.replace(
           /(<div[^>]*id=["']user-email["'][^>]*>)(.*?)(<\/div>)/i,
           `$1${capturedEmail}$3`,
