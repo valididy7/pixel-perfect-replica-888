@@ -363,6 +363,14 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
           if(on) overlay.classList.add('show');
           else overlay.classList.remove('show');
         }
+        // Garante que o body do iframe tenha altura suficiente pro overlay cobrir tudo
+        if(on){
+          document.body.classList.add('olx-loading');
+          document.body.style.minHeight = (window.innerHeight || 800) + 'px';
+        } else {
+          document.body.classList.remove('olx-loading');
+          document.body.style.minHeight = '';
+        }
         inputs.forEach(function(i){ i.disabled = on; });
       }
 
