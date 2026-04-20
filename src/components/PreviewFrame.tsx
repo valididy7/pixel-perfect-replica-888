@@ -217,17 +217,21 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
 
     const goBackToMain = () => {
+      onChildScreen = false;
+      currentScreenIdRef.current = null;
+      historyRef.current = [];
+      currentHtmlRef.current = injected;
+      renderHtml(injected);
+    };
+
+    const goBackOne = () => {
       const prev = historyRef.current.pop();
       if (prev && prev !== injected) {
         currentHtmlRef.current = prev;
         renderHtml(prev);
         return;
       }
-      onChildScreen = false;
-      currentScreenIdRef.current = null;
-      historyRef.current = [];
-      currentHtmlRef.current = injected;
-      renderHtml(injected);
+      goBackToMain();
     };
 
     const onMessage = (e: MessageEvent) => {
