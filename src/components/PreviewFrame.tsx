@@ -137,11 +137,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         return;
       }
 
-      if (data.type === "iframe-back") {
-        const prev = historyRef.current.pop();
-        if (prev) renderHtml(prev);
-        else renderHtml(baseHtml);
-      }
     };
     window.addEventListener("message", onMessage);
 
