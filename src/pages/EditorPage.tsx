@@ -225,6 +225,24 @@ export default function EditorPage() {
             </Button>
           </div>
 
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(previewHtml || "");
+                toast.success("HTML copiado!");
+              } catch {
+                toast.error("Falha ao copiar");
+              }
+            }}
+            disabled={!previewHtml}
+            title="Copiar código-fonte HTML do clone"
+          >
+            <Code2 className="mr-1.5 h-3.5 w-3.5" />
+            Copiar HTML
+          </Button>
+
           <Button size="sm" variant="secondary" onClick={() => handleSave(true)} disabled={saving}>
             {saving ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
             Salvar
