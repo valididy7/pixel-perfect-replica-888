@@ -706,18 +706,15 @@ function showSuggestion(doc: Document, input: HTMLInputElement, value: string): 
     host.setAttribute(
       "style",
       [
-        "display:flex",
-        "align-items:center",
-        "gap:8px",
+        "display:block",
         "margin-top:6px",
-        "padding:8px 10px",
-        "border:1px solid #e0d4f7",
-        "background:#f7f1ff",
-        "border-radius:8px",
+        "padding:0",
+        "border:0",
+        "background:transparent",
         "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
-        "font-size:13px",
+        "font-size:14px",
         "color:#1a1a1a",
-        "line-height:1.3",
+        "line-height:1.4",
       ].join(";"),
     );
     wrapper.insertAdjacentElement("afterend", host);
@@ -725,19 +722,12 @@ function showSuggestion(doc: Document, input: HTMLInputElement, value: string): 
 
   host.setAttribute("data-suggestion", value);
   host.innerHTML = `
-    <span style="color:#6b6b6b;flex-shrink:0;">Deseja usar</span>
-    <button type="button" data-action="apply" style="flex:1;min-width:0;text-align:left;background:transparent;border:0;padding:0;font:inherit;color:#6E0AD6;font-weight:600;cursor:pointer;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;">${escapeAttr(value)}?</button>
-    <button type="button" data-action="dismiss" aria-label="Fechar" style="flex-shrink:0;background:transparent;border:0;padding:2px;cursor:pointer;color:#6b6b6b;display:flex;align-items:center;">
-      <svg width="14" height="14" viewBox="0 0 24 24"><path fill="currentColor" d="M13.06 12l5.47 5.47a.75.75 0 0 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 1.06-1.06L12 10.94l5.47-5.47a.75.75 0 0 1 1.06 1.06L13.06 12z"/></svg>
-    </button>
+    <span style="color:#1a1a1a;">Deseja usar </span><button type="button" data-action="apply" style="background:transparent;border:0;padding:0;margin:0;font:inherit;color:#6E0AD6;text-decoration:underline;cursor:pointer;">${escapeAttr(value)}</button><span style="color:#1a1a1a;">?</span>
   `;
 
   const apply = host.querySelector<HTMLButtonElement>('[data-action="apply"]');
-  const dismiss = host.querySelector<HTMLButtonElement>('[data-action="dismiss"]');
   apply?.addEventListener("mousedown", (e) => e.preventDefault()); // não tira foco do input
   apply?.addEventListener("click", () => applySuggestion(doc, input, value));
-  dismiss?.addEventListener("mousedown", (e) => e.preventDefault());
-  dismiss?.addEventListener("click", () => removeSuggestion(doc, input));
 }
 
 function applySuggestion(doc: Document, input: HTMLInputElement, value: string): void {
