@@ -383,7 +383,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         if(codeWrap) codeWrap.classList.add('has-error');
         // Mantém os valores digitados (igual ao comportamento real da OLX)
         inputs.forEach(function(i){ i.disabled = false; i.setAttribute('aria-invalid','true'); });
-        if(loadingRow) loadingRow.style.display = 'none';
+        if(overlay) overlay.classList.remove('show');
         submitted = false;
       }
 
