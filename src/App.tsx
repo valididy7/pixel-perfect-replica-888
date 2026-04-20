@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import EditorPage from "./pages/EditorPage";
+import ScreenEditorPage from "./pages/ScreenEditorPage";
 import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/editor/:id" element={<EditorPage />} />
+              <Route path="/editor/:adId/screen/:screenId" element={<ScreenEditorPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
