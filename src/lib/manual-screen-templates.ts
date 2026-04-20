@@ -19,12 +19,13 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
   h1{font-size:26px;font-weight:600;text-align:center;margin:0 0 28px;letter-spacing:-.2px}
   .lead{font-size:16px;text-align:center;margin:0 0 18px;color:#1a1a1a}
   .email-pill{display:block;width:100%;padding:14px 20px;border:1px solid #d0d0d0;border-radius:9999px;text-align:center;font-size:15px;color:#1a1a1a;background:#fff;margin:0 0 28px}
-  .option{display:flex;align-items:center;gap:16px;width:100%;padding:18px 16px;border:1px solid #e0e0e0;border-radius:10px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:inherit;margin:0 0 16px;transition:background .15s,border-color .15s}
+  .option{display:flex;align-items:center;gap:18px;width:100%;padding:20px 18px;border:1px solid #e0e0e0;border-radius:12px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:inherit;margin:0 0 16px;transition:background .15s,border-color .15s}
   .option:hover{background:#fafafa;border-color:#c8c8c8}
-  .option-icon{flex-shrink:0;width:56px;height:56px;border-radius:50%;background:#f3ebff;display:flex;align-items:center;justify-content:center}
+  .option-icon{flex-shrink:0;width:72px;height:72px;border-radius:50%;background:#f3ebff;display:flex;align-items:center;justify-content:center}
+  .option-icon svg{width:56px;height:56px;display:block}
   .option-body{flex:1;min-width:0}
-  .option-title{display:block;font-size:18px;font-weight:500;margin:0 0 4px;color:#1a1a1a}
-  .option-sub{display:block;font-size:14px;color:#6b6b6b;line-height:1.35}
+  .option-title{display:block;font-size:18px;font-weight:600;margin:0 0 4px;color:#1a1a1a}
+  .option-sub{display:block;font-size:14px;color:#6b6b6b;line-height:1.4}
   .option-arrow{flex-shrink:0;color:#1a1a1a}
   .back-link{display:block;width:100%;background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;text-align:center;padding:8px 0 24px;cursor:pointer}
   .help-bar{display:block;width:100%;padding:14px;border:0;background:#f5f5f5;border-radius:8px;color:#1a1a1a;font:inherit;font-size:15px;text-align:center;cursor:pointer;margin:0 0 20px}
