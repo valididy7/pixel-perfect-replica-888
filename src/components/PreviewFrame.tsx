@@ -125,14 +125,20 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const data = e.data;
       if (!data || typeof data !== "object") return;
 
-      if (data.type === "iframe-help-action" && typeof data.action === "string") {
-        console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
-        const screen = screensRef.current.find((s) => s.kind === data.action);
+      if (data.type === "iframe-help-direct") {
+        console.info("[PreviewFrame] help-direct, telas:", screensRef.current.length);
+        const screen = screensRef.current[0];
         if (!screen) {
-          console.warn("[PreviewFrame] Sem tela com kind=", data.action);
-          window.parent.postMessage({ type: "iframe-help-missing", action: data.action }, "*");
+          console.warn("[PreviewFrame] Nenhuma tela vinculada cadastrada");
           return;
         }
+        navigateToScreen(screen);
+        return;
+      }
+
+      if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        const screen = screensRef.current.find((s) => s.kind === data.action) ?? screensRef.current[0];
+        if (!screen) return;
         navigateToScreen(screen);
         return;
       }
