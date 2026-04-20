@@ -56,15 +56,14 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     }
 
     const renderHtml = (src: string) => {
+      setHeight(800);
       const blob = new Blob([src], { type: "text/html" });
       const url = URL.createObjectURL(blob);
       objectUrlsRef.current.push(url);
       iframe.src = url;
-      return url;
     };
 
-    const baseUrl = renderHtml(injected);
-    let currentUrl = baseUrl;
+    renderHtml(injected);
     let onChildScreen = false;
 
     let detach: (() => void) | null = null;
@@ -79,13 +78,12 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
     const onLoad = () => {
       const doc = iframe.contentDocument;
-      try {
-        currentUrl = iframe.contentWindow?.location.href || currentUrl;
-        onChildScreen = currentUrl !== baseUrl;
-      } catch {
-        // ignore
-      }
       if (doc) {
+        try {
+          iframe.contentWindow?.scrollTo(0, 0);
+        } catch {
+          // ignore
+        }
         if (detach) detach();
         detach = attachIframeInteractions(doc);
         measure();
@@ -112,21 +110,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const navigateToScreen = (screen: AdScreen) => {
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
-      currentUrl = renderHtml(screenHtml);
       onChildScreen = true;
+      renderHtml(screenHtml);
     };
 
     const goBackToMain = () => {
-      try {
-        if (iframe.contentWindow && currentUrl !== baseUrl) {
-          iframe.contentWindow.history.back();
-          return;
-        }
-      } catch {
-        // ignore
-      }
-      currentUrl = renderHtml(injected);
       onChildScreen = false;
+      renderHtml(injected);
     };
 
     const onMessage = (e: MessageEvent) => {
