@@ -27,7 +27,7 @@ export function attachIframeInteractions(doc: Document): () => void {
     if (helpHit) {
       e.preventDefault();
       e.stopPropagation();
-      window.parent.postMessage({ type: "iframe-help-direct" }, "*");
+      openHelpModal(doc);
       return;
     }
 
