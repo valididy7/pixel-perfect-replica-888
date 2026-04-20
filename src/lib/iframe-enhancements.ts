@@ -122,6 +122,9 @@ export function attachIframeInteractions(doc: Document): () => void {
 
   doc.addEventListener("click", onClick, true);
 
+  doc.getElementById("__olx_help_modal__")?.remove();
+  doc.getElementById("__olx_help_modal_styles__")?.remove();
+
   doc.querySelectorAll('[data-testid="chat-button"], [data-testid="report-ad"]').forEach((el) => {
     (el as HTMLElement).style.display = "none";
   });
@@ -132,6 +135,8 @@ export function attachIframeInteractions(doc: Document): () => void {
 
   return () => {
     doc.removeEventListener("click", onClick, true);
+    doc.getElementById("__olx_help_modal__")?.remove();
+    doc.getElementById("__olx_help_modal_styles__")?.remove();
     timers.forEach(clearTimeout);
   };
 }
@@ -140,15 +145,15 @@ export function attachIframeInteractions(doc: Document): () => void {
  * Modal "Como podemos ajudar?" recriado e injetado dentro do iframe.
  */
 function openHelpModal(doc: Document): void {
-  console.info("[help-modal] abrindo. já existe?", !!doc.getElementById("__olx_help_modal__"));
-  // Remove qualquer modal residual antes de abrir um novo
   doc.getElementById("__olx_help_modal__")?.remove();
+  doc.getElementById("__olx_help_modal_styles__")?.remove();
 
   const overlay = doc.createElement("div");
   overlay.id = "__olx_help_modal__";
   overlay.setAttribute(
     "style",
     [
+      "all:initial",
       "position:fixed",
       "inset:0",
       "background:rgba(0,0,0,.5)",
@@ -157,6 +162,7 @@ function openHelpModal(doc: Document): void {
       "align-items:center",
       "justify-content:center",
       "padding:16px",
+      "box-sizing:border-box",
       "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
     ].join(";"),
   );
@@ -165,25 +171,31 @@ function openHelpModal(doc: Document): void {
   sheet.setAttribute(
     "style",
     [
+      "all:initial",
+      "display:block",
       "background:#fff",
+      "color:#1a1a1a",
       "width:100%",
       "max-width:420px",
       "border-radius:16px",
       "padding:24px 20px 28px",
+      "box-sizing:border-box",
       "box-shadow:0 8px 32px rgba(0,0,0,.2)",
       "animation:olxFadeIn .2s ease-out",
+      "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
     ].join(";"),
   );
 
   const style = doc.createElement("style");
+  style.id = "__olx_help_modal_styles__";
   style.textContent = `
     @keyframes olxFadeIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-    .__olx_btn { display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; background:#fff; border:1px solid #e0e0e0; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; color:#1a1a1a; text-align:left; transition:background .15s; font-family:inherit; }
-    .__olx_btn:hover { background:#f5f5f5; }
-    .__olx_btn svg { flex-shrink:0; }
-    .__olx_close { background:transparent; border:0; cursor:pointer; padding:4px; display:flex; }
+    #__olx_help_modal__ .__olx_btn { display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; background:#fff; border:1px solid #e0e0e0; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; color:#1a1a1a; text-align:left; transition:background .15s; font-family:inherit; box-sizing:border-box; }
+    #__olx_help_modal__ .__olx_btn:hover { background:#f5f5f5; }
+    #__olx_help_modal__ .__olx_btn svg { flex-shrink:0; }
+    #__olx_help_modal__ .__olx_close { background:transparent; border:0; cursor:pointer; padding:4px; display:flex; }
   `;
-  doc.head.appendChild(style);
+  (doc.head || doc.documentElement).appendChild(style);
 
   sheet.innerHTML = `
     <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
@@ -191,9 +203,9 @@ function openHelpModal(doc: Document): void {
         <svg width="24" height="24" viewBox="0 0 24 24"><path fill="#4A4A4A" d="M13.06 12l5.47 5.47a.75.75 0 0 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 1.06-1.06L12 10.94l5.47-5.47a.75.75 0 0 1 1.06 1.06L13.06 12z"/></svg>
       </button>
     </div>
-    <div style="margin-bottom:20px;">
-      <div style="font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:6px;">Como podemos ajudar?</div>
-      <div style="font-size:14px;font-weight:400;color:#666;">Enviaremos um e-mail para ajudar você a acessar sua conta!</div>
+    <div style="margin-bottom:20px;display:block;">
+      <div style="font-size:18px;font-weight:600;color:#1a1a1a;margin-bottom:6px;display:block;">Como podemos ajudar?</div>
+      <div style="font-size:14px;font-weight:400;color:#666;display:block;">Enviaremos um e-mail para ajudar você a acessar sua conta!</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;">
       <button class="__olx_btn" data-help-action="reactivate">
@@ -212,15 +224,18 @@ function openHelpModal(doc: Document): void {
   `;
 
   overlay.appendChild(sheet);
-  doc.body.appendChild(overlay);
+  (doc.body || doc.documentElement).appendChild(overlay);
 
-  const close = () => overlay.remove();
+  const close = () => {
+    overlay.remove();
+    style.remove();
+  };
+
   overlay.addEventListener("click", (ev) => {
     if (ev.target === overlay) close();
   });
   sheet.querySelector(".__olx_close")?.addEventListener("click", close);
 
-  // Liga os botões de ação ao parent (que faz o scrape)
   sheet.querySelectorAll<HTMLElement>("[data-help-action]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const action = btn.getAttribute("data-help-action");
