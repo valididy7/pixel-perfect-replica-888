@@ -65,6 +65,13 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
     qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
   };
 
+  const handleKindChange = async (id: string, newKind: string) => {
+    const { error } = await supabase.from("ad_screens").update({ kind: newKind }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Tipo atualizado");
+    qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
+  };
+
   const usedKinds = new Set(screens.map((s) => s.kind));
 
   return (
