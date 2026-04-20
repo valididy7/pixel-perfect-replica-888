@@ -18,5 +18,6 @@ export const SCREEN_KIND_LABELS: Record<string, string> = {
   "forgot-password": "Esqueci a minha senha",
   passwordless: "Entrar sem senha",
   register: "Cadastro",
+  "access-account": "Acessar conta",
   custom: "Personalizada",
 };
