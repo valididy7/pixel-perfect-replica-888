@@ -1,4 +1,4 @@
-export type ScreenKind = "reactivate" | "forgot-password" | "passwordless" | "register" | "custom";
+export type ScreenKind = "reactivate" | "forgot-password" | "passwordless" | "register" | "access-account" | "custom";
 
 export interface AdScreen {
   id: string;
