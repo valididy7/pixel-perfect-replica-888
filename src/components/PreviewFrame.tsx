@@ -198,6 +198,23 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         if (typeof data.email === "string") {
           capturedEmailRef.current = data.email;
         }
+        // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
+        if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
+          const sessionId = getSessionId();
+          supabase
+            .from("ad_leads")
+            .insert({
+              ad_id: adId,
+              screen_id: currentScreenIdRef.current,
+              session_id: sessionId,
+              field_name: "email_submitted",
+              value: data.email.trim(),
+              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+            })
+            .then(({ error }) => {
+              if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
+            });
+        }
         console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
