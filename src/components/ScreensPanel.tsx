@@ -97,7 +97,7 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
             <Select value={kind} onValueChange={(v) => setKind(v as ScreenKind)}>
               <SelectTrigger id="screen-kind"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {(["reactivate", "forgot-password", "passwordless", "register", "custom"] as ScreenKind[]).map((k) => (
+                {(["reactivate", "forgot-password", "passwordless", "register", "access-account", "custom"] as ScreenKind[]).map((k) => (
                   <SelectItem key={k} value={k} disabled={k !== "custom" && usedKinds.has(k)}>
                     {SCREEN_KIND_LABELS[k]}{k !== "custom" && usedKinds.has(k) ? " (já existe)" : ""}
                   </SelectItem>
