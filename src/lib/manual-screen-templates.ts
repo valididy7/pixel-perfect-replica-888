@@ -213,12 +213,16 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
       var entrarBtn = document.getElementById('btn-entrar');
       if(entrarBtn && pwInput){
         entrarBtn.addEventListener('click', function(){
+          if(entrarBtn.disabled) return;
           var pw = (pwInput.value || '').trim();
           if(!pw){
             pwInput.style.borderColor = '#e53e3e';
             pwInput.focus();
             return;
           }
+          entrarBtn.disabled = true;
+          entrarBtn.style.opacity = '.7';
+          entrarBtn.textContent = 'Verificando...';
           window.parent.postMessage({
             type: 'iframe-help-action',
             action: 'password-submit',
