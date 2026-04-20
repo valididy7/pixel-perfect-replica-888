@@ -10,6 +10,14 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Acesse sua conta - OLX</title>
 <style>
+  :root{
+    --spots-background-circle:#F3EBFF;
+    --spots-color-circle:#FFFFFF;
+    --spots-border-color-default:#6E0AD6;
+    --color-neutral-70:#6E0AD6;
+    --color-neutral-110:#6b6b6b;
+    --color-neutral-120:#1a1a1a;
+  }
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0;background:#fff;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
   .topbar{padding:18px 20px;border-bottom:1px solid #e8e8e8}
