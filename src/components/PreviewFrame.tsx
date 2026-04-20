@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
 
 interface PreviewFrameProps {
@@ -9,7 +9,7 @@ interface PreviewFrameProps {
 
 export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const blobUrlRef = useRef<string | null>(null);
+  const [height, setHeight] = useState<number>(800);
 
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -25,14 +25,35 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
 
     const blob = new Blob([injected], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    blobUrlRef.current = url;
     iframe.src = url;
 
     let detach: (() => void) | null = null;
+    let resizeObs: ResizeObserver | null = null;
+
+    const measure = () => {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+      const h = Math.max(
+        doc.documentElement.scrollHeight,
+        doc.body?.scrollHeight ?? 0,
+      );
+      if (h && Math.abs(h - height) > 4) setHeight(h);
+    };
+
     const onLoad = () => {
       const doc = iframe.contentDocument;
       if (doc) {
         detach = attachIframeInteractions(doc);
+        measure();
+        // Re-mede algumas vezes (imagens carregando, fontes etc.)
+        const tries = [200, 600, 1200, 2500];
+        tries.forEach((t) => setTimeout(measure, t));
+        try {
+          resizeObs = new ResizeObserver(() => measure());
+          if (doc.body) resizeObs.observe(doc.body);
+        } catch {
+          // ignore
+        }
       }
     };
     iframe.addEventListener("load", onLoad);
@@ -40,17 +61,19 @@ export function PreviewFrame({ html, mode = "mobile", className }: PreviewFrameP
     return () => {
       iframe.removeEventListener("load", onLoad);
       if (detach) detach();
+      if (resizeObs) resizeObs.disconnect();
       URL.revokeObjectURL(url);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html, mode]);
 
   return (
     <iframe
       ref={iframeRef}
       title="Pré-visualização do anúncio"
-      className={className || "h-full w-full bg-white"}
-      style={{ touchAction: "pan-y", border: 0 }}
-      scrolling="yes"
+      className={className || "block w-full bg-white"}
+      style={{ height: `${height}px`, border: 0, touchAction: "pan-y" }}
+      scrolling="no"
       sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
     />
   );
