@@ -264,8 +264,6 @@ export default function EditorPage() {
           <ScreensPanel adId={ad.id} />
 
           <LeadsPanel adId={ad.id} />
-
-          <EmailsReceivedPanel adId={ad.id} />
         </aside>
 
         {/* Preview */}
