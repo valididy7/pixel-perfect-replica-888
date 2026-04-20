@@ -12,8 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { generateUniqueSlug } from "@/lib/slug";
-import { compressStoredHtml } from "@/lib/ad-html-storage";
 import { toast } from "sonner";
 import { Loader2, Link as LinkIcon, Sparkles } from "lucide-react";
 
@@ -50,33 +48,13 @@ export function CloneUrlDialog({
       });
 
       if (error) throw new Error(error.message || "Falha ao chamar a função");
-      if (!data?.ok) throw new Error(data?.error || "Falha ao clonar a URL");
-
-      setStep("saving");
-      const slug = await generateUniqueSlug(data.title || "anuncio");
-
-      const { data: created, error: insertError } = await supabase
-        .from("ads")
-        .insert({
-          owner_id: user.id,
-          title: data.title || "Anúncio sem título",
-          price: data.price || null,
-          slug,
-          original_html: compressStoredHtml(data.original_html || ""),
-          edited_html: compressStoredHtml(data.original_html || ""),
-          thumbnail_url: data.thumbnail_url || null,
-          source_url: data.source_url || trimmedUrl,
-          status: "draft",
-        })
-        .select("id")
-        .single();
-
-      if (insertError) throw insertError;
+      if (data?.error) throw new Error(data.error);
+      if (!data?.ad?.id) throw new Error("Resposta inválida da função");
 
       toast.success("Anúncio clonado!");
       onOpenChange(false);
       setUrl("");
-      navigate(`/editor/${created.id}`);
+      navigate(`/editor/${data.ad.id}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro desconhecido";
       toast.error(msg);
