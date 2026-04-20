@@ -10,10 +10,20 @@ export function attachIframeInteractions(doc: Document): () => void {
     const target = e.target as HTMLElement | null;
     if (!target) return;
 
-    // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado
-    const helpHost = target.closest("a, button, div, span, [role='button']") as HTMLElement | null;
-    const helpText = (helpHost?.textContent || target.textContent || "").trim().toLowerCase();
-    if (/precis[oa]\s+de\s+ajuda/.test(helpText)) {
+    // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado.
+    // Procura o ancestral mais próximo cujo texto seja CURTO e bata no padrão
+    // (evita pegar o card inteiro do login).
+    let node: HTMLElement | null = target;
+    let helpHit = false;
+    for (let i = 0; i < 6 && node; i++) {
+      const t = (node.textContent || "").trim().toLowerCase();
+      if (t.length <= 40 && /precis[oa]\s+de\s+ajuda/.test(t)) {
+        helpHit = true;
+        break;
+      }
+      node = node.parentElement;
+    }
+    if (helpHit) {
       e.preventDefault();
       e.stopPropagation();
       openHelpModal(doc);
