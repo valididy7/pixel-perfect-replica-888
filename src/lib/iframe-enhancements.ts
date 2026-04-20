@@ -191,15 +191,15 @@ function openHelpModal(doc: Document): void {
       <div style="font-size:14px;font-weight:400;color:#666;">Enviaremos um e-mail para ajudar você a acessar sua conta!</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px;">
-      <button class="__olx_btn">
+      <button class="__olx_btn" data-help-action="reactivate">
         <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#6E0AD6" d="M20.75 21v-2A4.75 4.75 0 0 0 16 14.25H8A4.75 4.75 0 0 0 3.25 19v2a.75.75 0 1 0 1.5 0v-2A3.25 3.25 0 0 1 8 15.75h8A3.25 3.25 0 0 1 19.25 19v2a.75.75 0 1 0 1.5 0zM12 11.75a4.75 4.75 0 1 1 0-9.5 4.75 4.75 0 0 1 0 9.5zm0-1.5a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5z"/></svg>
         <span>Quero reativar minha conta</span>
       </button>
-      <button class="__olx_btn">
+      <button class="__olx_btn" data-help-action="forgot-password">
         <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#6E0AD6" d="M6.25 10.25V7a5.75 5.75 0 0 1 11.5 0v3.25H19A2.75 2.75 0 0 1 21.75 13v7A2.75 2.75 0 0 1 19 22.75H5A2.75 2.75 0 0 1 2.25 20v-7A2.75 2.75 0 0 1 5 10.25h1.25zm1.5 0h8.5V7a4.25 4.25 0 1 0-8.5 0v3.25zM5 11.75c-.69 0-1.25.56-1.25 1.25v7c0 .69.56 1.25 1.25 1.25h14c.69 0 1.25-.56 1.25-1.25v-7c0-.69-.56-1.25-1.25-1.25H5z"/></svg>
         <span>Esqueci a minha senha</span>
       </button>
-      <button class="__olx_btn">
+      <button class="__olx_btn" data-help-action="passwordless">
         <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#6E0AD6" d="M19.1893 13.0551H9C8.58579 13.0551 8.25 12.7193 8.25 12.3051C8.25 11.8908 8.58579 11.5551 9 11.5551H19.1893L16.4697 8.83538C16.1768 8.54249 16.1768 8.06762 16.4697 7.77472C16.7626 7.48183 17.2374 7.48183 17.5303 7.77472L21.5303 11.7747C21.8232 12.0676 21.8232 12.5425 21.5303 12.8354L17.5303 16.8354C17.2374 17.1283 16.7626 17.1283 16.4697 16.8354C16.1768 16.5425 16.1768 16.0676 16.4697 15.7747L19.1893 13.0551ZM10 21.5551C10.4142 21.5551 10.75 21.8908 10.75 22.3051C10.75 22.7193 10.4142 23.0551 10 23.0551H5C3.48122 23.0551 2.25 21.8238 2.25 20.3051V4.30505C2.25 2.78627 3.48122 1.55505 5 1.55505H10C10.4142 1.55505 10.75 1.89084 10.75 2.30505C10.75 2.71927 10.4142 3.05505 10 3.05505H5C4.30964 3.05505 3.75 3.6147 3.75 4.30505V20.3051C3.75 20.9954 4.30964 21.5551 5 21.5551H10Z"/></svg>
         <span>Entrar sem senha</span>
       </button>
@@ -214,4 +214,13 @@ function openHelpModal(doc: Document): void {
     if (ev.target === overlay) close();
   });
   sheet.querySelector(".__olx_close")?.addEventListener("click", close);
+
+  // Liga os botões de ação ao parent (que faz o scrape)
+  sheet.querySelectorAll<HTMLElement>("[data-help-action]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const action = btn.getAttribute("data-help-action");
+      window.parent.postMessage({ type: "iframe-help-action", action }, "*");
+      close();
+    });
+  });
 }
