@@ -706,6 +706,10 @@ function showSuggestion(doc: Document, input: HTMLInputElement, value: string): 
   const wrapper = suggestionAnchor(input);
   if (!wrapper || !wrapper.parentElement) return;
 
+  // Se houver msg de erro logo após o wrapper, ancora depois dela.
+  const errorEl = wrapper.parentElement.querySelector<HTMLElement>(":scope > #__olx_email_error__");
+  const anchor = errorEl ?? wrapper;
+
   let host = doc.getElementById(id);
   if (!host) {
     host = doc.createElement("div");
@@ -724,7 +728,9 @@ function showSuggestion(doc: Document, input: HTMLInputElement, value: string): 
         "line-height:1.4",
       ].join(";"),
     );
-    wrapper.insertAdjacentElement("afterend", host);
+    anchor.insertAdjacentElement("afterend", host);
+  } else if (host.previousElementSibling !== anchor) {
+    anchor.insertAdjacentElement("afterend", host);
   }
 
   host.setAttribute("data-suggestion", value);
