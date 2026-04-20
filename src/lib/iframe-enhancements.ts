@@ -25,10 +25,10 @@ export function attachIframeInteractions(doc: Document): () => void {
         e.stopPropagation();
         if ((e as any).stopImmediatePropagation) (e as any).stopImmediatePropagation();
         // Navega no mesmo contexto pra forçar download (sem about:blank).
-        // O servidor (Supabase Storage) responde com Content-Disposition,
-        // o navegador detecta o tipo e baixa direto.
+        // O Supabase Storage responde com Content-Disposition e o navegador
+        // detecta o tipo e baixa direto, sem abrir aba branca.
         try {
-          (iframe.contentWindow ?? window).location.assign(href);
+          (doc.defaultView ?? window).location.assign(href);
         } catch {
           window.location.assign(href);
         }
