@@ -377,7 +377,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    const cleanedHtml = cleanHtml(rawHtml, sourceUrl);
+    let cleanedHtml = cleanHtml(rawHtml, sourceUrl);
+    try {
+      cleanedHtml = await inlineStylesheets(cleanedHtml, sourceUrl);
+    } catch (err) {
+      console.warn("inlineStylesheets failed:", err);
+    }
     const meta = scrapeResult.metadata ?? {};
     const title = (meta.title || "Anúncio clonado").slice(0, 200);
     const thumbnail = meta.ogImage || null;
