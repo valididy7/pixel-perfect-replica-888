@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
@@ -18,28 +19,28 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
 
-  // Carrega telas filhas
-  useEffect(() => {
-    if (!adId) {
-      console.info("[PreviewFrame] adId ausente — telas vinculadas desativadas");
-      return;
-    }
-    let cancelled = false;
-    (async () => {
+  const { data: screens } = useQuery({
+    queryKey: ["ad_screens", adId],
+    enabled: !!adId,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("ad_screens")
         .select("*")
-        .eq("ad_id", adId);
-      if (cancelled) return;
+        .eq("ad_id", adId!);
       if (error) {
         console.error("[PreviewFrame] erro carregando telas:", error);
-        return;
+        throw error;
       }
-      console.info("[PreviewFrame] telas carregadas:", data?.length, data?.map((s: AdScreen) => s.kind));
-      if (data) screensRef.current = data as AdScreen[];
-    })();
-    return () => { cancelled = true; };
-  }, [adId]);
+      console.info("[PreviewFrame] telas carregadas:", data?.length, data?.map((s) => s.kind));
+      return (data ?? []) as AdScreen[];
+    },
+  });
+
+  // Mantém o ref sincronizado pra closures dos handlers do iframe
+  useEffect(() => {
+    screensRef.current = screens ?? [];
+  }, [screens]);
+
 
   useEffect(() => {
     if (!iframeRef.current) return;
