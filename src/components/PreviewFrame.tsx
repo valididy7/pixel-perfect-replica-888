@@ -74,18 +74,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (h && Math.abs(h - height) > 4) setHeight(h);
     };
 
-    const wrapWithBackBar = (rawHtml: string) => {
-      const bar = `<div style="position:sticky;top:0;left:0;right:0;z-index:2147483646;background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 14px;display:flex;align-items:center;gap:10px;font-family:'Open Sans',sans-serif;">
-        <button onclick="parent.postMessage({type:'iframe-back'},'*')" style="display:flex;align-items:center;gap:6px;background:transparent;border:0;cursor:pointer;font-size:14px;color:#6E0AD6;font-weight:600;padding:4px 8px;">
-          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#6E0AD6" d="M15.5 6.5c.3.3.3.8 0 1.1L11 12l4.5 4.5c.3.3.3.8 0 1.1s-.8.3-1.1 0l-5-5c-.3-.3-.3-.8 0-1.1l5-5c.3-.3.8-.3 1.1 0z"/></svg>
-          Voltar
-        </button>
-      </div>`;
-      if (/<body[^>]*>/i.test(rawHtml)) {
-        return rawHtml.replace(/<body[^>]*>/i, (m) => `${m}${bar}`);
-      }
-      return bar + rawHtml;
-    };
+    // (barra "Voltar" removida — usuário usa o voltar do dispositivo/navegador)
+
 
     const onLoad = () => {
       const doc = iframe.contentDocument;
@@ -116,20 +106,18 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const navigateToScreen = (screen: AdScreen) => {
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
-      const currentSrc = iframe.contentDocument?.documentElement?.outerHTML;
-      if (currentSrc) historyRef.current.push(currentSrc);
-      renderHtml(wrapWithBackBar(screenHtml));
+      renderHtml(screenHtml);
     };
 
     const onMessage = (e: MessageEvent) => {
       const data = e.data;
       if (!data || typeof data !== "object") return;
 
-      if (data.type === "iframe-help-action") {
-        console.info("[PreviewFrame] help-action recebido. adId=", adId, "telas=", screensRef.current.length, screensRef.current);
-        const screen = screensRef.current[0];
+      if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
+        const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
-          console.warn("[PreviewFrame] Nenhuma tela vinculada cadastrada (adId=" + adId + ")");
+          console.warn("[PreviewFrame] Nenhuma tela vinculada com kind=", data.action);
           return;
         }
         navigateToScreen(screen);
