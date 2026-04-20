@@ -172,6 +172,95 @@ function cleanHtml(rawHtml: string, sourceUrl: string): string {
   return html;
 }
 
+/**
+ * Baixa cada <link rel="stylesheet"> e substitui por <style> inline,
+ * reescrevendo url(...) e @import dentro do CSS pra absoluto.
+ * Limita 8 stylesheets e 5s por arquivo pra não estourar timeout.
+ */
+async function inlineStylesheets(html: string, sourceUrl: string): Promise<string> {
+  let base: URL;
+  try {
+    base = new URL(sourceUrl);
+  } catch {
+    return html;
+  }
+
+  const linkRegex = /<link\b[^>]*\brel\s*=\s*["']stylesheet["'][^>]*>/gi;
+  const matches = Array.from(html.matchAll(linkRegex)).slice(0, 8);
+  if (matches.length === 0) return html;
+
+  const replacements = await Promise.all(
+    matches.map(async (m) => {
+      const tag = m[0];
+      const hrefMatch = tag.match(/\bhref\s*=\s*["']([^"']+)["']/i);
+      if (!hrefMatch) return { tag, replacement: "" };
+
+      let href: string;
+      try {
+        href = new URL(hrefMatch[1], base).toString();
+      } catch {
+        return { tag, replacement: "" };
+      }
+
+      try {
+        const res = await fetch(href, {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+            Accept: "text/css,*/*;q=0.1",
+            Referer: sourceUrl,
+          },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) {
+          console.warn(`CSS fetch failed [${res.status}]: ${href}`);
+          return { tag, replacement: "" };
+        }
+        let css = await res.text();
+        const cssBase = new URL(href);
+
+        css = css.replace(
+          /url\(\s*(['"]?)((?!data:|https?:|\/\/|#)[^)'"]+)\1\s*\)/gi,
+          (_full, q, val) => {
+            try {
+              return `url(${q}${new URL(val, cssBase).toString()}${q})`;
+            } catch {
+              return `url(${q}${val}${q})`;
+            }
+          },
+        );
+
+        css = css.replace(
+          /@import\s+(?:url\(\s*)?(['"])([^'"]+)\1\s*\)?/gi,
+          (_full, q, val) => {
+            try {
+              return `@import ${q}${new URL(val, cssBase).toString()}${q}`;
+            } catch {
+              return `@import ${q}${val}${q}`;
+            }
+          },
+        );
+
+        return {
+          tag,
+          replacement: `<style data-inlined-from="${href}">\n${css}\n</style>`,
+        };
+      } catch (err) {
+        console.warn(`CSS fetch error: ${href}`, err);
+        return { tag, replacement: "" };
+      }
+    }),
+  );
+
+  let result = html;
+  for (const { tag, replacement } of replacements) {
+    if (replacement) {
+      result = result.replace(tag, replacement);
+    }
+  }
+  return result;
+}
+
 interface FirecrawlResult {
   html?: string;
   rawHtml?: string;
@@ -288,7 +377,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    const cleanedHtml = cleanHtml(rawHtml, sourceUrl);
+    let cleanedHtml = cleanHtml(rawHtml, sourceUrl);
+    try {
+      cleanedHtml = await inlineStylesheets(cleanedHtml, sourceUrl);
+    } catch (err) {
+      console.warn("inlineStylesheets failed:", err);
+    }
     const meta = scrapeResult.metadata ?? {};
     const title = (meta.title || "Anúncio clonado").slice(0, 200);
     const thumbnail = meta.ogImage || null;
