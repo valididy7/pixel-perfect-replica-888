@@ -26,6 +26,7 @@ import { PreviewFrame } from "@/components/PreviewFrame";
 import { FieldEditor } from "@/components/FieldEditor";
 import { ScreensPanel } from "@/components/ScreensPanel";
 import { LeadsPanel } from "@/components/LeadsPanel";
+import { DownloadFileUploader } from "@/components/DownloadFileUploader";
 import { toast } from "sonner";
 
 export default function EditorPage() {
@@ -296,8 +297,16 @@ export default function EditorPage() {
               className="mt-2"
             />
             <p className="mt-2 text-[11px] text-muted-foreground">
-              Cole o link do APK / ZIP. Botões com texto "Baixar", "Download" ou "Instalar" no anúncio vão apontar pra esse link.
+              Cole o link do APK / ZIP, ou suba o arquivo abaixo. Botões com texto "Baixar", "Download" ou "Instalar" no anúncio vão apontar pra esse link.
             </p>
+            <DownloadFileUploader
+              adId={ad.id}
+              currentUrl={downloadUrl}
+              onUploaded={(url) => {
+                setDownloadUrl(url);
+                setDirty(true);
+              }}
+            />
           </div>
 
           <FieldEditor
