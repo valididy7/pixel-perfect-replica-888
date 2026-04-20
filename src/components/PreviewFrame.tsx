@@ -4,6 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { AdScreen } from "@/types/screen";
+import {
+  applyLeadPlaceholders,
+  attachLeadCapture,
+  fetchSessionLeads,
+  getSessionId,
+  LeadValue,
+} from "@/lib/lead-capture";
 
 interface PreviewFrameProps {
   html: string;
@@ -19,6 +26,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
   const objectUrlsRef = useRef<string[]>([]);
+  const leadsRef = useRef<LeadValue[]>([]);
+  const currentScreenIdRef = useRef<string | null>(null);
 
   const { data: screens } = useQuery({
     queryKey: ["ad_screens", adId],
@@ -42,6 +51,31 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     screensRef.current = screens ?? [];
   }, [screens]);
 
+  // Hidrata leads da sessão atual (pra placeholders {{lead.email}}) + escuta realtime.
+  useEffect(() => {
+    if (!adId) return;
+    const sessionId = getSessionId();
+    let cancelled = false;
+    fetchSessionLeads(adId, sessionId).then((rows) => {
+      if (!cancelled) leadsRef.current = rows;
+    });
+    const channel = supabase
+      .channel(`lead-self-${adId}-${sessionId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "ad_leads", filter: `ad_id=eq.${adId}` },
+        (payload) => {
+          const row = payload.new as { session_id: string; field_name: string; value: string };
+          if (row.session_id !== sessionId) return;
+          leadsRef.current = [...leadsRef.current, { field_name: row.field_name, value: row.value }];
+        },
+      )
+      .subscribe();
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [adId]);
 
   useEffect(() => {
     if (!iframeRef.current) return;
@@ -54,6 +88,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         (m) => `${m}\n<meta name="viewport" content="width=device-width, initial-scale=1">`,
       );
     }
+    injected = applyLeadPlaceholders(injected, leadsRef.current);
 
     const renderHtml = (src: string) => {
       setHeight(800);
@@ -65,8 +100,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
     renderHtml(injected);
     let onChildScreen = false;
+    currentScreenIdRef.current = null;
 
     let detach: (() => void) | null = null;
+    let detachCapture: (() => void) | null = null;
     let resizeObs: ResizeObserver | null = null;
 
     const measure = () => {
@@ -87,6 +124,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         }
         if (detach) detach();
         detach = attachIframeInteractions(doc);
+        if (detachCapture) detachCapture();
+        if (adId) {
+          detachCapture = attachLeadCapture(doc, {
+            adId,
+            screenId: currentScreenIdRef.current,
+          });
+        }
         measure();
         const tries = [200, 600, 1200, 2500, 4000];
         tries.forEach((t) => setTimeout(measure, t));
@@ -127,11 +171,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
       onChildScreen = true;
-      renderHtml(screenHtml);
+      currentScreenIdRef.current = screen.id;
+      renderHtml(applyLeadPlaceholders(screenHtml, leadsRef.current));
     };
 
     const goBackToMain = () => {
       onChildScreen = false;
+      currentScreenIdRef.current = null;
       renderHtml(injected);
     };
 
@@ -177,13 +223,14 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       window.removeEventListener("popstate", onPageShow);
       clearRestoreTimers?.();
       if (detach) detach();
+      if (detachCapture) detachCapture();
       if (resizeObs) resizeObs.disconnect();
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       objectUrlsRef.current = [];
       historyRef.current = [];
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [html, mode]);
+  }, [html, mode, adId]);
 
   return (
     <iframe

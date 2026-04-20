@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_leads: {
+        Row: {
+          ad_id: string
+          created_at: string
+          field_name: string
+          id: string
+          screen_id: string | null
+          session_id: string
+          updated_at: string
+          user_agent: string | null
+          value: string
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          field_name: string
+          id?: string
+          screen_id?: string | null
+          session_id: string
+          updated_at?: string
+          user_agent?: string | null
+          value?: string
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          field_name?: string
+          id?: string
+          screen_id?: string | null
+          session_id?: string
+          updated_at?: string
+          user_agent?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_leads_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_leads_screen_id_fkey"
+            columns: ["screen_id"]
+            isOneToOne: false
+            referencedRelation: "ad_screens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_screens: {
         Row: {
           ad_id: string
