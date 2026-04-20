@@ -149,8 +149,9 @@ function openHelpModal(doc: Document): void {
       "background:rgba(0,0,0,.5)",
       "z-index:2147483647",
       "display:flex",
-      "align-items:flex-end",
+      "align-items:center",
       "justify-content:center",
+      "padding:16px",
       "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
     ].join(";"),
   );
@@ -161,11 +162,11 @@ function openHelpModal(doc: Document): void {
     [
       "background:#fff",
       "width:100%",
-      "max-width:480px",
-      "border-radius:16px 16px 0 0",
-      "padding:24px 20px 32px",
-      "box-shadow:0 -4px 24px rgba(0,0,0,.15)",
-      "animation:olxSlideUp .25s ease-out",
+      "max-width:420px",
+      "border-radius:16px",
+      "padding:24px 20px 28px",
+      "box-shadow:0 8px 32px rgba(0,0,0,.2)",
+      "animation:olxFadeIn .2s ease-out",
     ].join(";"),
   );
 
