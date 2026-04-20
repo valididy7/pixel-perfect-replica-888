@@ -301,6 +301,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         }
 
         console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
+        if (data.action === "back-one") {
+          goBackOne();
+          return;
+        }
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
           console.warn("[PreviewFrame] Nenhuma tela vinculada com kind=", data.action);
