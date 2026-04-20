@@ -65,6 +65,13 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
     qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
   };
 
+  const handleKindChange = async (id: string, newKind: string) => {
+    const { error } = await supabase.from("ad_screens").update({ kind: newKind }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Tipo atualizado");
+    qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
+  };
+
   const usedKinds = new Set(screens.map((s) => s.kind));
 
   return (
@@ -130,11 +137,18 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
         {screens.map((s) => (
           <div key={s.id} className="flex items-center justify-between gap-2 rounded-md border border-border bg-card/30 p-2.5">
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                  {SCREEN_KIND_LABELS[s.kind] || s.kind}
-                </span>
-              </div>
+              <Select value={s.kind} onValueChange={(v) => handleKindChange(s.id, v)}>
+                <SelectTrigger className="h-7 w-auto gap-1 border-0 bg-primary/10 px-1.5 py-0 text-[10px] font-semibold uppercase tracking-wide text-primary hover:bg-primary/20 focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["reactivate", "forgot-password", "passwordless", "register", "custom"] as ScreenKind[]).map((k) => (
+                    <SelectItem key={k} value={k} disabled={k !== "custom" && k !== s.kind && usedKinds.has(k)}>
+                      {SCREEN_KIND_LABELS[k]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <p className="mt-1 truncate text-xs text-muted-foreground" title={s.source_url || ""}>
                 {s.source_url}
               </p>
