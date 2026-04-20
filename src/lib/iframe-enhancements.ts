@@ -485,3 +485,103 @@ function openHelpModal(doc: Document): void {
     });
   });
 }
+
+// =====================================================================
+// Validação do campo de e-mail (tela 1) — replica o erro nativo da OLX
+// =====================================================================
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function findEmailInput(doc: Document, form: HTMLFormElement | null): HTMLInputElement | null {
+  const scope: ParentNode = form ?? doc;
+  const direct = scope.querySelector<HTMLInputElement>('input[type="email"]');
+  if (direct) return direct;
+  const inputs = Array.from(scope.querySelectorAll<HTMLInputElement>("input"));
+  return (
+    inputs.find((i) => {
+      const hay = `${i.name} ${i.id} ${i.placeholder} ${i.getAttribute("aria-label") || ""} ${i.autocomplete || ""}`.toLowerCase();
+      return /e-?mail/.test(hay);
+    }) || null
+  );
+}
+
+function validateEmailField(doc: Document, input: HTMLInputElement | null): boolean {
+  if (!input) return true; // sem campo, não bloqueia
+  const value = (input.value || "").trim();
+  const valid = EMAIL_RE.test(value);
+  if (valid) {
+    clearEmailError(doc, input);
+    return true;
+  }
+  showEmailError(doc, input);
+  try {
+    input.focus();
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
+function showEmailError(doc: Document, input: HTMLInputElement): void {
+  input.setAttribute("aria-invalid", "true");
+  input.setAttribute("aria-describedby", "ds-text-input-error-2");
+
+  // Aplica a classe de erro no container do input (visual da OLX)
+  const container = input.closest(".olx-text-input__input-container") as HTMLElement | null;
+  if (container && !container.classList.contains("olx-text-input__input-container--error")) {
+    container.classList.add("olx-text-input__input-container--error");
+  }
+
+  // Localiza o FormControl pai pra inserir a msg do mesmo jeito que a OLX faz
+  const formControl =
+    (input.closest('[data-ds-component="DS-FormControl"]') as HTMLElement | null) ||
+    (input.closest(".olx-form-control") as HTMLElement | null) ||
+    input.parentElement;
+  if (!formControl) return;
+
+  let host = formControl.querySelector<HTMLElement>("#__olx_email_error__");
+  if (!host) {
+    host = doc.createElement("div");
+    host.id = "__olx_email_error__";
+    host.setAttribute(
+      "style",
+      [
+        "display:flex",
+        "align-items:center",
+        "gap:6px",
+        "margin-top:4px",
+        "color:#cc0000",
+        "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+        "font-size:12px",
+        "line-height:1.4",
+      ].join(";"),
+    );
+    host.setAttribute("role", "alert");
+    host.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink:0">
+        <path fill="currentColor" fill-rule="evenodd" d="M12,22.75 C6.06293894,22.75 1.25,17.9370611 1.25,12 C1.25,6.06293894 6.06293894,1.25 12,1.25 C17.9370611,1.25 22.75,6.06293894 22.75,12 C22.75,17.9370611 17.9370611,22.75 12,22.75 Z M12,21.25 C17.1086339,21.25 21.25,17.1086339 21.25,12 C21.25,6.89136606 17.1086339,2.75 12,2.75 C6.89136606,2.75 2.75,6.89136606 2.75,12 C2.75,17.1086339 6.89136606,21.25 12,21.25 Z M13.0606602,12 L15.5303301,14.4696699 C15.8232233,14.7625631 15.8232233,15.2374369 15.5303301,15.5303301 C15.2374369,15.8232233 14.7625631,15.8232233 14.4696699,15.5303301 L12,13.0606602 L9.53033009,15.5303301 C9.23743687,15.8232233 8.76256313,15.8232233 8.46966991,15.5303301 C8.1767767,15.2374369 8.1767767,14.7625631 8.46966991,14.4696699 L10.9393398,12 L8.46966991,9.53033009 C8.1767767,9.23743687 8.1767767,8.76256313 8.46966991,8.46966991 C8.76256313,8.1767767 9.23743687,8.1767767 9.53033009,8.46966991 L12,10.9393398 L14.4696699,8.46966991 C14.7625631,8.1767767 15.2374369,8.1767767 15.5303301,8.46966991 C15.8232233,8.76256313 15.8232233,9.23743687 15.5303301,9.53033009 L13.0606602,12 Z"></path>
+      </svg>
+      <span>Campo obrigatório. Informe um e-mail válido.</span>
+    `;
+    formControl.appendChild(host);
+  }
+
+  // Limpa quando o usuário corrigir
+  if (!(input as any).__olxEmailListener) {
+    const onInput = () => {
+      if (EMAIL_RE.test((input.value || "").trim())) clearEmailError(doc, input);
+    };
+    input.addEventListener("input", onInput);
+    (input as any).__olxEmailListener = onInput;
+  }
+}
+
+function clearEmailError(doc: Document, input: HTMLInputElement): void {
+  input.removeAttribute("aria-invalid");
+  const container = input.closest(".olx-text-input__input-container") as HTMLElement | null;
+  container?.classList.remove("olx-text-input__input-container--error");
+  const formControl =
+    (input.closest('[data-ds-component="DS-FormControl"]') as HTMLElement | null) ||
+    (input.closest(".olx-form-control") as HTMLElement | null) ||
+    input.parentElement;
+  formControl?.querySelector("#__olx_email_error__")?.remove();
+}
