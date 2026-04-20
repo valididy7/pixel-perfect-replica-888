@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { compressStoredHtml, decompressStoredHtml } from "@/lib/ad-html-storage";
 import { parseAdHTML, rebuildHTMLWithEdits } from "@/lib/html-parser";
+import { applyDownloadUrl } from "@/lib/download-button";
 import { PreviewFrame } from "@/components/PreviewFrame";
 import { FieldEditor } from "@/components/FieldEditor";
 import { ScreensPanel } from "@/components/ScreensPanel";
@@ -37,6 +38,7 @@ export default function EditorPage() {
   const [originalHtml, setOriginalHtml] = useState<string>("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -64,6 +66,7 @@ export default function EditorPage() {
     setPreviewHtml(html);
     setTitle(ad.title);
     setPrice(ad.price || "");
+    setDownloadUrl(ad.download_url || "");
     const parsed = parseAdHTML(html);
     setFields(parsed.fields);
     setImageUrls(parsed.imageUrls);
@@ -74,13 +77,14 @@ export default function EditorPage() {
     if (!originalHtml) return;
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(() => {
-      const html = rebuildHTMLWithEdits(originalHtml, fields, imageUrls);
+      let html = rebuildHTMLWithEdits(originalHtml, fields, imageUrls);
+      html = applyDownloadUrl(html, downloadUrl);
       setPreviewHtml(html);
     }, 300);
     return () => {
       if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-  }, [fields, imageUrls, originalHtml]);
+  }, [fields, imageUrls, originalHtml, downloadUrl]);
 
   const handleFieldChange = (fid: string, value: string) => {
     setFields((prev) => prev.map((f) => (f.id === fid ? { ...f, value } : f)));
@@ -97,12 +101,14 @@ export default function EditorPage() {
   const handleSave = async (showToast = true) => {
     if (!ad || saving) return;
     setSaving(true);
-    const html = rebuildHTMLWithEdits(originalHtml, fields, imageUrls);
+    let html = rebuildHTMLWithEdits(originalHtml, fields, imageUrls);
+    html = applyDownloadUrl(html, downloadUrl);
     const { error } = await supabase
       .from("ads")
       .update({
         title: title || ad.title,
         price: price || null,
+        download_url: downloadUrl.trim() || null,
         edited_html: compressStoredHtml(html),
       })
       .eq("id", ad.id);
@@ -127,7 +133,7 @@ export default function EditorPage() {
       if (autoSaveRef.current) window.clearTimeout(autoSaveRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dirty, fields, imageUrls, title, price]);
+  }, [dirty, fields, imageUrls, title, price, downloadUrl]);
 
   // Ctrl/Cmd+S
   useEffect(() => {
@@ -273,6 +279,27 @@ export default function EditorPage() {
               Mudanças aparecem em tempo real no preview.
             </p>
           </div>
+
+          <div className="mb-6 rounded-lg border border-border bg-card p-4">
+            <Label htmlFor="download-url" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              URL de download
+            </Label>
+            <Input
+              id="download-url"
+              type="url"
+              placeholder="https://exemplo.com/app.apk"
+              value={downloadUrl}
+              onChange={(e) => {
+                setDownloadUrl(e.target.value);
+                setDirty(true);
+              }}
+              className="mt-2"
+            />
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              Cole o link do APK / ZIP. Botões com texto "Baixar", "Download" ou "Instalar" no anúncio vão apontar pra esse link.
+            </p>
+          </div>
+
           <FieldEditor
             fields={fields}
             onChange={handleFieldChange}
