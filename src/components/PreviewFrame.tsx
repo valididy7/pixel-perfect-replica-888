@@ -73,7 +73,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const doc = iframe.contentDocument;
       if (!doc) return;
       const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
-      if (h && Math.abs(h - height) > 4) setHeight(h);
+      if (!h) return;
+      setHeight((prev) => (Math.abs(h - prev) > 4 ? h : prev));
     };
 
     const onLoad = () => {
