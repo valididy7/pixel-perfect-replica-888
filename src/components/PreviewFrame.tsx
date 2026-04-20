@@ -197,8 +197,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const navigateToScreen = (screen: AdScreen) => {
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
-      onChildScreen = true;
-      currentScreenIdRef.current = screen.id;
       let nextHtml = applyLeadPlaceholders(screenHtml, leadsRef.current);
       const capturedEmail = capturedEmailRef.current.trim();
       if (capturedEmail && (screen.kind === "access-account" || screen.kind === "password" || screen.kind === "email-code")) {
@@ -207,12 +205,25 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           `$1${capturedEmail}$3`,
         );
       }
+      // Empilha o HTML atual pra permitir "voltar" pra tela anterior em vez de pular pra tela mãe
+      historyRef.current.push(currentHtmlRef.current);
+      onChildScreen = true;
+      currentScreenIdRef.current = screen.id;
+      currentHtmlRef.current = nextHtml;
       renderHtml(nextHtml);
     };
 
     const goBackToMain = () => {
+      const prev = historyRef.current.pop();
+      if (prev && prev !== injected) {
+        currentHtmlRef.current = prev;
+        renderHtml(prev);
+        return;
+      }
       onChildScreen = false;
       currentScreenIdRef.current = null;
+      historyRef.current = [];
+      currentHtmlRef.current = injected;
       renderHtml(injected);
     };
 
