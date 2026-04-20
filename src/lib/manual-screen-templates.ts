@@ -327,10 +327,17 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
     </div>
 
 
-    <div class="loading-row" id="loading-row">
-      <div class="spinner"></div>
-      <span>Verificando código...</span>
+    <div class="loading-row" id="loading-row" aria-hidden="true"></div>
+  </main>
+
+  <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+    <div class="box">
+      <div class="big-spinner"></div>
+      <div class="label">Verificando código...</div>
     </div>
+  </div>
+
+  <main style="display:none">
 
     <div class="alertbox" role="status">
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
