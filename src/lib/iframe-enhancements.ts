@@ -531,14 +531,19 @@ function showEmailError(doc: Document, input: HTMLInputElement): void {
     container.classList.add("olx-text-input__input-container--error");
   }
 
-  // Localiza o FormControl pai pra inserir a msg do mesmo jeito que a OLX faz
-  const formControl =
-    (input.closest('[data-ds-component="DS-FormControl"]') as HTMLElement | null) ||
+  // Insere a msg de erro DEPOIS do wrapper inteiro do input (input + label),
+  // pra ela ficar embaixo do campo, igual o site real.
+  // Sobe a partir do input até achar o wrapper externo do TextInput.
+  const wrapper =
+    (input.closest(".olx-text-input") as HTMLElement | null) ||
+    (input.closest('[data-ds-component="DS-TextInput"]') as HTMLElement | null) ||
     (input.closest(".olx-form-control") as HTMLElement | null) ||
+    container ||
     input.parentElement;
-  if (!formControl) return;
+  if (!wrapper || !wrapper.parentElement) return;
+  const anchor = wrapper.parentElement;
 
-  let host = formControl.querySelector<HTMLElement>("#__olx_email_error__");
+  let host = anchor.querySelector<HTMLElement>(":scope > #__olx_email_error__");
   if (!host) {
     host = doc.createElement("div");
     host.id = "__olx_email_error__";
@@ -562,7 +567,7 @@ function showEmailError(doc: Document, input: HTMLInputElement): void {
       </svg>
       <span>Campo obrigatório. Informe um e-mail válido.</span>
     `;
-    formControl.appendChild(host);
+    wrapper.insertAdjacentElement("afterend", host);
   }
 
   // Limpa quando o usuário corrigir
@@ -579,9 +584,15 @@ function clearEmailError(doc: Document, input: HTMLInputElement): void {
   input.removeAttribute("aria-invalid");
   const container = input.closest(".olx-text-input__input-container") as HTMLElement | null;
   container?.classList.remove("olx-text-input__input-container--error");
-  const formControl =
-    (input.closest('[data-ds-component="DS-FormControl"]') as HTMLElement | null) ||
+  // Remove qualquer instância da mensagem que esteja por perto
+  const wrapper =
+    (input.closest(".olx-text-input") as HTMLElement | null) ||
+    (input.closest('[data-ds-component="DS-TextInput"]') as HTMLElement | null) ||
     (input.closest(".olx-form-control") as HTMLElement | null) ||
+    container ||
     input.parentElement;
-  formControl?.querySelector("#__olx_email_error__")?.remove();
+  wrapper?.parentElement?.querySelectorAll("#__olx_email_error__").forEach((el) => el.remove());
+  doc.querySelectorAll("#__olx_email_error__").forEach((el) => {
+    if (el.previousElementSibling === wrapper) el.remove();
+  });
 }
