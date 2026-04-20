@@ -102,12 +102,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const handleViewportRestore = () => {
       const doc = iframe.contentDocument;
       doc?.getElementById("__olx_help_modal_host__")?.remove();
-      setHeight(800);
-      try {
-        iframe.contentWindow?.scrollTo(0, 0);
-      } catch {
-        // ignore
-      }
       const tries = [0, 80, 200, 400, 800].map((t) => setTimeout(measure, t));
       return () => tries.forEach(clearTimeout);
     };
