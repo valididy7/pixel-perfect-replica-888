@@ -282,8 +282,12 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .back-link{background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:0;text-decoration:none}
   .back-link:hover{text-decoration:underline}
   .code-error{display:none;color:#c0392b;font-size:13px;margin:-4px 0 12px;text-align:center}
-  .loading-row{display:none;align-items:center;justify-content:center;gap:10px;padding:14px 0;color:#6b6b6b;font-size:14px}
-  .loading-row .spinner{width:18px;height:18px;border:2px solid #e5e7eb;border-top-color:#6E0AD6;border-radius:50%;animation:olxSpin .9s linear infinite}
+  .loading-row{display:none}
+  .loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+  .loading-overlay.show{display:flex}
+  .loading-overlay .box{background:#fff;border-radius:14px;padding:28px 36px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 12px 40px rgba(0,0,0,.3);min-width:200px}
+  .loading-overlay .big-spinner{width:48px;height:48px;border:4px solid #ede3fb;border-top-color:#6E0AD6;border-radius:50%;animation:olxSpin .9s linear infinite}
+  .loading-overlay .label{color:#1a1a1a;font-size:14px;font-weight:500}
   @keyframes olxSpin{to{transform:rotate(360deg)}}
 </style>
 </head>
