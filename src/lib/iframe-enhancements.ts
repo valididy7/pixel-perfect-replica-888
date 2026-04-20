@@ -74,6 +74,17 @@ export function attachIframeInteractions(doc: Document): () => void {
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (a) {
       const linkText = (a.textContent || "").trim().toLowerCase();
+      // Botão "voltar" do header da OLX → desempilha um nível (volta pra tela anterior)
+      const isHeaderBack =
+        a.classList.contains("olx-focus-header__goback") ||
+        a.closest(".olx-focus-header__goback") !== null ||
+        (a.getAttribute("aria-label") || "").toLowerCase().includes("voltar");
+      if (isHeaderBack) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: "iframe-help-action", action: "back-one" }, "*");
+        return;
+      }
       // Texto "cadastre-se" / "cadastrar" → vira ação de tela "register"
       if (/cadastr[ae]/.test(linkText)) {
         e.preventDefault();
@@ -87,6 +98,15 @@ export function attachIframeInteractions(doc: Document): () => void {
         window.parent.postMessage({ type: "iframe-link-click", url: a.href }, "*");
         return;
       }
+    }
+
+    // Botões com aria-label "voltar" (ex.: <button> do header) → desempilha um nível
+    const backBtn = target.closest('[aria-label*="oltar" i], .olx-focus-header__goback') as HTMLElement | null;
+    if (backBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.parent.postMessage({ type: "iframe-help-action", action: "back-one" }, "*");
+      return;
     }
 
     const buyBtn = target.closest('[data-action="buy"], [data-testid*="buy" i], [data-testid*="chat" i]');
