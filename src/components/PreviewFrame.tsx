@@ -60,9 +60,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const url = URL.createObjectURL(blob);
       objectUrlsRef.current.push(url);
       iframe.src = url;
+      return url;
     };
 
-    renderHtml(injected);
+    const baseUrl = renderHtml(injected);
+    let currentUrl = baseUrl;
     let onChildScreen = false;
 
     let detach: (() => void) | null = null;
@@ -75,11 +77,14 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (h && Math.abs(h - height) > 4) setHeight(h);
     };
 
-    // (barra "Voltar" removida — usuário usa o voltar do dispositivo/navegador)
-
-
     const onLoad = () => {
       const doc = iframe.contentDocument;
+      try {
+        currentUrl = iframe.contentWindow?.location.href || currentUrl;
+        onChildScreen = currentUrl !== baseUrl;
+      } catch {
+        // ignore
+      }
       if (doc) {
         if (detach) detach();
         detach = attachIframeInteractions(doc);
@@ -107,13 +112,21 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const navigateToScreen = (screen: AdScreen) => {
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
+      currentUrl = renderHtml(screenHtml);
       onChildScreen = true;
-      renderHtml(screenHtml);
     };
 
     const goBackToMain = () => {
+      try {
+        if (iframe.contentWindow && currentUrl !== baseUrl) {
+          iframe.contentWindow.history.back();
+          return;
+        }
+      } catch {
+        // ignore
+      }
+      currentUrl = renderHtml(injected);
       onChildScreen = false;
-      renderHtml(injected);
     };
 
     const onMessage = (e: MessageEvent) => {
