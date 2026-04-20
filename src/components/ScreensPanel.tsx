@@ -3,11 +3,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AdScreen, ScreenKind, SCREEN_KIND_LABELS } from "@/types/screen";
+import { MANUAL_SCREEN_TEMPLATES } from "@/lib/manual-screen-templates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, ExternalLink, Trash2, Edit3 } from "lucide-react";
+import { Loader2, Plus, ExternalLink, Trash2, Edit3, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 interface ScreensPanelProps {
