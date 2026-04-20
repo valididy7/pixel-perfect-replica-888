@@ -161,42 +161,36 @@ function enhanceForms(doc: Document): void {
   const allInputs = Array.from(doc.querySelectorAll<HTMLInputElement>("input"));
 
   const isCpfInput = (el: HTMLInputElement) => {
-    const hay = [
-      el.name,
-      el.id,
-      el.placeholder,
-      el.getAttribute("aria-label") || "",
-      el.autocomplete || "",
-    ]
-      .join(" ")
-      .toLowerCase();
-    return /cpf/.test(hay);
+    const hay = [el.name, el.id, el.placeholder, el.getAttribute("aria-label") || "", el.autocomplete || ""].join(" ").toLowerCase();
+    return /cpf/.test(hay) && !/cnpj/.test(hay);
+  };
+
+  const isCnpjInput = (el: HTMLInputElement) => {
+    const hay = [el.name, el.id, el.placeholder, el.getAttribute("aria-label") || "", el.autocomplete || ""].join(" ").toLowerCase();
+    return /cnpj/.test(hay);
   };
 
   const isNameInput = (el: HTMLInputElement) => {
-    const hay = [
-      el.name,
-      el.id,
-      el.placeholder,
-      el.getAttribute("aria-label") || "",
-      el.autocomplete || "",
-    ]
-      .join(" ")
-      .toLowerCase();
+    const hay = [el.name, el.id, el.placeholder, el.getAttribute("aria-label") || "", el.autocomplete || ""].join(" ").toLowerCase();
     return /(nome|name)/.test(hay) && !/user|usuario|email|sobrenome/.test(hay);
   };
 
   const formatCpf = (raw: string) => {
     const digits = raw.replace(/\D/g, "").slice(0, 11);
     let out = digits;
-    if (digits.length > 9) {
-      out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-    } else if (digits.length > 6) {
-      out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-    } else if (digits.length > 3) {
-      out = `${digits.slice(0, 3)}.${digits.slice(3)}`;
-    }
+    if (digits.length > 9) out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+    else if (digits.length > 6) out = `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    else if (digits.length > 3) out = `${digits.slice(0, 3)}.${digits.slice(3)}`;
     return out;
+  };
+
+  const formatCnpj = (raw: string) => {
+    const d = raw.replace(/\D/g, "").slice(0, 14);
+    if (d.length > 12) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+    if (d.length > 8) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8)}`;
+    if (d.length > 5) return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5)}`;
+    if (d.length > 2) return `${d.slice(0, 2)}.${d.slice(2)}`;
+    return d;
   };
 
   allInputs.forEach((input) => {
@@ -206,11 +200,22 @@ function enhanceForms(doc: Document): void {
       input.setAttribute("inputmode", "numeric");
       input.setAttribute("maxlength", "14");
       input.setAttribute("autocomplete", "off");
-      const onInput = () => {
-        const formatted = formatCpf(input.value);
-        if (input.value !== formatted) input.value = formatted;
-      };
-      input.addEventListener("input", onInput);
+      input.addEventListener("input", () => {
+        const f = formatCpf(input.value);
+        if (input.value !== f) input.value = f;
+      });
+      (input as any).dataset.olxEnhanced = "1";
+      return;
+    }
+
+    if (isCnpjInput(input)) {
+      input.setAttribute("inputmode", "numeric");
+      input.setAttribute("maxlength", "18");
+      input.setAttribute("autocomplete", "off");
+      input.addEventListener("input", () => {
+        const f = formatCnpj(input.value);
+        if (input.value !== f) input.value = f;
+      });
       (input as any).dataset.olxEnhanced = "1";
       return;
     }
@@ -222,7 +227,6 @@ function enhanceForms(doc: Document): void {
       return;
     }
 
-    // Limite genérico pra qualquer outro input de texto sem maxlength
     const type = (input.type || "text").toLowerCase();
     if (["text", "email", "tel", "search", "url", "password"].includes(type) && !input.hasAttribute("maxlength")) {
       input.setAttribute("maxlength", "120");
@@ -236,7 +240,6 @@ function enhanceForms(doc: Document): void {
 function injectFakeTurnstile(doc: Document): void {
   if (doc.getElementById("__olx_turnstile_fake__")) return;
 
-  // Procura algum container que pareça ser o Turnstile/Cloudflare
   const candidates = Array.from(
     doc.querySelectorAll<HTMLElement>(
       '.cf-turnstile, [class*="turnstile" i], [data-sitekey], iframe[src*="challenges.cloudflare"], iframe[src*="turnstile"]',
@@ -248,7 +251,6 @@ function injectFakeTurnstile(doc: Document): void {
     const node = candidates[0];
     host = (node.closest('[class*="turnstile" i], .cf-turnstile') as HTMLElement | null) || node.parentElement || node;
   } else {
-    // Fallback: procura por texto "verificando" / "verifying" no formulário
     const textHit = Array.from(doc.querySelectorAll<HTMLElement>("form *")).find((el) => {
       const t = (el.textContent || "").trim().toLowerCase();
       return t.length < 60 && /(verificando|verifying|sou humano|not a robot)/.test(t);
@@ -266,23 +268,35 @@ function injectFakeTurnstile(doc: Document): void {
     [
       "display:flex",
       "align-items:center",
+      "justify-content:space-between",
       "gap:12px",
       "padding:10px 14px",
-      "border:1px solid #e0e0e0",
-      "border-radius:8px",
+      "border:1px solid #e5e7eb",
+      "border-radius:6px",
       "background:#fafafa",
-      "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
+      "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
       "font-size:14px",
       "color:#1a1a1a",
-      "max-width:320px",
+      "max-width:303px",
+      "width:100%",
+      "box-sizing:border-box",
+      "min-height:65px",
     ].join(";"),
   );
   wrapper.innerHTML = `
-    <div id="__olx_ts_indicator__" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <div style="width:18px;height:18px;border:2px solid #d0d0d0;border-top-color:#f48120;border-radius:50%;animation:olxSpin .8s linear infinite;"></div>
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+      <div id="__olx_ts_indicator__" style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:20px;height:20px;border:3px solid #e5e7eb;border-top-color:#f48120;border-radius:50%;animation:olxSpin .9s linear infinite;"></div>
+      </div>
+      <span id="__olx_ts_label__" style="color:#1a1a1a;">Verificando se você é humano...</span>
     </div>
-    <span id="__olx_ts_label__" style="flex:1;">Verificando...</span>
-    <span style="font-size:11px;color:#888;">Cloudflare</span>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;">
+      <svg width="34" height="14" viewBox="0 0 88 36" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#f48120" d="M55.7 26.3l.5-1.7c.6-2 .4-3.9-.6-5.2-.9-1.3-2.4-2-4.2-2.1l-34.4-.4c-.2 0-.4-.1-.5-.3-.1-.2-.1-.4-.1-.6.1-.3.4-.5.7-.5l34.7-.4c4.1-.2 8.6-3.5 10.2-7.6l2-5.2c.1-.2.1-.4.1-.6C61.7 1 55.5 0 49.3 0 33.7 0 20.6 10 16.6 24c-2.6-.2-4.7 2.5-4.3 5 .4 2.1 2.2 3.7 4.4 4 .3 0 .6 0 .9-.1l34.4-.4c2.5-.1 4.7-1.7 5.7-4l-2-2.2z"/>
+        <path fill="#faae40" d="M67.3 9.7c-.3 0-.6 0-.9.1-.2 0-.4.2-.5.4l-1.4 4.7c-.6 2-.4 3.9.6 5.2.9 1.3 2.4 2 4.2 2.1l7.3.4c.2 0 .4.1.5.3.1.2.1.4.1.6-.1.3-.4.5-.7.5l-7.6.4c-4.1.2-8.6 3.5-10.2 7.6l-.6 1.5c-.1.3.1.6.4.6h26.1c.3 0 .6-.2.7-.5 1.1-3.6 1.7-7.4 1.7-11.4 0-6.3-1.4-12.3-3.9-17.6-.1-.2-.4-.3-.6-.3-.6.1-1.2.2-1.8.4-4.4 1.3-8.5 3.5-12.1 6.5"/>
+      </svg>
+      <span style="font-size:9px;color:#999;line-height:1;">Privacidade • Termos</span>
+    </div>
     <style>@keyframes olxSpin{to{transform:rotate(360deg)}}</style>
   `;
   host.appendChild(wrapper);
@@ -292,9 +306,10 @@ function injectFakeTurnstile(doc: Document): void {
     const label = wrapper.querySelector<HTMLElement>("#__olx_ts_label__");
     if (indicator) {
       indicator.innerHTML = `
-        <div style="width:22px;height:22px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </div>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#16a34a"/>
+          <polyline points="7 12.5 10.5 16 17 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       `;
     }
     if (label) label.textContent = "Sucesso!";
