@@ -259,10 +259,10 @@ export default function EditorPage() {
         </aside>
 
         {/* Preview */}
-        <main className="relative flex-1 overflow-hidden bg-gradient-subtle p-6">
-          <div className="absolute inset-0 bg-gradient-glow opacity-30" />
+        <main className="relative flex-1 overflow-auto bg-gradient-subtle p-6">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-glow opacity-30" />
           <div
-            className={`relative mx-auto h-full overflow-hidden rounded-xl border border-border bg-white shadow-elegant transition-all duration-300 ${
+            className={`relative mx-auto h-full min-h-[600px] overflow-hidden rounded-xl border border-border bg-white shadow-elegant transition-all duration-300 ${
               mode === "mobile" ? "max-w-[420px]" : "max-w-full"
             }`}
           >
