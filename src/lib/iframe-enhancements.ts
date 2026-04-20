@@ -140,7 +140,9 @@ export function attachIframeInteractions(doc: Document): () => void {
  * Modal "Como podemos ajudar?" recriado e injetado dentro do iframe.
  */
 function openHelpModal(doc: Document): void {
-  if (doc.getElementById("__olx_help_modal__")) return;
+  console.info("[help-modal] abrindo. já existe?", !!doc.getElementById("__olx_help_modal__"));
+  // Remove qualquer modal residual antes de abrir um novo
+  doc.getElementById("__olx_help_modal__")?.remove();
 
   const overlay = doc.createElement("div");
   overlay.id = "__olx_help_modal__";
