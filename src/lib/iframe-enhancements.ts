@@ -10,10 +10,10 @@ export function attachIframeInteractions(doc: Document): () => void {
     const target = e.target as HTMLElement | null;
     if (!target) return;
 
-    // Intercepta "Precisa de ajuda?" e abre o modal customizado
-    const helpHost = target.closest("a, button, [role='button']") as HTMLElement | null;
+    // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado
+    const helpHost = target.closest("a, button, div, span, [role='button']") as HTMLElement | null;
     const helpText = (helpHost?.textContent || target.textContent || "").trim().toLowerCase();
-    if (helpText.includes("precisa de ajuda")) {
+    if (/precis[oa]\s+de\s+ajuda/.test(helpText)) {
       e.preventDefault();
       e.stopPropagation();
       openHelpModal(doc);
