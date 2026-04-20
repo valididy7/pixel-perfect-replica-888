@@ -136,7 +136,7 @@ export default function EditorPage() {
       if (autoSaveRef.current) window.clearTimeout(autoSaveRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dirty, fields, imageUrls, title, price]);
+  }, [dirty, fields, imageUrls, title, price, helpReactivateUrl, helpForgotPasswordUrl, helpPasswordlessUrl]);
 
   // Ctrl/Cmd+S
   useEffect(() => {
