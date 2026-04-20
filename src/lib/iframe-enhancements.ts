@@ -34,6 +34,13 @@ export function attachIframeInteractions(doc: Document): () => void {
     // Botão "Acessar" (submit do form de login da tela 1) → abre tela "access-account"
     const clickable = target.closest("button, a, input[type='submit'], [role='button']") as HTMLElement | null;
     if (clickable) {
+      // Botão "Voltar" das telas manuais (senha / e-mail) → desempilha um nível
+      if (clickable.getAttribute("data-action") === "back") {
+        e.preventDefault();
+        e.stopPropagation();
+        window.parent.postMessage({ type: "iframe-help-action", action: "back-one" }, "*");
+        return;
+      }
       // Botões da tela "Acesse sua conta" com data-method (e-mail / senha)
       const method = clickable.getAttribute("data-method");
       if (method === "password") {
