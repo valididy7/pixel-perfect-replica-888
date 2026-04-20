@@ -256,6 +256,7 @@ function enhanceForms(doc: Document): void {
 }
 
 function injectFakeTurnstile(doc: Document): void {
+  // (helpers de validação de e-mail estão definidos no fim do arquivo)
   if (doc.getElementById("__olx_turnstile_fake__")) return;
 
   const candidates = Array.from(
