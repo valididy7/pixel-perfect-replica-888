@@ -346,10 +346,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   </main>
 
   <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
-    <div class="box">
-      <div class="big-spinner"></div>
-      <div class="label">Verificando código...</div>
-    </div>
+    <div class="big-spinner"></div>
   </div>
 
   <script>
