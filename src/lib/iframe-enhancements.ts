@@ -13,8 +13,28 @@ export function attachIframeInteractions(doc: Document): () => void {
     // Não intercepta cliques dentro do modal de ajuda customizado
     if (target.closest("#__olx_help_modal__")) return;
 
-    // Libera cliques de download injetados no HTML clonado
-    if (target.closest('[data-download-trigger="1"]')) return;
+    // Cliques de download (botão marcado OU <a download> OU link pro nosso storage):
+    // dispara o download e bloqueia os outros handlers do iframe
+    const dlEl = target.closest('[data-download-trigger="1"], a[download]') as HTMLElement | null;
+    const aHref = (target.closest("a") as HTMLAnchorElement | null)?.href || "";
+    const isStorageLink = /\/storage\/v1\/object\/public\/ad-downloads\//.test(aHref);
+    if (dlEl || isStorageLink) {
+      const href = (dlEl?.getAttribute("href") || aHref || "").trim();
+      if (href) {
+        e.preventDefault();
+        e.stopPropagation();
+        if ((e as any).stopImmediatePropagation) (e as any).stopImmediatePropagation();
+        const a = doc.createElement("a");
+        a.href = href;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.setAttribute("download", "");
+        doc.body.appendChild(a);
+        a.click();
+        setTimeout(() => a.remove(), 200);
+      }
+      return;
+    }
 
     // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado.
     let node: HTMLElement | null = target;
