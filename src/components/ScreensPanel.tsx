@@ -249,6 +249,23 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
                   <Edit3 className="h-3.5 w-3.5" />
                 </Link>
               </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0"
+                aria-label="Copiar HTML"
+                title="Copiar código-fonte"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(s.edited_html || s.original_html || "");
+                    toast.success("HTML copiado!");
+                  } catch {
+                    toast.error("Falha ao copiar");
+                  }
+                }}
+              >
+                <Code2 className="h-3.5 w-3.5" />
+              </Button>
               {s.source_url && (
                 <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" aria-label="Abrir URL original">
                   <a href={s.source_url} target="_blank" rel="noreferrer">
