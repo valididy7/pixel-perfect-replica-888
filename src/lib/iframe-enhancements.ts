@@ -10,10 +10,20 @@ export function attachIframeInteractions(doc: Document): () => void {
     const target = e.target as HTMLElement | null;
     if (!target) return;
 
-    // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado
-    const helpHost = target.closest("a, button, div, span, [role='button']") as HTMLElement | null;
-    const helpText = (helpHost?.textContent || target.textContent || "").trim().toLowerCase();
-    if (/precis[oa]\s+de\s+ajuda/.test(helpText)) {
+    // Intercepta o bloco "Preciso/Precisa de ajuda" e abre o modal customizado.
+    // Procura o ancestral mais próximo cujo texto seja CURTO e bata no padrão
+    // (evita pegar o card inteiro do login).
+    let node: HTMLElement | null = target;
+    let helpHit = false;
+    for (let i = 0; i < 6 && node; i++) {
+      const t = (node.textContent || "").trim().toLowerCase();
+      if (t.length <= 40 && /precis[oa]\s+de\s+ajuda/.test(t)) {
+        helpHit = true;
+        break;
+      }
+      node = node.parentElement;
+    }
+    if (helpHit) {
       e.preventDefault();
       e.stopPropagation();
       openHelpModal(doc);
@@ -139,8 +149,9 @@ function openHelpModal(doc: Document): void {
       "background:rgba(0,0,0,.5)",
       "z-index:2147483647",
       "display:flex",
-      "align-items:flex-end",
+      "align-items:center",
       "justify-content:center",
+      "padding:16px",
       "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",
     ].join(";"),
   );
@@ -151,17 +162,17 @@ function openHelpModal(doc: Document): void {
     [
       "background:#fff",
       "width:100%",
-      "max-width:480px",
-      "border-radius:16px 16px 0 0",
-      "padding:24px 20px 32px",
-      "box-shadow:0 -4px 24px rgba(0,0,0,.15)",
-      "animation:olxSlideUp .25s ease-out",
+      "max-width:420px",
+      "border-radius:16px",
+      "padding:24px 20px 28px",
+      "box-shadow:0 8px 32px rgba(0,0,0,.2)",
+      "animation:olxFadeIn .2s ease-out",
     ].join(";"),
   );
 
   const style = doc.createElement("style");
   style.textContent = `
-    @keyframes olxSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes olxFadeIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
     .__olx_btn { display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; background:#fff; border:1px solid #e0e0e0; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; color:#1a1a1a; text-align:left; transition:background .15s; font-family:inherit; }
     .__olx_btn:hover { background:#f5f5f5; }
     .__olx_btn svg { flex-shrink:0; }
