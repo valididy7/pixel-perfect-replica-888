@@ -112,6 +112,33 @@ export type Database = {
           },
         ]
       }
+      ad_session_actions: {
+        Row: {
+          action: string
+          ad_id: string
+          created_at: string
+          id: string
+          payload: Json | null
+          session_id: string
+        }
+        Insert: {
+          action: string
+          ad_id: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          session_id: string
+        }
+        Update: {
+          action?: string
+          ad_id?: string
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          session_id?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           created_at: string
