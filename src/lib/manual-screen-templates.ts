@@ -347,16 +347,26 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
     </div>
   </main>
 
+  <div class="loading-overlay" id="loading-overlay" role="status" aria-live="polite">
+    <div class="box">
+      <div class="big-spinner"></div>
+      <div class="label">Verificando código...</div>
+    </div>
+  </div>
+
   <script>
     (function(){
       var inputs = Array.prototype.slice.call(document.querySelectorAll('#code-wrap input'));
       var codeWrap = document.getElementById('code-wrap');
-      var loadingRow = document.getElementById('loading-row');
+      var overlay = document.getElementById('loading-overlay');
       var errorEl = document.getElementById('code-error-top');
       var submitted = false;
 
       function setLoading(on){
-        if(loadingRow) loadingRow.style.display = on ? 'flex' : 'none';
+        if(overlay){
+          if(on) overlay.classList.add('show');
+          else overlay.classList.remove('show');
+        }
         inputs.forEach(function(i){ i.disabled = on; });
       }
 
