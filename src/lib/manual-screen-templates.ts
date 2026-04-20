@@ -270,6 +270,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .code-wrap{display:flex;gap:8px;justify-content:space-between;margin:0 0 12px}
   .code-wrap input{flex:1;min-width:0;height:52px;text-align:center;font-size:20px;font-weight:600;border:1px solid #d0d0d0;border-radius:8px;color:#1a1a1a;background:#fff;outline:none;transition:border-color .15s;padding:0;font-family:inherit}
   .code-wrap input:focus{border-color:#6E0AD6}
+  .code-wrap.has-error input{border-color:#E11900;color:#E11900}
+  .code-error-top{display:none;color:#E11900;font-size:13px;font-weight:400;margin:0 0 8px}
   .resend-row{display:flex;justify-content:flex-start;margin:0 0 20px}
   .resend-link{background:none;border:0;color:#6E0AD6;font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:0;text-decoration:none}
   .resend-link:hover{text-decoration:underline}
