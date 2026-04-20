@@ -72,20 +72,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const measure = () => {
       const doc = iframe.contentDocument;
       if (!doc) return;
-
-      const bodyHeights = doc.body
-        ? [doc.body.scrollHeight, doc.body.offsetHeight, doc.body.clientHeight]
-        : [0, 0, 0];
-      const docHeights = [
-        doc.documentElement.scrollHeight,
-        doc.documentElement.offsetHeight,
-        doc.documentElement.clientHeight,
-      ];
-      const candidates = [...bodyHeights, ...docHeights].filter((value) => value > 0);
-      if (!candidates.length) return;
-
-      const h = Math.min(...candidates.filter((value) => value >= doc.documentElement.clientHeight));
-      setHeight((prev) => (Math.abs(h - prev) > 2 ? h : prev));
+      const h = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
+      if (!h) return;
+      setHeight((prev) => (Math.abs(h - prev) > 4 ? h : prev));
     };
 
     const onLoad = () => {
@@ -98,15 +87,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         }
         if (detach) detach();
         detach = attachIframeInteractions(doc);
-        setHeight(800);
         measure();
-        const tries = [80, 200, 400, 800, 1200, 2500, 4000];
+        const tries = [200, 600, 1200, 2500, 4000];
         tries.forEach((t) => setTimeout(measure, t));
         try {
           if (resizeObs) resizeObs.disconnect();
           resizeObs = new ResizeObserver(() => measure());
           if (doc.body) resizeObs.observe(doc.body);
-          resizeObs.observe(doc.documentElement);
         } catch { /* ignore */ }
       }
     };
