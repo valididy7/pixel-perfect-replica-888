@@ -41,40 +41,132 @@ function randomSuffix(len = 6): string {
 }
 
 /**
- * Pós-processa o HTML cru: remove scripts/iframes de tracking, banners de cookies,
- * mantém estrutura visual e injeta uma <base> tag para resolver assets relativos.
+ * Resolve uma URL (possivelmente relativa ou protocol-relative) contra a base.
+ * Retorna a string original se a resolução falhar.
+ */
+function absolutize(value: string, base: URL): string {
+  const v = value.trim();
+  if (!v) return v;
+  if (v.startsWith("data:") || v.startsWith("blob:") || v.startsWith("#") || v.startsWith("mailto:") || v.startsWith("tel:") || v.startsWith("javascript:")) {
+    return v;
+  }
+  try {
+    return new URL(v, base).toString();
+  } catch {
+    return v;
+  }
+}
+
+/**
+ * Reescreve um srcset absolutizando cada URL.
+ */
+function absolutizeSrcset(srcset: string, base: URL): string {
+  return srcset
+    .split(",")
+    .map((part) => {
+      const trimmed = part.trim();
+      if (!trimmed) return "";
+      const segs = trimmed.split(/\s+/);
+      const url = segs.shift() || "";
+      const desc = segs.join(" ");
+      const abs = absolutize(url, base);
+      return desc ? `${abs} ${desc}` : abs;
+    })
+    .filter(Boolean)
+    .join(", ");
+}
+
+const TRACKER_PATTERNS = [
+  "google-analytics",
+  "googletagmanager",
+  "gtag/js",
+  "doubleclick",
+  "facebook.net",
+  "connect.facebook",
+  "hotjar",
+  "clarity.ms",
+  "segment.com",
+  "mixpanel",
+  "amplitude",
+  "newrelic",
+  "datadog",
+  "sentry",
+  "tiktok",
+  "criteo",
+  "taboola",
+  "outbrain",
+];
+
+function isTrackerUrl(url: string): boolean {
+  const lower = url.toLowerCase();
+  return TRACKER_PATTERNS.some((p) => lower.includes(p));
+}
+
+/**
+ * Pós-processa o HTML cru:
+ * - PRESERVA <link rel="stylesheet"> e CSS inline (visual)
+ * - Remove apenas scripts/iframes de trackers conhecidos
+ * - Mantém scripts inline e libs (alguns sites injetam estilos via JS)
+ * - Absolutiza href/src/srcset/poster/data-src para URLs absolutas
+ * - Injeta <base> como fallback
  */
 function cleanHtml(rawHtml: string, sourceUrl: string): string {
   let html = rawHtml;
-
-  // Remove script tags inteiros
-  html = html.replace(/<script[\s\S]*?<\/script>/gi, "");
-  // Remove noscript
-  html = html.replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
-  // Remove iframes (geralmente ads / trackers)
-  html = html.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
-  // Remove event handlers inline (onclick, onload, etc)
-  html = html.replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, "");
-  html = html.replace(/\son[a-z]+\s*=\s*'[^']*'/gi, "");
-  // Remove links de preconnect a trackers comuns
-  html = html.replace(
-    /<link[^>]+(google-analytics|googletagmanager|facebook|hotjar|clarity)[^>]*>/gi,
-    "",
-  );
-
-  // Tenta injetar uma <base> tag para resolver URLs relativas
+  let base: URL;
   try {
-    const u = new URL(sourceUrl);
-    const base = `<base href="${u.origin}${u.pathname.replace(/[^/]*$/, "")}">`;
-    if (/<head[^>]*>/i.test(html)) {
-      html = html.replace(/<head([^>]*)>/i, `<head$1>${base}`);
-    } else if (/<html[^>]*>/i.test(html)) {
-      html = html.replace(/<html([^>]*)>/i, `<html$1><head>${base}</head>`);
-    } else {
-      html = `<!DOCTYPE html><html><head>${base}</head><body>${html}</body></html>`;
-    }
+    base = new URL(sourceUrl);
   } catch {
-    // ignore
+    return rawHtml;
+  }
+
+  // 1. Remove noscript (atrapalha em iframes)
+  html = html.replace(/<noscript[\s\S]*?<\/noscript>/gi, "");
+
+  // 2. Remove scripts de trackers (mantém os outros)
+  html = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (full, attrs, body) => {
+    const srcMatch = /src\s*=\s*["']([^"']+)["']/i.exec(attrs);
+    if (srcMatch && isTrackerUrl(srcMatch[1])) return "";
+    if (!srcMatch && isTrackerUrl(body)) return "";
+    return full;
+  });
+
+  // 3. Remove iframes de trackers (mantém vídeos do youtube etc.)
+  html = html.replace(/<iframe\b[^>]*src\s*=\s*["']([^"']+)["'][^>]*>[\s\S]*?<\/iframe>/gi, (full, src) => {
+    return isTrackerUrl(src) ? "" : full;
+  });
+
+  // 4. Remove links a trackers
+  html = html.replace(/<link\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/gi, (full, href) => {
+    return isTrackerUrl(href) ? "" : full;
+  });
+
+  // 5. Absolutiza atributos de URL
+  const urlAttrs = ["href", "src", "data-src", "data-original", "poster", "action"];
+  for (const attr of urlAttrs) {
+    const re = new RegExp(`(\\s${attr})\\s*=\\s*"([^"]+)"`, "gi");
+    html = html.replace(re, (_m, name, val) => `${name}="${absolutize(val, base)}"`);
+    const re2 = new RegExp(`(\\s${attr})\\s*=\\s*'([^']+)'`, "gi");
+    html = html.replace(re2, (_m, name, val) => `${name}='${absolutize(val, base)}'`);
+  }
+
+  // 6. Absolutiza srcset
+  html = html.replace(/(\ssrcset)\s*=\s*"([^"]+)"/gi, (_m, name, val) => `${name}="${absolutizeSrcset(val, base)}"`);
+  html = html.replace(/(\ssrcset)\s*=\s*'([^']+)'/gi, (_m, name, val) => `${name}='${absolutizeSrcset(val, base)}'`);
+
+  // 7. Absolutiza url(...) dentro de <style> e style="..."
+  const rewriteCssUrls = (css: string) =>
+    css.replace(/url\(\s*(['"]?)([^)'"]+)\1\s*\)/gi, (_m, q, val) => `url(${q}${absolutize(val, base)}${q})`);
+  html = html.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, (_m, css) => `<style>${rewriteCssUrls(css)}</style>`);
+  html = html.replace(/style\s*=\s*"([^"]+)"/gi, (_m, css) => `style="${rewriteCssUrls(css)}"`);
+
+  // 8. Injeta <base> como fallback
+  const baseTag = `<base href="${base.origin}${base.pathname.replace(/[^/]*$/, "")}">`;
+  if (/<head[^>]*>/i.test(html)) {
+    html = html.replace(/<head([^>]*)>/i, `<head$1>${baseTag}`);
+  } else if (/<html[^>]*>/i.test(html)) {
+    html = html.replace(/<html([^>]*)>/i, `<html$1><head>${baseTag}</head>`);
+  } else {
+    html = `<!DOCTYPE html><html><head>${baseTag}</head><body>${html}</body></html>`;
   }
 
   return html;
