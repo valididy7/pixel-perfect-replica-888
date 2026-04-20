@@ -107,7 +107,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const navigateToScreen = (screen: AdScreen) => {
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
+      onChildScreen = true;
       renderHtml(screenHtml);
+    };
+
+    const goBackToMain = () => {
+      onChildScreen = false;
+      renderHtml(injected);
     };
 
     const onMessage = (e: MessageEvent) => {
@@ -126,6 +132,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       if (data.type === "iframe-link-click" && typeof data.url === "string") {
+        // Se já estamos numa tela filha, qualquer link volta pra principal
+        if (onChildScreen) {
+          goBackToMain();
+          return;
+        }
         const target = normalizeUrl(data.url);
         const match = screensRef.current.find(
           (s) => s.source_url && normalizeUrl(s.source_url) === target,
