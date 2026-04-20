@@ -145,7 +145,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       if (data.type === "iframe-link-click" && typeof data.url === "string") {
-        // Se já estamos numa tela filha, qualquer link volta pra principal
         if (onChildScreen) {
           goBackToMain();
           return;
