@@ -172,7 +172,7 @@ function openHelpModal(doc: Document): void {
 
   const style = doc.createElement("style");
   style.textContent = `
-    @keyframes olxSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes olxFadeIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
     .__olx_btn { display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; background:#fff; border:1px solid #e0e0e0; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; color:#1a1a1a; text-align:left; transition:background .15s; font-family:inherit; }
     .__olx_btn:hover { background:#f5f5f5; }
     .__olx_btn svg { flex-shrink:0; }
