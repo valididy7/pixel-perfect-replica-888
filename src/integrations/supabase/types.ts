@@ -14,13 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ads: {
+        Row: {
+          created_at: string
+          edited_html: string | null
+          expires_at: string | null
+          id: string
+          original_html: string | null
+          owner_id: string
+          price: string | null
+          slug: string
+          source_url: string | null
+          status: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          edited_html?: string | null
+          expires_at?: string | null
+          id?: string
+          original_html?: string | null
+          owner_id: string
+          price?: string | null
+          slug: string
+          source_url?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          edited_html?: string | null
+          expires_at?: string | null
+          id?: string
+          original_html?: string | null
+          owner_id?: string
+          price?: string | null
+          slug?: string
+          source_url?: string | null
+          status?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_ad_view_count: { Args: { ad_slug: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
