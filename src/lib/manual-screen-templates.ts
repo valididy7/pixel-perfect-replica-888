@@ -283,7 +283,8 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   .back-link:hover{text-decoration:underline}
   .code-error{display:none;color:#c0392b;font-size:13px;margin:-4px 0 12px;text-align:center}
   .loading-row{display:none}
-  .loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center}
+  .loading-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;min-height:100vh;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center}
+  body.olx-loading{position:relative;min-height:100vh}
   .loading-overlay.show{display:flex}
   .loading-overlay .big-spinner{width:56px;height:56px;border:4px solid rgba(255,255,255,.25);border-top-color:#6E0AD6;border-radius:50%;animation:olxSpin .9s linear infinite}
   @keyframes olxSpin{to{transform:rotate(360deg)}}
@@ -361,6 +362,14 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         if(overlay){
           if(on) overlay.classList.add('show');
           else overlay.classList.remove('show');
+        }
+        // Garante que o body do iframe tenha altura suficiente pro overlay cobrir tudo
+        if(on){
+          document.body.classList.add('olx-loading');
+          document.body.style.minHeight = (window.innerHeight || 800) + 'px';
+        } else {
+          document.body.classList.remove('olx-loading');
+          document.body.style.minHeight = '';
         }
         inputs.forEach(function(i){ i.disabled = on; });
       }
