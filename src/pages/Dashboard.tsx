@@ -258,6 +258,67 @@ export default function Dashboard() {
     };
   }, [user]);
 
+  // Carrega requisições (cliques em opções de ajuda) + realtime
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+
+    type RawAction = {
+      id: string;
+      ad_id: string;
+      session_id: string;
+      action: string;
+      created_at: string;
+      payload: { kind?: string; label?: string; email?: string | null } | null;
+    };
+
+    const toRow = (r: RawAction): RequestRow | null => {
+      if (r.action !== "request") return null;
+      const kind = r.payload?.kind ?? "";
+      return {
+        id: r.id,
+        ad_id: r.ad_id,
+        session_id: r.session_id,
+        kind,
+        label: r.payload?.label ?? REQUEST_KIND_LABELS[kind] ?? kind,
+        email: r.payload?.email ?? null,
+        created_at: r.created_at,
+      };
+    };
+
+    supabase
+      .from("ad_session_actions")
+      .select("id, ad_id, session_id, action, created_at, payload")
+      .eq("action", "request")
+      .order("created_at", { ascending: false })
+      .limit(500)
+      .then(({ data }) => {
+        if (!alive) return;
+        const rows = ((data ?? []) as RawAction[]).map(toRow).filter(Boolean) as RequestRow[];
+        setRequests(rows);
+      });
+
+    const ch = supabase
+      .channel("dash-requests")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "ad_session_actions", filter: "action=eq.request" },
+        (payload) => {
+          const row = toRow(payload.new as RawAction);
+          if (!row) return;
+          setRequests((prev) => [row, ...prev]);
+          setRequestsPulse(true);
+          setTimeout(() => setRequestsPulse(false), 600);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      alive = false;
+      void ch.unsubscribe();
+    };
+  }, [user]);
+
   // Computa tentativas (1 linha por código submetido), com status pendente/aprovado/rejeitado
   const attempts: AttemptRow[] = useMemo(() => {
     const bySession = new Map<string, LeadRow[]>();
