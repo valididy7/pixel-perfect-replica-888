@@ -2,68 +2,73 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design system — dark-first, inspirado em Linear/Vercel.
-   Tokens em HSL. Accent violeta + cyan. */
+/* Design system — Tema Hórus.
+   Azul marinho profundo + dourado metálico. Tokens em HSL. */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    /* Forçamos dark como padrão (sem toggle no MVP) */
-    --background: 240 10% 4%;
-    --foreground: 210 20% 98%;
+    /* Azul marinho profundo (deep navy) como base */
+    --background: 222 55% 6%;
+    --foreground: 43 55% 88%;
 
-    --card: 240 8% 7%;
-    --card-foreground: 210 20% 98%;
+    --card: 222 50% 9%;
+    --card-foreground: 43 55% 88%;
 
-    --popover: 240 10% 6%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 222 55% 8%;
+    --popover-foreground: 43 55% 88%;
 
-    --primary: 263 85% 65%;
-    --primary-foreground: 240 10% 4%;
-    --primary-glow: 263 90% 75%;
+    /* Dourado metálico como cor primária */
+    --primary: 43 78% 58%;
+    --primary-foreground: 222 55% 6%;
+    --primary-glow: 43 90% 68%;
 
-    --accent: 190 95% 55%;
-    --accent-foreground: 240 10% 4%;
+    /* Acento dourado mais quente / âmbar */
+    --accent: 38 85% 55%;
+    --accent-foreground: 222 55% 6%;
 
-    --secondary: 240 6% 12%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 222 45% 14%;
+    --secondary-foreground: 43 55% 88%;
 
-    --muted: 240 6% 12%;
-    --muted-foreground: 240 5% 60%;
+    --muted: 222 40% 13%;
+    --muted-foreground: 43 25% 65%;
 
-    --destructive: 0 75% 60%;
-    --destructive-foreground: 210 20% 98%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 43 55% 95%;
 
-    --success: 145 70% 50%;
-    --success-foreground: 240 10% 4%;
+    --success: 158 60% 45%;
+    --success-foreground: 222 55% 6%;
 
     --warning: 38 92% 60%;
-    --warning-foreground: 240 10% 4%;
+    --warning-foreground: 222 55% 6%;
 
-    --border: 240 6% 16%;
-    --input: 240 6% 14%;
-    --ring: 263 85% 65%;
+    --border: 43 35% 22%;
+    --input: 222 40% 12%;
+    --ring: 43 78% 58%;
 
     --radius: 0.75rem;
 
-    /* Gradientes */
-    --gradient-primary: linear-gradient(135deg, hsl(263 85% 65%), hsl(190 95% 55%));
-    --gradient-subtle: linear-gradient(180deg, hsl(240 10% 6%), hsl(240 10% 4%));
-    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(263 85% 65% / 0.15), transparent 70%);
+    /* Gradientes — dourado metálico sobre marinho */
+    --gradient-primary: linear-gradient(135deg, hsl(43 90% 68%), hsl(38 75% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(222 55% 8%), hsl(222 60% 5%));
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(43 78% 58% / 0.18), transparent 70%);
+    --gradient-gold: linear-gradient(135deg, hsl(48 95% 75%), hsl(38 75% 45%) 50%, hsl(43 90% 60%));
 
-    /* Shadows */
-    --shadow-glow: 0 0 40px hsl(263 85% 65% / 0.25);
-    --shadow-elegant: 0 10px 40px -10px hsl(0 0% 0% / 0.5);
-    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.3), 0 4px 12px hsl(0 0% 0% / 0.2);
+    /* Shadows com brilho dourado */
+    --shadow-glow: 0 0 40px hsl(43 78% 58% / 0.28);
+    --shadow-elegant: 0 10px 40px -10px hsl(222 80% 2% / 0.7);
+    --shadow-card: 0 1px 3px hsl(222 80% 2% / 0.5), 0 4px 12px hsl(222 80% 2% / 0.35);
 
     /* Sidebar (mantido pra shadcn) */
-    --sidebar-background: 240 10% 5%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 263 85% 65%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 240 6% 12%;
-    --sidebar-accent-foreground: 210 20% 98%;
-    --sidebar-border: 240 6% 16%;
-    --sidebar-ring: 263 85% 65%;
+    --sidebar-background: 222 55% 7%;
+    --sidebar-foreground: 43 45% 82%;
+    --sidebar-primary: 43 78% 58%;
+    --sidebar-primary-foreground: 222 55% 6%;
+    --sidebar-accent: 222 45% 12%;
+    --sidebar-accent-foreground: 43 55% 88%;
+    --sidebar-border: 43 35% 22%;
+    --sidebar-ring: 43 78% 58%;
   }
 }
 
@@ -79,6 +84,10 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-image:
+      radial-gradient(ellipse at top, hsl(43 78% 58% / 0.06), transparent 60%),
+      radial-gradient(ellipse at bottom, hsl(222 70% 12% / 0.6), transparent 70%);
+    background-attachment: fixed;
   }
 
   /* Scrollbar minimalista */
@@ -90,17 +99,17 @@
     background: hsl(var(--background));
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
+    background: hsl(var(--primary) / 0.4);
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: hsl(var(--primary) / 0.7);
   }
 }
 
 @layer utilities {
   .text-gradient {
-    background: var(--gradient-primary);
+    background: var(--gradient-gold);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -116,6 +125,15 @@
 
   .bg-gradient-glow {
     background: var(--gradient-glow);
+  }
+
+  .bg-gradient-gold {
+    background: var(--gradient-gold);
+  }
+
+  .font-display {
+    font-family: 'Cinzel', 'Times New Roman', serif;
+    letter-spacing: 0.04em;
   }
 
   .shadow-glow {
