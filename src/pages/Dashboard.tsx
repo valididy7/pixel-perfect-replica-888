@@ -105,23 +105,46 @@ export default function Dashboard() {
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
 
+  // Destrava AudioContext no primeiro clique (necessário pra tocar som depois sem gesto)
+  useEffect(() => {
+    const unlock = () => {
+      try {
+        const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+        if (!Ctx) return;
+        const ctx = new Ctx();
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(ctx.destination);
+        src.start(0);
+        setTimeout(() => ctx.close().catch(() => {}), 200);
+      } catch { /* ignore */ }
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
   // Subscreve presença global de visitantes
   useEffect(() => {
     if (!user) return;
-    const knownRef = { current: new Set<string>() };
     const off = subscribeToOnlineVisitors(
       (map) => {
         const ids = new Set(map.keys());
         setOnlineSessionIds(ids);
-        knownRef.current = ids;
       },
       (sessionId) => {
-        // Toca som só quando alguém ENTRA (transição offline→online)
-        if (!knownRef.current.has(sessionId) && soundOnRef.current) {
+        // Cada JOIN = transição offline→online de uma sessão.
+        // Toca som SEMPRE, mesmo se a mesma sessão entrar/sair várias vezes.
+        console.info("[Dashboard] visitante online:", sessionId);
+        if (soundOnRef.current) {
           playOnlineDing();
-          setPulse(true);
-          setTimeout(() => setPulse(false), 600);
         }
+        setPulse(true);
+        setTimeout(() => setPulse(false), 600);
       },
     );
     return off;
