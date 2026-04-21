@@ -3,7 +3,6 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -34,19 +33,6 @@ export default function LoginPage() {
     navigate(from, { replace: true });
   };
 
-  const onSignup = async (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
-    });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success("Conta criada! Você já pode fazer login.");
-  };
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
       <div className="absolute inset-0 bg-gradient-glow" />
@@ -66,46 +52,20 @@ export default function LoginPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card/50 p-6 backdrop-blur-xl shadow-elegant">
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar conta</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login" className="mt-6">
-              <form onSubmit={onLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-                </div>
-                <Button type="submit" disabled={submitting} className="w-full bg-gradient-primary hover:opacity-90 shadow-glow">
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Entrar
-                </Button>
-              </form>
-            </TabsContent>
-
-            <TabsContent value="signup" className="mt-6">
-              <form onSubmit={onSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-su">Email</Label>
-                  <Input id="email-su" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password-su">Senha</Label>
-                  <Input id="password-su" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" />
-                </div>
-                <Button type="submit" disabled={submitting} className="w-full bg-gradient-primary hover:opacity-90 shadow-glow">
-                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Criar conta
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+          <form onSubmit={onLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            </div>
+            <Button type="submit" disabled={submitting} className="w-full bg-gradient-primary hover:opacity-90 shadow-glow">
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Entrar
+            </Button>
+          </form>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 
 export function ProtectedRoute() {
   const { user, loading } = useAuth();
@@ -17,7 +17,7 @@ export function ProtectedRoute() {
 
   if (!user) {
     const from = location.pathname.startsWith(ADMIN_BASE) ? location.pathname : ADMIN_BASE;
-    return <Navigate to="/login" state={{ from }} replace />;
+    return <Navigate to={ADMIN_LOGIN_PATH} state={{ from }} replace />;
   }
 
   return <Outlet />;

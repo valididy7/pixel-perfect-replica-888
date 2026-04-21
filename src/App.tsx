@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminGate } from "@/components/AdminGate";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import PublicAd from "./pages/PublicAd";
@@ -28,7 +28,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route path={ADMIN_LOGIN_PATH} element={<LoginPage />} />
             <Route path="/ad/:slug" element={<PublicAd />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route
