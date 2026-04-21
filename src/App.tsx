@@ -10,8 +10,9 @@ import { ADMIN_BASE } from "@/lib/admin-route";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import PublicAd from "./pages/PublicAd";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+
+const PUBLIC_AD_SLUG = "minha-conta-olx-ddeib0";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -25,7 +26,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/ad/:slug" element={<PublicAd />} />
             <Route
