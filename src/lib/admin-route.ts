@@ -10,3 +10,6 @@ export const adminPath = (sub: string = "") => {
 };
 
 export const ADMIN_GATE_KEY = "olx_admin_gate_token";
+
+/** Rota de login escondida — não usar `/login` puro. */
+export const ADMIN_LOGIN_PATH = "/login-x9k2m-acesso";

@@ -3,7 +3,6 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -32,19 +31,6 @@ export default function LoginPage() {
     if (error) return toast.error(error.message);
     toast.success("Bem-vindo de volta!");
     navigate(from, { replace: true });
-  };
-
-  const onSignup = async (e: FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
-    });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success("Conta criada! Você já pode fazer login.");
   };
 
   return (
