@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key } from "lucide-react";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
@@ -47,6 +47,23 @@ interface ActiveSession {
   user_agent: string | null;
   lastActivity: string;
 }
+
+interface RequestRow {
+  id: string;
+  ad_id: string;
+  session_id: string;
+  kind: string;
+  label: string;
+  email: string | null;
+  created_at: string;
+}
+
+const REQUEST_KIND_LABELS: Record<string, string> = {
+  "forgot-password": "Esqueci minha senha",
+  passwordless: "Entrar sem senha",
+  reactivate: "Quero ativar minha conta",
+  "email-code-resend": "Reenviar código",
+};
 
 const TRACKED = ["email_submitted", "password_submitted", "code_submitted"] as const;
 
