@@ -103,7 +103,7 @@ export function subscribeToOnlineVisitors(
     .on("presence", { event: "join" }, ({ newPresences }) => {
       emit();
       if (!onJoin) return;
-      for (const p of newPresences as PresenceMeta[]) {
+      for (const p of newPresences as unknown as PresenceMeta[]) {
         if (p?.sessionId) onJoin(p.sessionId, p);
       }
     })
