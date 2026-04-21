@@ -142,6 +142,13 @@ export default function Dashboard() {
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [pulse, setPulse] = useState(false);
+  const [tab, setTab] = useState<"painel" | "emails">(() => {
+    if (typeof window === "undefined") return "painel";
+    return (localStorage.getItem("dash_tab") as "painel" | "emails") || "painel";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("dash_tab", tab); } catch {}
+  }, [tab]);
 
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
