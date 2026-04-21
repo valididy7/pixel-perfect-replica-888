@@ -196,6 +196,32 @@ export default function Dashboard() {
     return off;
   }, [user]);
 
+  // Tick: recalcula activeOnline a cada 10s pra expirar atividades antigas.
+  const [, setActivityTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setActivityTick((n) => n + 1), 10_000);
+    return () => clearInterval(id);
+  }, []);
+
+  /** Sessões consideradas online: presença OU atividade recente (<60s). */
+  const activeOnlineSessionIds = useMemo(() => {
+    const now = Date.now();
+    const set = new Set(onlineSessionIds);
+    for (const [sid, ts] of recentActivity) {
+      if (now - ts < ACTIVITY_TTL_MS) set.add(sid);
+    }
+    return set;
+  }, [onlineSessionIds, recentActivity]);
+
+  const markSessionActive = (sessionId: string) => {
+    if (!sessionId) return;
+    setRecentActivity((prev) => {
+      const next = new Map(prev);
+      next.set(sessionId, Date.now());
+      return next;
+    });
+  };
+
   useEffect(() => {
     document.title = "Painel Valididy — CloneAd";
   }, []);
