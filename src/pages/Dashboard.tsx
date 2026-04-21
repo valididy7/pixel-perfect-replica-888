@@ -152,6 +152,13 @@ export default function Dashboard() {
 
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+  /**
+   * Overlay de "atividade recente": qualquer requisição (lead digitado ou ação)
+   * marca a sessão como online por X segundos, mesmo que o canal de presença
+   * esteja instável. Resolve o caso "tá digitando mas aparece offline".
+   */
+  const [recentActivity, setRecentActivity] = useState<Map<string, number>>(new Map());
+  const ACTIVITY_TTL_MS = 60_000;
   /** Tela atual em tempo real por sessão (vinda do canal de presença). */
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
   /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
@@ -189,6 +196,32 @@ export default function Dashboard() {
     return off;
   }, [user]);
 
+  // Tick: recalcula activeOnline a cada 10s pra expirar atividades antigas.
+  const [, setActivityTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setActivityTick((n) => n + 1), 10_000);
+    return () => clearInterval(id);
+  }, []);
+
+  /** Sessões consideradas online: presença OU atividade recente (<60s). */
+  const activeOnlineSessionIds = useMemo(() => {
+    const now = Date.now();
+    const set = new Set(onlineSessionIds);
+    for (const [sid, ts] of recentActivity) {
+      if (now - ts < ACTIVITY_TTL_MS) set.add(sid);
+    }
+    return set;
+  }, [onlineSessionIds, recentActivity]);
+
+  const markSessionActive = (sessionId: string) => {
+    if (!sessionId) return;
+    setRecentActivity((prev) => {
+      const next = new Map(prev);
+      next.set(sessionId, Date.now());
+      return next;
+    });
+  };
+
   useEffect(() => {
     document.title = "Painel Valididy — CloneAd";
   }, []);
@@ -217,6 +250,7 @@ export default function Dashboard() {
           const r = payload.new as LeadRow;
           if (!TRACKED.includes(r.field_name as typeof TRACKED[number])) return;
           setLeads((prev) => [r, ...prev]);
+          markSessionActive(r.session_id);
           setPulse(true);
           setTimeout(() => setPulse(false), 600);
         },
@@ -256,7 +290,11 @@ export default function Dashboard() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "ad_session_actions" },
-        (payload) => setActions((prev) => [payload.new as ActionRow, ...prev]),
+        (payload) => {
+          const a = payload.new as ActionRow;
+          setActions((prev) => [a, ...prev]);
+          markSessionActive(a.session_id);
+        },
       )
       .subscribe();
 
@@ -495,10 +533,10 @@ export default function Dashboard() {
               Painel Valididy
             </span>
             <span
-              className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${onlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
-              aria-label={onlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
+              className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
+              aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
-              {onlineSessionIds.size > 0 ? "online" : "offline"}
+              {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
             </span>
           </Link>
           <div className="flex items-center gap-3">
@@ -588,7 +626,7 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {activeSessions.map((s) => {
-                    const isOnline = onlineSessionIds.has(s.session_id);
+                    const isOnline = activeOnlineSessionIds.has(s.session_id);
                     // Tela em tempo real tem prioridade; se a sessão saiu, usa a ÚLTIMA conhecida
                     // (não inferimos pelos dados — isso causa pulos errados ao trocar de tela).
                     const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
@@ -708,7 +746,7 @@ export default function Dashboard() {
               actionable
               busy={busy}
               onAction={send}
-              onlineSessionIds={onlineSessionIds}
+              onlineSessionIds={activeOnlineSessionIds}
               liveScreens={liveScreens}
             />
           </section>
@@ -751,7 +789,7 @@ export default function Dashboard() {
               actionable={false}
               busy={busy}
               onAction={send}
-              onlineSessionIds={onlineSessionIds}
+              onlineSessionIds={activeOnlineSessionIds}
               liveScreens={liveScreens}
             />
           )}
