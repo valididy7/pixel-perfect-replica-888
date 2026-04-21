@@ -593,6 +593,17 @@ export default function Dashboard() {
               <h2 className="font-display text-base font-semibold tracking-wider uppercase">Requisições</h2>
               <Badge variant="secondary" className="text-[10px]">{requests.length}</Badge>
             </div>
+            {requests.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleClearRequests}
+                className="h-8 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Limpar tudo
+              </Button>
+            )}
           </div>
 
           {requests.length === 0 ? (
