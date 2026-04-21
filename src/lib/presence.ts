@@ -78,11 +78,10 @@ export function trackVisitorPresence(
 
     channel = nextChannel;
     nextChannel.subscribe((status) => {
-      if (stopped || channel !== nextChannel) {
-        supabase.removeChannel(nextChannel);
-        return;
-      }
-
+      // Importante: NÃO chamar removeChannel daqui — isso causa
+      // recursão (unsubscribe → trigger → callback → unsubscribe → …)
+      // e estoura a stack. O fechamento fica todo a cargo do closeChannel.
+      if (stopped || channel !== nextChannel) return;
       if (status === "SUBSCRIBED") {
         void trackOnChannel(nextChannel);
       }
