@@ -59,6 +59,28 @@ function formatTime(iso: string): string {
   });
 }
 
+/** Mapeia o `kind` da tela (vindo da presença) pra um rótulo amigável. */
+function screenKindLabel(kind: string): string {
+  switch (kind) {
+    case "main":
+      return "Tela home";
+    case "access-account":
+      return "Tela acessar";
+    case "password":
+      return "Tela senha";
+    case "email-code":
+      return "Tela código";
+    case "forgot-password":
+      return "Tela esqueci senha";
+    case "passwordless":
+      return "Tela sem senha";
+    case "reactivate":
+      return "Tela reativar";
+    default:
+      return kind;
+  }
+}
+
 function deviceLabel(ua: string | null): string {
   if (!ua) return "—";
   if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
