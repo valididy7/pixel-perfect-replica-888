@@ -104,6 +104,8 @@ export default function Dashboard() {
 
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+  /** Tela atual em tempo real por sessão (vinda do canal de presença). */
+  const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
 
   // Destrava AudioContext no primeiro clique (necessário pra tocar som depois sem gesto)
   useEffect(() => {
@@ -135,6 +137,11 @@ export default function Dashboard() {
       (map) => {
         const ids = new Set(map.keys());
         setOnlineSessionIds(ids);
+        const screens = new Map<string, string>();
+        for (const [sid, meta] of map) {
+          if (meta.screenKind) screens.set(sid, meta.screenKind);
+        }
+        setLiveScreens(screens);
       },
       (sessionId) => {
         // Cada JOIN = transição offline→online de uma sessão.
