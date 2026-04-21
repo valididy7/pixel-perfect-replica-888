@@ -756,6 +756,8 @@ export default function Dashboard() {
             />
           )}
         </section>
+        </>
+        )}
       </main>
     </div>
   );
