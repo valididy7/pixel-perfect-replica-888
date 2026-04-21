@@ -664,9 +664,8 @@ function AttemptsTable({
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
             const isOnline = onlineSessionIds.has(row.session_id);
             return (
-              <>
+              <Fragment key={row.key}>
               <tr
-                key={row.key}
                 className={`border-t border-border transition-colors ${
                   actionable ? "bg-primary/5" : "hover:bg-muted/30"
                 }`}
@@ -708,7 +707,7 @@ function AttemptsTable({
                 </td>
               </tr>
               {actionable && (
-                <tr key={`${row.key}-actions`} className="bg-primary/5">
+                <tr className="bg-primary/5">
                   <td colSpan={8} className="px-4 pb-4 pt-0">
                     <div className="flex flex-wrap gap-2 sm:justify-end">
                       <Button
@@ -744,7 +743,7 @@ function AttemptsTable({
                   </td>
                 </tr>
               )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
