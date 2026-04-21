@@ -38,6 +38,7 @@ export default function EditorPage() {
   const [originalHtml, setOriginalHtml] = useState<string>("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -65,6 +66,7 @@ export default function EditorPage() {
     setPreviewHtml(html);
     setTitle(ad.title);
     setPrice(ad.price || "");
+    setDownloadUrl(ad.download_url || "");
     const parsed = parseAdHTML(html);
     setFields(parsed.fields);
     setImageUrls(parsed.imageUrls);
@@ -104,6 +106,7 @@ export default function EditorPage() {
       .update({
         title: title || ad.title,
         price: price || null,
+        download_url: downloadUrl.trim() || null,
         edited_html: compressStoredHtml(html),
       })
       .eq("id", ad.id);
