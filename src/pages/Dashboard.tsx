@@ -91,6 +91,31 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
+/** Célula que copia o conteúdo pro clipboard ao clicar. */
+function CopyText({ value, className = "", emptyValue }: { value: string; className?: string; emptyValue?: string }) {
+  if (!value || value === "—") {
+    return <span className="text-muted-foreground">{emptyValue ?? "—"}</span>;
+  }
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success("Copiado!", { description: value, duration: 1500 });
+    } catch {
+      toast.error("Falha ao copiar");
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Clique pra copiar"
+      className={`cursor-pointer rounded px-1 py-0.5 text-left transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/20 ${className}`}
+    >
+      {value}
+    </button>
+  );
+}
+
 /** Som de entrada de visitante (transição offline→online). */
 function playOnlineDing() {
   try {
