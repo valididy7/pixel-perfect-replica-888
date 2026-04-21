@@ -46,6 +46,7 @@ export function trackVisitorPresence(
   let currentScreen = "main";
   let desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
   let syncInFlight = false;
+  let stopped = false;
 
   const doTrack = async () => {
     if (!isSubscribed) return;
@@ -67,11 +68,12 @@ export function trackVisitorPresence(
   // da página. Sem isso, um untrack antigo pode chegar depois do track novo e
   // deixar a sessão aparecendo offline errado.
   const syncPresence = async () => {
-    if (!isSubscribed || syncInFlight) return;
+    if (stopped || !isSubscribed || syncInFlight) return;
     syncInFlight = true;
 
     try {
       while (true) {
+        if (stopped) break;
         const targetVisible = desiredVisible;
         if (targetVisible) {
           await doTrack();
@@ -83,6 +85,7 @@ export function trackVisitorPresence(
       }
     } finally {
       syncInFlight = false;
+      if (stopped) return;
       if (desiredVisible !== (typeof document === "undefined" || document.visibilityState === "visible")) {
         desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
         void syncPresence();
@@ -132,6 +135,7 @@ export function trackVisitorPresence(
   document.addEventListener("keydown", onActivity);
 
   const stop = () => {
+    stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
