@@ -486,28 +486,18 @@ export default function Dashboard() {
         </section>
 
         {/* AO VIVO */}
-        <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className={`absolute inline-flex h-full w-full rounded-full bg-success ${live.length > 0 ? "animate-ping opacity-75" : "opacity-0"}`} />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
-              </span>
-              <h2 className="text-base font-semibold">Ao vivo</h2>
-              <Badge variant="secondary" className="text-[10px]">{live.length}</Badge>
-            </div>
-          </div>
-
-          {live.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                <Radio className="h-5 w-5 text-muted-foreground" />
+        {live.length > 0 && (
+          <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
+            <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" />
+                </span>
+                <h2 className="text-base font-semibold">Ao vivo</h2>
+                <Badge variant="secondary" className="text-[10px]">{live.length}</Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Aguardando códigos… as tentativas em tempo real vão aparecer aqui pra você aprovar ou rejeitar.
-              </p>
             </div>
-          ) : (
             <AttemptsTable
               rows={live}
               leads={leads}
@@ -516,8 +506,8 @@ export default function Dashboard() {
               onAction={send}
               onlineSessionIds={onlineSessionIds}
             />
-          )}
-        </section>
+          </section>
+        )}
 
         {/* HISTÓRICO */}
         <section className="mt-6 rounded-xl border border-border bg-card shadow-card">
