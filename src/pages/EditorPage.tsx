@@ -259,6 +259,26 @@ export default function EditorPage() {
               Mudanças aparecem em tempo real no preview.
             </p>
           </div>
+
+          <div className="mb-6 rounded-lg border border-border bg-card p-4 space-y-2">
+            <Label htmlFor="download-url" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Link de download (APK)
+            </Label>
+            <Input
+              id="download-url"
+              type="url"
+              placeholder="https://exemplo.com/app.apk"
+              value={downloadUrl}
+              onChange={(e) => {
+                setDownloadUrl(e.target.value);
+                setDirty(true);
+              }}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Quando preenchido, aparece um botão flutuante "Baixar app" na página pública.
+            </p>
+          </div>
+
           <FieldEditor
             fields={fields}
             onChange={handleFieldChange}
