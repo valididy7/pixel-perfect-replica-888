@@ -152,6 +152,13 @@ export default function Dashboard() {
 
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+  /**
+   * Overlay de "atividade recente": qualquer requisição (lead digitado ou ação)
+   * marca a sessão como online por X segundos, mesmo que o canal de presença
+   * esteja instável. Resolve o caso "tá digitando mas aparece offline".
+   */
+  const [recentActivity, setRecentActivity] = useState<Map<string, number>>(new Map());
+  const ACTIVITY_TTL_MS = 60_000;
   /** Tela atual em tempo real por sessão (vinda do canal de presença). */
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
   /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
