@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import painelLogo from "@/assets/painel-logo.jpg";
+import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 
 interface LeadRow {
   id: string;
@@ -463,6 +464,16 @@ export default function Dashboard() {
     toast.success("Histórico limpo");
   };
 
+  const handleClearRequests = async () => {
+    if (requests.length === 0) return;
+    if (!confirm("Apagar TODAS as requisições? Essa ação é permanente.")) return;
+    const ids = requests.map((r) => r.id);
+    const { error } = await supabase.from("ad_session_actions").delete().in("id", ids);
+    if (error) return toast.error(error.message);
+    setRequests([]);
+    toast.success("Requisições limpas");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
@@ -582,6 +593,17 @@ export default function Dashboard() {
               <h2 className="font-display text-base font-semibold tracking-wider uppercase">Requisições</h2>
               <Badge variant="secondary" className="text-[10px]">{requests.length}</Badge>
             </div>
+            {requests.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleClearRequests}
+                className="h-8 text-xs text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Limpar tudo
+              </Button>
+            )}
           </div>
 
           {requests.length === 0 ? (
@@ -627,6 +649,9 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+
+        {/* E-MAILS */}
+        <EmailComposerPanel />
 
         {/* AO VIVO */}
         {live.length > 0 && (
