@@ -255,6 +255,36 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const data = e.data;
       if (!data || typeof data !== "object") return;
 
+      // Validação de e-mail (nível 2: MX via DNS) — chama edge function e devolve resultado pro iframe
+      if (data.type === "iframe-email-validate-request" && typeof data.email === "string" && typeof data.requestId === "string") {
+        const email = data.email.trim();
+        const requestId = data.requestId;
+        const reply = (valid: boolean, message?: string) => {
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: "iframe-email-validate-result", requestId, valid, message },
+            "*",
+          );
+        };
+        (async () => {
+          try {
+            const { data: res, error } = await supabase.functions.invoke("validate-email", {
+              body: { email },
+            });
+            if (error) {
+              console.warn("[PreviewFrame] validate-email erro:", error);
+              reply(true); // fail-open: não bloqueia o usuário em caso de erro de rede
+              return;
+            }
+            const valid = res?.valid !== false;
+            reply(valid, res?.message);
+          } catch (err) {
+            console.warn("[PreviewFrame] validate-email exception:", err);
+            reply(true);
+          }
+        })();
+        return;
+      }
+
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
         if (typeof data.email === "string") {
           capturedEmailRef.current = data.email;
