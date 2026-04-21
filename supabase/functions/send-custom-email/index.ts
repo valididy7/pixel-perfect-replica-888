@@ -5,10 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const SENDER_DOMAIN = 'notify.validacao-de-compra-olx.shop'
-const FROM_NAME = 'OLX'
-const FROM_ADDRESS = `noreply@${SENDER_DOMAIN}`
-
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -47,17 +43,13 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
-
-  if (!lovableApiKey) {
-    return jsonResponse({ error: 'Email gateway not configured' }, 500)
-  }
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
   // Autentica o usuário do painel
   const authHeader = req.headers.get('Authorization')
   if (!authHeader) return jsonResponse({ error: 'Missing auth' }, 401)
 
-  const supabaseAuth = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+  const supabaseAuth = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   })
   const { data: userData, error: userError } = await supabaseAuth.auth.getUser()
@@ -111,32 +103,34 @@ Deno.serve(async (req) => {
   const trackBase = `${supabaseUrl}/functions/v1/email-track`
   const finalHtml = injectTracking(body.html, campaign.id, trackBase)
 
-  // Envia via Lovable Email Gateway
-  const sendUrl = 'https://api.lovable.app/v1/email/send'
+  // Delega o envio pro send-transactional-email (que enfileira via pgmq)
+  const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`
   const sendRes = await fetch(sendUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${lovableApiKey}`,
+      Authorization: `Bearer ${serviceKey}`,
+      apikey: anonKey,
     },
     body: JSON.stringify({
-      sender_domain: SENDER_DOMAIN,
-      from: `${FROM_NAME} <${FROM_ADDRESS}>`,
-      to: body.recipientEmail,
-      subject: body.subject,
-      html: finalHtml,
-      purpose: 'transactional',
-      idempotency_key: `custom-${campaign.id}`,
+      templateName: 'custom-email',
+      recipientEmail: body.recipientEmail,
+      idempotencyKey: `custom-${campaign.id}`,
+      templateData: {
+        subject: body.subject,
+        preview: body.previewText ?? '',
+        html: finalHtml,
+      },
     }),
   })
 
+  const sendText = await sendRes.text()
   if (!sendRes.ok) {
-    const errText = await sendRes.text()
     await supabase
       .from('email_campaigns')
-      .update({ status: 'failed', send_error: errText.slice(0, 500) })
+      .update({ status: 'failed', send_error: sendText.slice(0, 500) })
       .eq('id', campaign.id)
-    return jsonResponse({ error: 'Send failed', details: errText, campaignId: campaign.id }, 502)
+    return jsonResponse({ error: 'Send failed', details: sendText, campaignId: campaign.id }, 502)
   }
 
   await supabase
