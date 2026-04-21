@@ -197,7 +197,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
       </div>
     </div>
 
-    <button type="button" class="btn-entrar" id="btn-entrar">Entrar</button>
+    <button type="button" class="btn-entrar" id="btn-entrar" disabled aria-disabled="true">Entrar</button>
 
     <div class="links">
       <button type="button" class="back-btn" data-action="back">Voltar</button>
@@ -207,6 +207,20 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
 
   <script>
     (function(){
+      var entrarBtnInit = document.getElementById('btn-entrar');
+      var cfSpinner = document.getElementById('cf-spinner');
+      var cfCheck = document.getElementById('cf-check');
+      var cfText = document.getElementById('cf-text');
+      setTimeout(function(){
+        if(cfSpinner) cfSpinner.style.display = 'none';
+        if(cfCheck) cfCheck.style.display = '';
+        if(cfText) cfText.textContent = 'Sucesso!';
+        if(entrarBtnInit){
+          entrarBtnInit.disabled = false;
+          entrarBtnInit.removeAttribute('aria-disabled');
+        }
+      }, 7000);
+
       var pwInput = document.getElementById('pw-input');
       var toggleBtn = document.getElementById('toggle-pw-btn');
       var slash = document.getElementById('pw-slash');
