@@ -148,6 +148,9 @@ export default function Dashboard() {
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
   /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
   const [lastKnownScreens, setLastKnownScreens] = useState<Map<string, string>>(new Map());
+  /** Requisições do visitante (esqueci senha, sem senha, reativar, reenviar código). */
+  const [requests, setRequests] = useState<RequestRow[]>([]);
+  const [requestsPulse, setRequestsPulse] = useState(false);
 
   // Subscreve presença global de visitantes
   useEffect(() => {
