@@ -382,8 +382,8 @@ export default function Dashboard() {
             </div>
             <span className="text-lg font-bold tracking-tight">Painel</span>
             <span
-              className={`ml-2 inline-flex h-2 w-2 rounded-full bg-success ${pulse ? "animate-ping" : ""}`}
-              aria-label="Conectado"
+              className={`ml-2 inline-flex h-2 w-2 rounded-full ${onlineSessionIds.size > 0 ? "bg-success" : "bg-destructive"} ${pulse ? "animate-ping" : ""}`}
+              aria-label={onlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             />
           </Link>
           <div className="flex items-center gap-3">
