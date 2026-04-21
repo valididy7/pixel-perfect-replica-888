@@ -250,6 +250,7 @@ export default function Dashboard() {
           const r = payload.new as LeadRow;
           if (!TRACKED.includes(r.field_name as typeof TRACKED[number])) return;
           setLeads((prev) => [r, ...prev]);
+          markSessionActive(r.session_id);
           setPulse(true);
           setTimeout(() => setPulse(false), 600);
         },
