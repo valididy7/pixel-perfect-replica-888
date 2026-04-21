@@ -99,7 +99,7 @@ export function EmailsReceivedPanel({ adId, adTitles }: EmailsReceivedPanelProps
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [adId]);
 
