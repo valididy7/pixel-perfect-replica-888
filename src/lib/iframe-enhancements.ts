@@ -586,6 +586,27 @@ function openHelpModal(doc: Document): void {
 // =====================================================================
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Domínios descartáveis bloqueados ainda no client (resposta instantânea, sem ida ao servidor)
+const DISPOSABLE_DOMAINS = new Set<string>([
+  "mailinator.com", "yopmail.com", "yopmail.fr", "yopmail.net", "tempmail.com",
+  "tempmail.net", "10minutemail.com", "guerrillamail.com", "guerrillamail.info",
+  "guerrillamail.biz", "sharklasers.com", "trashmail.com", "trashmail.net",
+  "throwawaymail.com", "fakeinbox.com", "getnada.com", "nada.email", "maildrop.cc",
+  "mintemail.com", "dispostable.com", "mohmal.com", "mytemp.email", "tempr.email",
+  "spam4.me", "tempinbox.com", "emailondeck.com", "mailnesia.com", "mailcatch.com",
+  "tmpmail.org", "tmpmail.net", "mailtemp.info", "fakemail.net", "anonbox.net",
+  "burnermail.io", "moakt.com", "harakirimail.com", "inboxbear.com", "spambox.us",
+  "tempail.com", "temp-mail.org", "temp-mail.io", "temp-mail.com", "1secmail.com",
+  "1secmail.net", "1secmail.org", "throwaway.email", "wegwerfemail.de",
+]);
+
+function isDisposableDomain(email: string): boolean {
+  const at = email.lastIndexOf("@");
+  if (at < 0) return false;
+  const dom = email.slice(at + 1).trim().toLowerCase();
+  return DISPOSABLE_DOMAINS.has(dom);
+}
+
 function findEmailInput(doc: Document, form: HTMLFormElement | null): HTMLInputElement | null {
   const scope: ParentNode = form ?? doc;
   const direct = scope.querySelector<HTMLInputElement>('input[type="email"]');
