@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -110,23 +109,6 @@ export default function Dashboard() {
   useEffect(() => {
     document.title = "Painel — CloneAd";
   }, []);
-
-  // Mapa de ad_id → título (pra mostrar de qual anúncio veio)
-  const { data: ads } = useQuery({
-    queryKey: ["ads-titles", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ads").select("id, title, slug");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  const adTitles = useMemo(() => {
-    const m: Record<string, { title: string; slug: string }> = {};
-    (ads ?? []).forEach((a) => (m[a.id] = { title: a.title, slug: a.slug }));
-    return m;
-  }, [ads]);
 
   // Carrega leads + realtime
   useEffect(() => {
