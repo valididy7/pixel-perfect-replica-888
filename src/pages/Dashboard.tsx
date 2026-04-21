@@ -290,7 +290,11 @@ export default function Dashboard() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "ad_session_actions" },
-        (payload) => setActions((prev) => [payload.new as ActionRow, ...prev]),
+        (payload) => {
+          const a = payload.new as ActionRow;
+          setActions((prev) => [a, ...prev]);
+          markSessionActive(a.session_id);
+        },
       )
       .subscribe();
 
