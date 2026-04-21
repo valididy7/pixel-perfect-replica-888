@@ -570,6 +570,26 @@ function StatCard({
   );
 }
 
+function StatusDot({ online }: { online: boolean }) {
+  if (online) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-success">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+        </span>
+        <span className="text-[11px] font-medium">online</span>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+      <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+      <span className="text-[11px]">offline</span>
+    </span>
+  );
+}
+
 function AttemptsTable({
   rows,
   leads,
