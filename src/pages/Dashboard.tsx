@@ -659,7 +659,7 @@ function AttemptsTable({
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
-            <th className="px-4 py-3 text-left font-medium">Status</th>
+            {actionable && <th className="px-4 py-3 text-left font-medium">Status</th>}
             <th className="px-4 py-3 text-left font-medium">Hora</th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
@@ -697,9 +697,11 @@ function AttemptsTable({
                   actionable ? "bg-primary/5" : "hover:bg-muted/30"
                 }`}
               >
-                <td className="whitespace-nowrap px-4 py-3 text-xs">
-                  <StatusDot online={isOnline} />
-                </td>
+                {actionable && (
+                  <td className="whitespace-nowrap px-4 py-3 text-xs">
+                    <StatusDot online={isOnline} />
+                  </td>
+                )}
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
