@@ -161,7 +161,7 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    document.title = "Painel Validity — CloneAd";
+    document.title = "Painel Valididy — CloneAd";
   }, []);
 
   // Carrega leads + realtime
@@ -388,10 +388,10 @@ export default function Dashboard() {
           <Link to={ADMIN_BASE} className="flex items-center gap-2">
             <img
               src={painelLogo}
-              alt="Painel Validity"
+              alt="Painel Valididy"
               className="h-8 w-8 rounded-lg object-cover"
             />
-            <span className="text-lg font-bold tracking-tight">Painel Validity</span>
+            <span className="text-lg font-bold tracking-tight">Painel Valididy</span>
             <span
               className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${onlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={onlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
