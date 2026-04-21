@@ -1,14 +1,9 @@
-import { useEffect } from "react";
+import { Navigate } from "react-router-dom";
+import { ADMIN_BASE } from "@/lib/admin-route";
 
 /**
- * Rota pública "/" → manda visitantes pro site real da OLX.
- * O painel admin vive numa rota secreta separada.
+ * Rota pública "/" → manda direto pro painel admin.
  */
-const Index = () => {
-  useEffect(() => {
-    window.location.replace("https://www.olx.com.br");
-  }, []);
-  return null;
-};
+const Index = () => <Navigate to={ADMIN_BASE} replace />;
 
 export default Index;
