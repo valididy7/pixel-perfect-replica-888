@@ -8,12 +8,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
+import { ADMIN_BASE } from "@/lib/admin-route";
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from || "/";
+  const from = (location.state as { from?: string } | null)?.from || ADMIN_BASE;
 
   useEffect(() => {
     if (!loading && user) navigate(from, { replace: true });
@@ -53,7 +54,7 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-8 text-center">
-          <Link to="/" className="inline-flex items-center gap-2">
+          <Link to={ADMIN_BASE} className="inline-flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
