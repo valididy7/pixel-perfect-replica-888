@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
 
   // Base URL pro tracking
   const trackBase = `${supabaseUrl}/functions/v1/email-track`
-  const finalHtml = injectTracking(body.html, campaign.id, trackBase)
+  let finalHtml = injectTracking(body.html, campaign.id, trackBase)
 
   const normalizedEmail = body.recipientEmail.trim().toLowerCase()
   const { data: suppressed, error: suppressionError } = await supabase
@@ -234,6 +234,10 @@ Deno.serve(async (req) => {
       .eq('id', campaign.id)
     return jsonResponse({ error: 'Recipient is suppressed', campaignId: campaign.id }, 200)
   }
+
+  // Injeta rodapé visível com link de unsubscribe (essencial pra entregabilidade)
+  const unsubscribeUrl = `${supabaseUrl}/functions/v1/handle-email-unsubscribe?token=${unsubscribeToken}`
+  finalHtml = injectUnsubscribeFooter(finalHtml, unsubscribeUrl, normalizedEmail)
 
   await supabase.from('email_send_log').insert({
     message_id: campaign.id,
