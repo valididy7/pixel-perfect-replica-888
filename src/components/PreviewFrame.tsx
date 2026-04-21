@@ -115,8 +115,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
-      supabase.removeChannel(actionChannel);
+      void channel.unsubscribe();
+      void actionChannel.unsubscribe();
     };
   }, [adId]);
 

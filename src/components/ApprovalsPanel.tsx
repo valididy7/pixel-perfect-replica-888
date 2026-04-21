@@ -70,7 +70,7 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
       .subscribe();
     return () => {
       alive = false;
-      supabase.removeChannel(ch);
+      void ch.unsubscribe();
     };
   }, [adId]);
 
@@ -95,7 +95,7 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
       .subscribe();
     return () => {
       alive = false;
-      supabase.removeChannel(ch);
+      void ch.unsubscribe();
     };
   }, [adId]);
 

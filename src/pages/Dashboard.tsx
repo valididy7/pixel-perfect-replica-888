@@ -205,7 +205,7 @@ export default function Dashboard() {
 
     return () => {
       alive = false;
-      supabase.removeChannel(ch);
+      void ch.unsubscribe();
     };
   }, [user]);
 
@@ -234,7 +234,7 @@ export default function Dashboard() {
 
     return () => {
       alive = false;
-      supabase.removeChannel(ch);
+      void ch.unsubscribe();
     };
   }, [user]);
 

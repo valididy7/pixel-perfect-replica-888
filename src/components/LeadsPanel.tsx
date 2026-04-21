@@ -125,7 +125,7 @@ export function LeadsPanel({ adId }: LeadsPanelProps) {
 
     return () => {
       mounted = false;
-      supabase.removeChannel(channel);
+      void channel.unsubscribe();
     };
   }, [adId]);
 

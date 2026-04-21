@@ -40,57 +40,63 @@ export function trackVisitorPresence(
 
   let currentScreen = "main";
   let stopped = false;
+  let subscribed = false;
+  let tracked = false;
 
-  let channel: ReturnType<typeof supabase.channel> | null = null;
+  const channel = supabase.channel(CHANNEL_NAME, {
+    config: { presence: { key: presenceKey } },
+  });
 
-  const trackOnChannel = async (target: ReturnType<typeof supabase.channel>) => {
-    if (stopped || channel !== target) return;
-    await target.track({
-      adId,
-      sessionId,
-      online_at: new Date().toISOString(),
-      screenKind: currentScreen,
-    } satisfies PresenceMeta);
+  let queue = Promise.resolve();
+  const enqueue = (job: () => Promise<void>) => {
+    queue = queue.catch(() => undefined).then(job);
+    return queue;
   };
 
-  const closeChannel = async (target = channel) => {
-    if (!target) return;
-    if (channel === target) channel = null;
-    try {
-      await target.untrack();
-    } catch {
-      // ignore untrack errors during teardown
-    }
-    supabase.removeChannel(target);
-  };
-
-  const openChannel = () => {
-    if (stopped) return;
+  const trackPresence = () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    if (channel) {
-      void trackOnChannel(channel);
-      return;
-    }
-
-    const nextChannel = supabase.channel(CHANNEL_NAME, {
-      config: { presence: { key: presenceKey } },
+    void enqueue(async () => {
+      if (stopped || !subscribed) return;
+      await channel.track({
+        adId,
+        sessionId,
+        online_at: new Date().toISOString(),
+        screenKind: currentScreen,
+      } satisfies PresenceMeta);
+      tracked = true;
     });
+  };
 
-    channel = nextChannel;
-    nextChannel.subscribe((status) => {
-      // Importante: NÃO chamar removeChannel daqui — isso causa
-      // recursão (unsubscribe → trigger → callback → unsubscribe → …)
-      // e estoura a stack. O fechamento fica todo a cargo do closeChannel.
-      if (stopped || channel !== nextChannel) return;
-      if (status === "SUBSCRIBED") {
-        void trackOnChannel(nextChannel);
+  const untrackPresence = () => {
+    void enqueue(async () => {
+      if (!subscribed || !tracked) return;
+      try {
+        await channel.untrack();
+      } catch {
+        // ignore untrack errors during teardown / rapid tab switches
+      } finally {
+        tracked = false;
       }
     });
   };
 
+  channel.subscribe((status) => {
+    if (stopped) return;
+    if (status === "SUBSCRIBED") {
+      subscribed = true;
+      trackPresence();
+      return;
+    }
+
+    if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
+      subscribed = false;
+      tracked = false;
+    }
+  });
+
   const markActive = () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    openChannel();
+    trackPresence();
   };
 
   const setScreen = (kind: string) => {
@@ -103,7 +109,7 @@ export function trackVisitorPresence(
     if (document.visibilityState === "visible") {
       markActive();
     } else {
-      void closeChannel();
+      untrackPresence();
     }
   };
 
@@ -117,7 +123,7 @@ export function trackVisitorPresence(
   };
 
   const onPageHide = () => {
-    void closeChannel();
+    untrackPresence();
   };
 
   document.addEventListener("visibilitychange", onVisibility);
@@ -131,11 +137,8 @@ export function trackVisitorPresence(
   document.addEventListener("scroll", onActivity, { passive: true });
   document.addEventListener("keydown", onActivity);
 
-  if (typeof document === "undefined" || document.visibilityState === "visible") {
-    openChannel();
-  }
-
   const stop = () => {
+    if (stopped) return;
     stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
@@ -147,7 +150,25 @@ export function trackVisitorPresence(
     document.removeEventListener("mousemove", onActivity);
     document.removeEventListener("scroll", onActivity);
     document.removeEventListener("keydown", onActivity);
-    void closeChannel();
+    void enqueue(async () => {
+      if (tracked) {
+        try {
+          await channel.untrack();
+        } catch {
+          // ignore final untrack failure
+        } finally {
+          tracked = false;
+        }
+      }
+
+      try {
+        await channel.unsubscribe();
+      } catch {
+        // ignore unsubscribe failure
+      } finally {
+        subscribed = false;
+      }
+    });
   };
 
   return { stop, setScreen, markActive };
@@ -194,6 +215,6 @@ export function subscribeToOnlineVisitors(
     .subscribe();
 
   return () => {
-    supabase.removeChannel(channel);
+    void channel.unsubscribe();
   };
 }
