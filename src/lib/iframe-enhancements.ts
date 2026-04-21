@@ -77,6 +77,14 @@ export function attachIframeInteractions(doc: Document): () => void {
       }
     }
 
+    const actionNode = target.closest("[data-action]") as HTMLElement | null;
+    if (actionNode?.getAttribute("data-action") === "forgot-password") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.parent.postMessage({ type: "iframe-help-action", action: "forgot-password" }, "*");
+      return;
+    }
+
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (a) {
       const linkText = (a.textContent || "").trim().toLowerCase();
