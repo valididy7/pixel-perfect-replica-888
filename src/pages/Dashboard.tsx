@@ -188,6 +188,7 @@ export default function Dashboard() {
         for (const [sid, meta] of map) {
           if (meta.screenKind) screens.set(sid, meta.screenKind);
         }
+        console.info("[Dashboard] presence sync — telas:", Array.from(screens.entries()));
         setLiveScreens(screens);
       },
       (sessionId) => {
