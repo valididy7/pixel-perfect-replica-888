@@ -31,8 +31,13 @@ export function trackVisitorPresence(
     return { stop: () => {}, setScreen: () => {} };
   }
 
+  // Key única por CONEXÃO (não por sessionId). Garante que sair e voltar
+  // sempre dispara um novo "join" no painel, mesmo que o session_id (cookie)
+  // do visitante seja o mesmo.
+  const presenceKey = `visitor-${sessionId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const channel = supabase.channel(CHANNEL_NAME, {
-    config: { presence: { key: sessionId } },
+    config: { presence: { key: presenceKey } },
   });
 
   let isTracking = false;
