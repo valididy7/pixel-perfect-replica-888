@@ -346,7 +346,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               );
             } catch { /* ignore */ }
             const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
+              redirect_uri: window.location.href,
             });
             if (result.error) {
               console.error("[PreviewFrame] google oauth erro:", result.error);
