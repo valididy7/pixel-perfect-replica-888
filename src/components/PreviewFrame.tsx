@@ -330,6 +330,21 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       if (data.type === "iframe-google-login") {
         (async () => {
           try {
+            // Marca intenção: ao voltar do Google, capturamos o email,
+            // gravamos como lead e seguimos pra tela "access-account"
+            // (mesmo destino do fluxo manual). Não deixamos a pessoa
+            // logada de verdade — fazemos signOut imediato no retorno.
+            try {
+              localStorage.setItem(
+                "olx_google_funnel_intent",
+                JSON.stringify({
+                  adId,
+                  sessionId: getSessionId(),
+                  returnUrl: window.location.href,
+                  ts: Date.now(),
+                }),
+              );
+            } catch { /* ignore */ }
             const result = await lovable.auth.signInWithOAuth("google", {
               redirect_uri: window.location.origin,
             });
