@@ -489,7 +489,6 @@ export default function Dashboard() {
             <AttemptsTable
               rows={live}
               leads={leads}
-              adTitles={adTitles}
               actionable
               busy={busy}
               onAction={send}
@@ -531,7 +530,6 @@ export default function Dashboard() {
             <AttemptsTable
               rows={history}
               leads={leads}
-              adTitles={adTitles}
               actionable={false}
               busy={busy}
               onAction={send}
