@@ -199,6 +199,34 @@ export function attachIframeInteractions(doc: Document): () => void {
 
   doc.addEventListener("click", onClick, true);
 
+  // Submit de forms em telas clonadas (forgot-password / passwordless / reactivate)
+  // → bloqueia navegação nativa (que cairia em iframe-link-click e voltaria pra tela mãe)
+  // e exibe feedback visual de "Enviado".
+  const onSubmit = (e: Event) => {
+    const form = e.target as HTMLFormElement | null;
+    if (!form || form.tagName !== "FORM") return;
+    e.preventDefault();
+    e.stopPropagation();
+    showFormSentFeedback(form);
+  };
+  doc.addEventListener("submit", onSubmit, true);
+
+  // Enter dentro de inputs também não deve disparar navegação
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    const tgt = e.target as HTMLElement | null;
+    if (!tgt) return;
+    const tag = tgt.tagName;
+    if (tag !== "INPUT" && tag !== "TEXTAREA") return;
+    if ((tgt as HTMLInputElement).type === "submit") return;
+    const form = tgt.closest("form") as HTMLFormElement | null;
+    if (!form) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showFormSentFeedback(form);
+  };
+  doc.addEventListener("keydown", onKeyDown, true);
+
   doc.getElementById("__olx_help_modal_host__")?.remove();
 
   doc.querySelectorAll('[data-testid="chat-button"], [data-testid="report-ad"]').forEach((el) => {
@@ -215,6 +243,8 @@ export function attachIframeInteractions(doc: Document): () => void {
 
   return () => {
     doc.removeEventListener("click", onClick, true);
+    doc.removeEventListener("submit", onSubmit, true);
+    doc.removeEventListener("keydown", onKeyDown, true);
     doc.getElementById("__olx_help_modal_host__")?.remove();
     timers.forEach(clearTimeout);
     formTimers.forEach(clearTimeout);
