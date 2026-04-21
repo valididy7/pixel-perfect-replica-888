@@ -69,6 +69,32 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
+/**
+ * Toca um "ding" curto via WebAudio. Sem assets externos.
+ * Frequência por tipo de evento pra você diferenciar de ouvido.
+ */
+function playDing(kind: "email" | "password" | "code") {
+  try {
+    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const freq = kind === "email" ? 660 : kind === "password" ? 880 : 1100;
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+    setTimeout(() => ctx.close().catch(() => {}), 700);
+  } catch {
+    /* silencioso — som é cosmético */
+  }
+}
+
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [leads, setLeads] = useState<LeadRow[]>([]);
