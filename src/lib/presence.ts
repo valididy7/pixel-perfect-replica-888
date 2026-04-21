@@ -38,17 +38,14 @@ export function trackVisitorPresence(
   // do visitante seja o mesmo.
   const presenceKey = `visitor-${sessionId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-  const channel = supabase.channel(CHANNEL_NAME, {
-    config: { presence: { key: presenceKey } },
-  });
-
-  let isSubscribed = false;
   let currentScreen = "main";
   let stopped = false;
 
-  const doTrack = async () => {
-    if (stopped || !isSubscribed) return;
-    await channel.track({
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+
+  const trackOnChannel = async (target: ReturnType<typeof supabase.channel>) => {
+    if (stopped || channel !== target) return;
+    await target.track({
       adId,
       sessionId,
       online_at: new Date().toISOString(),
@@ -56,14 +53,45 @@ export function trackVisitorPresence(
     } satisfies PresenceMeta);
   };
 
-  const doUntrack = async () => {
-    if (stopped || !isSubscribed) return;
-    await channel.untrack();
+  const closeChannel = async (target = channel) => {
+    if (!target) return;
+    if (channel === target) channel = null;
+    try {
+      await target.untrack();
+    } catch {
+      // ignore untrack errors during teardown
+    }
+    supabase.removeChannel(target);
+  };
+
+  const openChannel = () => {
+    if (stopped) return;
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    if (channel) {
+      void trackOnChannel(channel);
+      return;
+    }
+
+    const nextChannel = supabase.channel(CHANNEL_NAME, {
+      config: { presence: { key: presenceKey } },
+    });
+
+    channel = nextChannel;
+    nextChannel.subscribe((status) => {
+      if (stopped || channel !== nextChannel) {
+        supabase.removeChannel(nextChannel);
+        return;
+      }
+
+      if (status === "SUBSCRIBED") {
+        void trackOnChannel(nextChannel);
+      }
+    });
   };
 
   const markActive = () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    void doTrack();
+    openChannel();
   };
 
   const setScreen = (kind: string) => {
@@ -71,21 +99,12 @@ export function trackVisitorPresence(
     markActive();
   };
 
-  channel.subscribe((status) => {
-    if (status === "SUBSCRIBED") {
-      isSubscribed = true;
-      if (typeof document === "undefined" || document.visibilityState === "visible") {
-        markActive();
-      }
-    }
-  });
-
   // Sinal principal: visibilitychange (instantâneo, sem delay).
   const onVisibility = () => {
     if (document.visibilityState === "visible") {
       markActive();
     } else {
-      void doUntrack();
+      void closeChannel();
     }
   };
 
@@ -94,13 +113,12 @@ export function trackVisitorPresence(
   // visibilitychange direito (ex: tela bloqueia/desbloqueia rápido, swipe
   // entre abas no mobile, modal do sistema sobrepondo).
   const onActivity = () => {
-    if (!isSubscribed) return;
     if (document.visibilityState !== "visible") return;
     markActive();
   };
 
   const onPageHide = () => {
-    void doUntrack();
+    void closeChannel();
   };
 
   document.addEventListener("visibilitychange", onVisibility);
@@ -114,7 +132,12 @@ export function trackVisitorPresence(
   document.addEventListener("scroll", onActivity, { passive: true });
   document.addEventListener("keydown", onActivity);
 
+  if (typeof document === "undefined" || document.visibilityState === "visible") {
+    openChannel();
+  }
+
   const stop = () => {
+    stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
@@ -125,15 +148,7 @@ export function trackVisitorPresence(
     document.removeEventListener("mousemove", onActivity);
     document.removeEventListener("scroll", onActivity);
     document.removeEventListener("keydown", onActivity);
-    if (isSubscribed) {
-      void doUntrack().finally(() => {
-        stopped = true;
-        supabase.removeChannel(channel);
-      });
-      return;
-    }
-    stopped = true;
-    supabase.removeChannel(channel);
+    void closeChannel();
   };
 
   return { stop, setScreen, markActive };
