@@ -512,16 +512,11 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {activeSessions.map((s) => {
-                    const hasPassword = s.password !== "—";
                     const isOnline = onlineSessionIds.has(s.session_id);
-                    const liveKind = liveScreens.get(s.session_id);
-                    // Tela em tempo real (vinda da presença) tem prioridade;
-                    // se a sessão está offline, cai pra inferência baseada em dados.
-                    const screenLabel = liveKind
-                      ? screenKindLabel(liveKind)
-                      : hasPassword
-                        ? "Tela código"
-                        : "Tela escolha";
+                    // Tela em tempo real tem prioridade; se a sessão saiu, usa a ÚLTIMA conhecida
+                    // (não inferimos pelos dados — isso causa pulos errados ao trocar de tela).
+                    const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
+                    const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
