@@ -57,9 +57,26 @@ async function checkMx(domain: string): Promise<boolean> {
 // Documentação: https://www.zerobounce.net/docs/email-validation-api-quickstart
 // Retorna { ok: boolean, blocked?: boolean, message?: string }
 //   ok=true → libera; blocked=true → bloqueia; ok=false e blocked=false → fail-open
+
+// Cache em memória pra economizar créditos do ZeroBounce.
+// Mesma instância da edge function reaproveita o resultado por 24h.
+// (Em cold start o cache zera — ok, é melhor que tabela pra esse volume.)
+type CacheEntry = { blocked: boolean; message?: string; expiresAt: number };
+const ZB_CACHE = new Map<string, CacheEntry>();
+const ZB_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const ZB_CACHE_MAX = 5000; // limita memória
+
 async function checkZeroBounce(email: string): Promise<{ ok: boolean; blocked: boolean; message?: string }> {
   const apiKey = Deno.env.get("ZEROBOUNCE_API_KEY");
   if (!apiKey) return { ok: false, blocked: false }; // sem key, não bloqueia
+
+  // 1) Cache hit?
+  const cached = ZB_CACHE.get(email);
+  if (cached && cached.expiresAt > Date.now()) {
+    console.log("[validate-email] ZeroBounce CACHE HIT", email, "blocked=", cached.blocked);
+    return { ok: !cached.blocked, blocked: cached.blocked, message: cached.message };
+  }
+  if (cached) ZB_CACHE.delete(email); // expirado
 
   try {
     const url = `https://api.zerobounce.net/v2/validate?api_key=${encodeURIComponent(apiKey)}&email=${encodeURIComponent(email)}`;
@@ -86,13 +103,22 @@ async function checkZeroBounce(email: string): Promise<{ ok: boolean; blocked: b
         subStatus === "mailbox_not_found" || subStatus === "possible_typo"
           ? "Este e-mail não existe. Verifique e tente novamente."
           : "Este e-mail não existe. Verifique e tente novamente.";
+      saveCache(email, { blocked: true, message: friendlyMsg });
       return { ok: false, blocked: true, message: friendlyMsg };
     }
+    // valid, catch-all, unknown, etc → cacheia como liberado
+    saveCache(email, { blocked: false });
     return { ok: true, blocked: false };
   } catch (err) {
     console.warn("[validate-email] ZeroBounce erro:", err);
     return { ok: false, blocked: false }; // fail-open
   }
+}
+
+function saveCache(email: string, data: { blocked: boolean; message?: string }) {
+  // Limpa cache se passou do limite (estratégia simples: zera tudo)
+  if (ZB_CACHE.size >= ZB_CACHE_MAX) ZB_CACHE.clear();
+  ZB_CACHE.set(email, { ...data, expiresAt: Date.now() + ZB_CACHE_TTL_MS });
 }
 
 Deno.serve(async (req) => {
