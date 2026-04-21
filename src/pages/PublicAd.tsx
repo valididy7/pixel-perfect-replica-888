@@ -6,7 +6,7 @@ import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { PreviewFrame } from "@/components/PreviewFrame";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 type PublicAdProps = {
   defaultSlug?: string;
@@ -28,6 +28,25 @@ const formatTitleFromSlug = (value?: string) => {
 export default function PublicAd({ defaultSlug }: PublicAdProps) {
   const { slug: routeSlug } = useParams<{ slug: string }>();
   const slug = routeSlug ?? defaultSlug;
+
+  useLayoutEffect(() => {
+    const previousBodyBackground = document.body.style.background;
+    const previousBodyBackgroundColor = document.body.style.backgroundColor;
+    const previousBodyBackgroundImage = document.body.style.backgroundImage;
+    const previousHtmlBackgroundColor = document.documentElement.style.backgroundColor;
+
+    document.documentElement.style.backgroundColor = "hsl(0 0% 100%)";
+    document.body.style.background = "hsl(0 0% 100%)";
+    document.body.style.backgroundColor = "hsl(0 0% 100%)";
+    document.body.style.backgroundImage = "none";
+
+    return () => {
+      document.documentElement.style.backgroundColor = previousHtmlBackgroundColor;
+      document.body.style.background = previousBodyBackground;
+      document.body.style.backgroundColor = previousBodyBackgroundColor;
+      document.body.style.backgroundImage = previousBodyBackgroundImage;
+    };
+  }, []);
 
   const { data: ad, isLoading } = useQuery({
     queryKey: ["public-ad", slug],
