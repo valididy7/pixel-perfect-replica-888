@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -657,7 +657,6 @@ function AttemptsTable({
             </th>
             <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
             <th className="px-4 py-3 text-left font-medium">Status</th>
-            {actionable && <th className="px-4 py-3 text-right font-medium">Ações</th>}
           </tr>
         </thead>
         <tbody>
@@ -665,8 +664,8 @@ function AttemptsTable({
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
             const isOnline = onlineSessionIds.has(row.session_id);
             return (
+              <Fragment key={row.key}>
               <tr
-                key={row.key}
                 className={`border-t border-border transition-colors ${
                   actionable ? "bg-primary/5" : "hover:bg-muted/30"
                 }`}
@@ -706,42 +705,45 @@ function AttemptsTable({
                     <span className="text-muted-foreground">— ignorado</span>
                   )}
                 </td>
-                {actionable && (
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-1.5">
+              </tr>
+              {actionable && (
+                <tr className="bg-primary/5">
+                  <td colSpan={8} className="px-4 pb-4 pt-0">
+                    <div className="flex flex-wrap gap-2 sm:justify-end">
                       <Button
                         size="sm"
-                        className="h-8 bg-success px-3 text-success-foreground hover:bg-success/90"
+                        className="h-10 flex-1 bg-success px-5 text-success-foreground hover:bg-success/90 sm:flex-none"
                         onClick={() => onAction(row, "approve")}
                         disabled={busy === `${row.key}-approve`}
                       >
                         {busy === `${row.key}-approve` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            <Check className="mr-1 h-3.5 w-3.5" /> Aprovar
+                            <Check className="mr-1.5 h-4 w-4" /> Aprovar
                           </>
                         )}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8 border-destructive/40 px-3 text-destructive hover:bg-destructive/10"
+                        className="h-10 flex-1 border-destructive/40 px-5 text-destructive hover:bg-destructive/10 sm:flex-none"
                         onClick={() => onAction(row, "reject")}
                         disabled={busy === `${row.key}-reject`}
                       >
                         {busy === `${row.key}-reject` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <>
-                            <X className="mr-1 h-3.5 w-3.5" /> Rejeitar
+                            <X className="mr-1.5 h-4 w-4" /> Rejeitar
                           </>
                         )}
                       </Button>
                     </div>
                   </td>
-                )}
-              </tr>
+                </tr>
+              )}
+              </Fragment>
             );
           })}
         </tbody>
