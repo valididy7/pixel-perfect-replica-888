@@ -533,6 +533,7 @@ export default function Dashboard() {
               actionable={false}
               busy={busy}
               onAction={send}
+              onlineSessionIds={onlineSessionIds}
             />
           )}
         </section>
