@@ -626,7 +626,7 @@ export default function Dashboard() {
                 </thead>
                 <tbody>
                   {activeSessions.map((s) => {
-                    const isOnline = onlineSessionIds.has(s.session_id);
+                    const isOnline = activeOnlineSessionIds.has(s.session_id);
                     // Tela em tempo real tem prioridade; se a sessão saiu, usa a ÚLTIMA conhecida
                     // (não inferimos pelos dados — isso causa pulos errados ao trocar de tela).
                     const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
