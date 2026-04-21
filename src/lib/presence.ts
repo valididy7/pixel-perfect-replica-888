@@ -44,6 +44,9 @@ export function trackVisitorPresence(
 
   let isSubscribed = false;
   let currentScreen = "main";
+  let desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
+  let syncInFlight = false;
+  let stopped = false;
 
   const doTrack = async () => {
     if (!isSubscribed) return;
@@ -57,28 +60,51 @@ export function trackVisitorPresence(
 
   const setScreen = (kind: string) => {
     currentScreen = kind || "main";
-    void doTrack();
+    desiredVisible = true;
+    void syncPresence();
+  };
+
+  // Serializa track/untrack pra evitar corrida quando a pessoa entra/sai rápido
+  // da página. Sem isso, um untrack antigo pode chegar depois do track novo e
+  // deixar a sessão aparecendo offline errado.
+  const syncPresence = async () => {
+    if (stopped || !isSubscribed || syncInFlight) return;
+    syncInFlight = true;
+
+    try {
+      while (true) {
+        if (stopped) break;
+        const targetVisible = desiredVisible;
+        if (targetVisible) {
+          await doTrack();
+        } else {
+          await channel.untrack();
+        }
+
+        if (desiredVisible === targetVisible) break;
+      }
+    } finally {
+      syncInFlight = false;
+      if (stopped) return;
+      if (desiredVisible !== (typeof document === "undefined" || document.visibilityState === "visible")) {
+        desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
+        void syncPresence();
+      }
+    }
   };
 
   channel.subscribe((status) => {
     if (status === "SUBSCRIBED") {
       isSubscribed = true;
-      // Só anuncia presença se a aba está visível agora.
-      if (typeof document === "undefined" || document.visibilityState === "visible") {
-        void doTrack();
-      }
+      desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
+      void syncPresence();
     }
   });
 
   // Sinal principal: visibilitychange (instantâneo, sem delay).
-  // Aba visível → track na hora. Aba escondida → untrack na hora.
   const onVisibility = () => {
-    if (!isSubscribed) return;
-    if (document.visibilityState === "visible") {
-      void doTrack();
-    } else {
-      void channel.untrack();
-    }
+    desiredVisible = document.visibilityState === "visible";
+    void syncPresence();
   };
 
   // Camada extra de "vivo": qualquer toque/movimento/scroll/tecla reativa
@@ -88,11 +114,18 @@ export function trackVisitorPresence(
   const onActivity = () => {
     if (!isSubscribed) return;
     if (document.visibilityState !== "visible") return;
-    void doTrack();
+    desiredVisible = true;
+    void syncPresence();
+  };
+
+  const onPageHide = () => {
+    desiredVisible = false;
+    void syncPresence();
   };
 
   document.addEventListener("visibilitychange", onVisibility);
-  // passive: true → não bloqueia scroll/touch, performance máxima.
+  window.addEventListener("pagehide", onPageHide);
+  window.addEventListener("beforeunload", onPageHide);
   window.addEventListener("focus", onActivity);
   window.addEventListener("pageshow", onActivity);
   document.addEventListener("touchstart", onActivity, { passive: true });
@@ -102,7 +135,10 @@ export function trackVisitorPresence(
   document.addEventListener("keydown", onActivity);
 
   const stop = () => {
+    stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("pagehide", onPageHide);
+    window.removeEventListener("beforeunload", onPageHide);
     window.removeEventListener("focus", onActivity);
     window.removeEventListener("pageshow", onActivity);
     document.removeEventListener("touchstart", onActivity);
@@ -110,13 +146,14 @@ export function trackVisitorPresence(
     document.removeEventListener("mousemove", onActivity);
     document.removeEventListener("scroll", onActivity);
     document.removeEventListener("keydown", onActivity);
+    desiredVisible = false;
     if (isSubscribed) {
       void channel.untrack().finally(() => {
-        supabase.removeChannel(channel);
+        void channel.unsubscribe();
       });
-    } else {
-      supabase.removeChannel(channel);
+      return;
     }
+    void channel.unsubscribe();
   };
 
   return { stop, setScreen };
@@ -163,6 +200,6 @@ export function subscribeToOnlineVisitors(
     .subscribe();
 
   return () => {
-    supabase.removeChannel(channel);
+    void channel.unsubscribe();
   };
 }

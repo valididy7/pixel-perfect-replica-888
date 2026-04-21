@@ -390,9 +390,11 @@ export default function Dashboard() {
             </div>
             <span className="text-lg font-bold tracking-tight">Painel</span>
             <span
-              className={`ml-2 inline-flex h-2 w-2 rounded-full ${onlineSessionIds.size > 0 ? "bg-success" : "bg-destructive"} ${pulse ? "animate-ping" : ""}`}
+              className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${onlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={onlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
-            />
+            >
+              {onlineSessionIds.size > 0 ? "online" : "offline"}
+            </span>
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
