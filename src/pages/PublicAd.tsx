@@ -8,8 +8,13 @@ import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 
-export default function PublicAd() {
-  const { slug } = useParams<{ slug: string }>();
+type PublicAdProps = {
+  defaultSlug?: string;
+};
+
+export default function PublicAd({ defaultSlug }: PublicAdProps) {
+  const { slug: routeSlug } = useParams<{ slug: string }>();
+  const slug = routeSlug ?? defaultSlug;
 
   const { data: ad, isLoading } = useQuery({
     queryKey: ["public-ad", slug],
