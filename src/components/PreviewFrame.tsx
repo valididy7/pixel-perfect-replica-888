@@ -11,6 +11,7 @@ import {
   getSessionId,
   LeadValue,
 } from "@/lib/lead-capture";
+import { trackVisitorPresence } from "@/lib/presence";
 
 interface PreviewFrameProps {
   html: string;
@@ -30,6 +31,19 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const leadsRef = useRef<LeadValue[]>([]);
   const currentScreenIdRef = useRef<string | null>(null);
   const capturedEmailRef = useRef("");
+  const setScreenRef = useRef<((kind: string) => void) | null>(null);
+
+  // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
+  useEffect(() => {
+    if (!adId) return;
+    const sessionId = getSessionId();
+    const { stop, setScreen } = trackVisitorPresence(adId, sessionId);
+    setScreenRef.current = setScreen;
+    return () => {
+      setScreenRef.current = null;
+      stop();
+    };
+  }, [adId]);
 
   const { data: screens } = useQuery({
     queryKey: ["ad_screens", adId],
@@ -129,6 +143,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     currentScreenIdRef.current = null;
     currentHtmlRef.current = injected;
     historyRef.current = [];
+    setScreenRef.current?.("main");
 
     let detach: (() => void) | null = null;
     let detachCapture: (() => void) | null = null;
@@ -214,6 +229,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       currentScreenIdRef.current = screen.id;
       currentHtmlRef.current = nextHtml;
       renderHtml(nextHtml);
+      setScreenRef.current?.(screen.kind);
     };
 
     const goBackToMain = () => {
@@ -222,6 +238,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       historyRef.current = [];
       currentHtmlRef.current = injected;
       renderHtml(injected);
+      setScreenRef.current?.("main");
     };
 
     const goBackOne = () => {
