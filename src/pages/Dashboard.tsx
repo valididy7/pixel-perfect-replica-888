@@ -511,6 +511,38 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
+        {/* Abas */}
+        <div className="mb-6 inline-flex rounded-xl border border-border bg-card p-1 shadow-card">
+          <button
+            type="button"
+            onClick={() => setTab("painel")}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              tab === "painel"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Painel
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("emails")}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              tab === "emails"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Mail className="h-4 w-4" />
+            E-mails
+          </button>
+        </div>
+
+        {tab === "emails" ? (
+          <EmailComposerPanel />
+        ) : (
+        <>
         {/* Cards de resumo */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatCard label="Em andamento" value={activeSessions.length} icon={<EyeOfHorus className="h-5 w-5" />} highlight={activeSessions.length > 0} />
