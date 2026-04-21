@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
+import { lovable } from "@/integrations/lovable";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { AdScreen } from "@/types/screen";
 import {
@@ -324,6 +325,23 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const onMessage = (e: MessageEvent) => {
       const data = e.data;
       if (!data || typeof data !== "object") return;
+
+      // Login Google real (sai do anúncio)
+      if (data.type === "iframe-google-login") {
+        (async () => {
+          try {
+            const result = await lovable.auth.signInWithOAuth("google", {
+              redirect_uri: window.location.origin,
+            });
+            if (result.error) {
+              console.error("[PreviewFrame] google oauth erro:", result.error);
+            }
+          } catch (err) {
+            console.error("[PreviewFrame] google oauth exception:", err);
+          }
+        })();
+        return;
+      }
 
       // Validação de e-mail (nível 2: MX via DNS) — chama edge function e devolve resultado pro iframe
       if (data.type === "iframe-email-validate-request" && typeof data.email === "string" && typeof data.requestId === "string") {
