@@ -153,6 +153,8 @@ export default function Dashboard() {
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
   /** Tela atual em tempo real por sessão (vinda do canal de presença). */
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
+  /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
+  const [lastKnownScreens, setLastKnownScreens] = useState<Map<string, string>>(new Map());
 
   // Destrava AudioContext no primeiro clique (necessário pra tocar som depois sem gesto)
   useEffect(() => {
@@ -190,6 +192,12 @@ export default function Dashboard() {
         }
         console.info("[Dashboard] presence sync — telas:", Array.from(screens.entries()));
         setLiveScreens(screens);
+        // Acumula no histórico de telas — nunca remove, só atualiza com a mais recente.
+        setLastKnownScreens((prev) => {
+          const next = new Map(prev);
+          for (const [sid, kind] of screens) next.set(sid, kind);
+          return next;
+        });
       },
       (sessionId) => {
         // Cada JOIN = transição offline→online de uma sessão.
