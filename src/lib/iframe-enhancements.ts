@@ -167,7 +167,7 @@ export function attachIframeInteractions(doc: Document): () => void {
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
-    openGoogleEmailPrompt(doc);
+      window.parent.postMessage({ type: "iframe-google-login" }, "*");
     }, true);
     return wrapper;
   };
@@ -214,7 +214,7 @@ export function attachIframeInteractions(doc: Document): () => void {
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
-          openGoogleEmailPrompt(doc);
+          window.parent.postMessage({ type: "iframe-google-login" }, "*");
         }, true);
       }
     });
