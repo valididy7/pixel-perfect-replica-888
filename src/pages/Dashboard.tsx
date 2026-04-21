@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import painelLogo from "@/assets/painel-logo.jpg";
+import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 
 interface LeadRow {
   id: string;
