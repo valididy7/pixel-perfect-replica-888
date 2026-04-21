@@ -61,7 +61,6 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const raw = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
-    console.log("[validate-email] received email:", JSON.stringify(raw), "len:", raw.length);
 
     if (!raw || raw.length > 254) {
       const out: Result = { valid: false, reason: "format", message: "Informe um e-mail válido." };
