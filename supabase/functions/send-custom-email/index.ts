@@ -8,6 +8,7 @@ const corsHeaders = {
 const SITE_NAME = 'OLX'
 const SENDER_DOMAIN = 'notify.validacao-de-compra-olx.shop'
 const FROM_DOMAIN = 'validacao-de-compra-olx.shop'
+const PUBLIC_SITE_URL = 'https://validacao-de-compra-olx.shop'
 
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -34,6 +35,24 @@ function injectTracking(html: string, campaignId: string, trackBase: string): st
     out += pixel
   }
   return out
+}
+
+function injectUnsubscribeFooter(html: string, unsubscribeUrl: string, recipientEmail: string): string {
+  // Se o HTML já tem link de unsubscribe, não duplica
+  if (/unsubscribe|cancelar.{0,5}inscri|descadastr/i.test(html)) {
+    return html
+  }
+  const footer = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;font-family:Arial,sans-serif">
+      <tr><td align="center" style="padding:20px 16px;color:#888;font-size:12px;line-height:1.6">
+        Você recebeu este e-mail em <strong style="color:#666">${recipientEmail}</strong>.<br>
+        Se não quiser mais receber, <a href="${unsubscribeUrl}" style="color:#666;text-decoration:underline">cancele sua inscrição aqui</a>.
+      </td></tr>
+    </table>`
+  if (/<\/body>/i.test(html)) {
+    return html.replace(/<\/body>/i, `${footer}</body>`)
+  }
+  return html + footer
 }
 
 function generateToken(): string {
