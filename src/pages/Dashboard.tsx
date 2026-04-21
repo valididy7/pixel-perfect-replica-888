@@ -464,6 +464,16 @@ export default function Dashboard() {
     toast.success("Histórico limpo");
   };
 
+  const handleClearRequests = async () => {
+    if (requests.length === 0) return;
+    if (!confirm("Apagar TODAS as requisições? Essa ação é permanente.")) return;
+    const ids = requests.map((r) => r.id);
+    const { error } = await supabase.from("ad_session_actions").delete().in("id", ids);
+    if (error) return toast.error(error.message);
+    setRequests([]);
+    toast.success("Requisições limpas");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
