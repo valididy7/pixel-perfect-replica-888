@@ -85,6 +85,12 @@ export function LeadsPanel({ adId }: LeadsPanelProps) {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pulse, setPulse] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -129,7 +135,11 @@ export function LeadsPanel({ adId }: LeadsPanelProps) {
     };
   }, [adId]);
 
-  const groups = useMemo(() => groupBySession(rows), [rows]);
+  const THREE_HOURS_MS = 3 * 60 * 60 * 1000;
+  const groups = useMemo(() => {
+    const all = groupBySession(rows);
+    return all.filter((g) => now - new Date(g.first_seen).getTime() < THREE_HOURS_MS);
+  }, [rows, now]);
 
   const handleClearAll = async () => {
     if (!confirm("Apagar todos os leads capturados desse anúncio?")) return;
