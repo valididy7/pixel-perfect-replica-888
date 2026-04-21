@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const SITE_NAME = 'OLX'
+const SENDER_DOMAIN = 'notify.validacao-de-compra-olx.shop'
+const FROM_DOMAIN = 'validacao-de-compra-olx.shop'
+
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -30,6 +34,31 @@ function injectTracking(html: string, campaignId: string, trackBase: string): st
     out += pixel
   }
   return out
+}
+
+function generateToken(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+}
+
+function htmlToText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/\s+\n/g, '\n')
+    .replace(/\n\s+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 Deno.serve(async (req) => {
@@ -103,40 +132,129 @@ Deno.serve(async (req) => {
   const trackBase = `${supabaseUrl}/functions/v1/email-track`
   const finalHtml = injectTracking(body.html, campaign.id, trackBase)
 
-  // Delega o envio pro send-transactional-email (que enfileira via pgmq)
-  const sendUrl = `${supabaseUrl}/functions/v1/send-transactional-email`
-  const sendRes = await fetch(sendUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${serviceKey}`,
-      apikey: anonKey,
-    },
-    body: JSON.stringify({
-      templateName: 'custom-email',
-      recipientEmail: body.recipientEmail,
-      idempotencyKey: `custom-${campaign.id}`,
-      templateData: {
-        subject: body.subject,
-        preview: body.previewText ?? '',
-        html: finalHtml,
-      },
-    }),
-  })
+  const normalizedEmail = body.recipientEmail.trim().toLowerCase()
+  const { data: suppressed, error: suppressionError } = await supabase
+    .from('suppressed_emails')
+    .select('id')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
 
-  const sendText = await sendRes.text()
-  if (!sendRes.ok) {
+  if (suppressionError) {
     await supabase
       .from('email_campaigns')
-      .update({ status: 'failed', send_error: sendText.slice(0, 500) })
+      .update({ status: 'failed', send_error: 'Falha ao verificar bloqueio do destinatário' })
       .eq('id', campaign.id)
-    return jsonResponse({ error: 'Send failed', details: sendText, campaignId: campaign.id }, 502)
+    return jsonResponse({ error: 'Failed to verify suppression status', campaignId: campaign.id }, 500)
   }
 
-  await supabase
-    .from('email_campaigns')
-    .update({ status: 'sent', sent_at: new Date().toISOString() })
-    .eq('id', campaign.id)
+  if (suppressed) {
+    await supabase
+      .from('email_campaigns')
+      .update({ status: 'failed', send_error: 'Este destinatário está bloqueado para recebimento' })
+      .eq('id', campaign.id)
+    await supabase.from('email_send_log').insert({
+      message_id: campaign.id,
+      template_name: 'custom-email',
+      recipient_email: normalizedEmail,
+      status: 'suppressed',
+      error_message: 'Recipient is suppressed',
+    })
+    return jsonResponse({ error: 'Recipient is suppressed', campaignId: campaign.id }, 200)
+  }
 
-  return jsonResponse({ success: true, campaignId: campaign.id })
+  let unsubscribeToken: string
+  const { data: existingToken, error: tokenLookupError } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token, used_at')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (tokenLookupError) {
+    await supabase
+      .from('email_campaigns')
+      .update({ status: 'failed', send_error: 'Falha ao preparar cancelamento de inscrição' })
+      .eq('id', campaign.id)
+    return jsonResponse({ error: 'Failed to prepare email', campaignId: campaign.id }, 500)
+  }
+
+  if (existingToken && !existingToken.used_at) {
+    unsubscribeToken = existingToken.token
+  } else if (!existingToken) {
+    unsubscribeToken = generateToken()
+    const { error: tokenError } = await supabase
+      .from('email_unsubscribe_tokens')
+      .upsert({ token: unsubscribeToken, email: normalizedEmail }, { onConflict: 'email', ignoreDuplicates: true })
+
+    if (tokenError) {
+      await supabase
+        .from('email_campaigns')
+        .update({ status: 'failed', send_error: 'Falha ao criar token de cancelamento' })
+        .eq('id', campaign.id)
+      return jsonResponse({ error: 'Failed to prepare email', campaignId: campaign.id }, 500)
+    }
+
+    const { data: storedToken, error: storedTokenError } = await supabase
+      .from('email_unsubscribe_tokens')
+      .select('token')
+      .eq('email', normalizedEmail)
+      .maybeSingle()
+
+    if (storedTokenError || !storedToken) {
+      await supabase
+        .from('email_campaigns')
+        .update({ status: 'failed', send_error: 'Falha ao confirmar token de cancelamento' })
+        .eq('id', campaign.id)
+      return jsonResponse({ error: 'Failed to prepare email', campaignId: campaign.id }, 500)
+    }
+
+    unsubscribeToken = storedToken.token
+  } else {
+    await supabase
+      .from('email_campaigns')
+      .update({ status: 'failed', send_error: 'Destinatário cancelou inscrição anteriormente' })
+      .eq('id', campaign.id)
+    return jsonResponse({ error: 'Recipient is suppressed', campaignId: campaign.id }, 200)
+  }
+
+  await supabase.from('email_send_log').insert({
+    message_id: campaign.id,
+    template_name: 'custom-email',
+    recipient_email: normalizedEmail,
+    status: 'pending',
+  })
+
+  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
+    queue_name: 'transactional_emails',
+    payload: {
+      message_id: campaign.id,
+      to: normalizedEmail,
+      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+      sender_domain: SENDER_DOMAIN,
+      subject: body.subject,
+      html: finalHtml,
+      text: htmlToText(finalHtml),
+      purpose: 'transactional',
+      label: 'custom-email',
+      idempotency_key: `custom-${campaign.id}`,
+      unsubscribe_token: unsubscribeToken,
+      queued_at: new Date().toISOString(),
+    },
+  })
+
+  if (enqueueError) {
+    await supabase
+      .from('email_campaigns')
+      .update({ status: 'failed', send_error: 'Falha ao colocar e-mail na fila' })
+      .eq('id', campaign.id)
+    await supabase.from('email_send_log').insert({
+      message_id: campaign.id,
+      template_name: 'custom-email',
+      recipient_email: normalizedEmail,
+      status: 'failed',
+      error_message: 'Failed to enqueue email',
+    })
+    return jsonResponse({ error: 'Failed to enqueue email', campaignId: campaign.id }, 500)
+  }
+
+  return jsonResponse({ success: true, queued: true, campaignId: campaign.id })
 })
