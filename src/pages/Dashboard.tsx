@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio, Volume2, VolumeX, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
+import { subscribeToOnlineVisitors } from "@/lib/presence";
 
 interface LeadRow {
   id: string;
@@ -92,6 +93,27 @@ function playDing(kind: "email" | "password" | "code") {
   } catch {
     /* silencioso — som é cosmético */
   }
+}
+
+/** Som mais "presente" pra entrada de visitante (online). */
+function playOnlineDing() {
+  try {
+    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(520, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(780, ctx.currentTime + 0.18);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.55);
+    setTimeout(() => ctx.close().catch(() => {}), 800);
+  } catch { /* silencioso */ }
 }
 
 export default function Dashboard() {
