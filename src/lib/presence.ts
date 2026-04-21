@@ -17,10 +17,12 @@ export interface PresenceMeta {
 }
 
 /**
- * Liga a presença do visitante. Mantém o estado online/offline confiável usando
- * MÚLTIPLOS sinais do navegador (visibility, focus, blur, pageshow, online/offline)
- * + heartbeat periódico de re-track. Garante que ao voltar do bfcache (botão
- * "voltar"), trocar de aba ou reconectar a internet, o painel reflita o estado real.
+ * Liga a presença do visitante usando o padrão nativo do Supabase Realtime:
+ * - track() quando a aba está visível
+ * - untrack() quando a aba some (visibilitychange)
+ * O Realtime já mantém o WebSocket aberto, faz heartbeat interno e reconecta
+ * sozinho. Sem heartbeats manuais, sem listeners redundantes — isso evita o
+ * "pisca offline/online" que acontecia antes.
  * Retorna `stop()` pra cleanup e `setScreen(kind)` pra atualizar a tela atual.
  */
 export function trackVisitorPresence(
@@ -40,18 +42,8 @@ export function trackVisitorPresence(
     config: { presence: { key: presenceKey } },
   });
 
-  let isTracking = false;
   let isSubscribed = false;
   let currentScreen = "main";
-  let heartbeat: ReturnType<typeof setInterval> | null = null;
-
-  /** Considera "ativo" se a aba está visível OU em foco (cobre todos os edge cases). */
-  const isActive = (): boolean => {
-    if (typeof document === "undefined") return false;
-    if (document.visibilityState === "visible") return true;
-    if (document.hasFocus && document.hasFocus()) return true;
-    return false;
-  };
 
   const doTrack = async () => {
     if (!isSubscribed) return;
@@ -63,80 +55,43 @@ export function trackVisitorPresence(
     } satisfies PresenceMeta);
   };
 
-  const startTracking = async () => {
-    if (isTracking) return;
-    isTracking = true;
-    await doTrack();
-  };
-
-  const stopTracking = async () => {
-    if (!isTracking) return;
-    isTracking = false;
-    if (!isSubscribed) return;
-    await channel.untrack();
-  };
-
   const setScreen = (kind: string) => {
     currentScreen = kind || "main";
-    if (!isTracking) return;
     void doTrack();
-  };
-
-  /** Sincroniza o estado real do navegador com a presença. Idempotente. */
-  const syncState = () => {
-    if (isActive()) {
-      void startTracking();
-    } else {
-      void stopTracking();
-    }
   };
 
   channel.subscribe((status) => {
     if (status === "SUBSCRIBED") {
       isSubscribed = true;
-      syncState();
+      // Só anuncia presença se a aba está visível agora.
+      if (typeof document === "undefined" || document.visibilityState === "visible") {
+        void doTrack();
+      }
     }
   });
 
-  const onVisibility = () => syncState();
-  const onFocus = () => syncState();
-  const onBlur = () => syncState();
-  // pageshow dispara ao voltar do bfcache (botão "voltar"). Sempre re-sincroniza.
-  const onPageShow = () => syncState();
-  // pagehide marca offline imediato (vai pro bfcache ou fecha a aba).
-  const onPageHide = () => void stopTracking();
-  const onOnline = () => syncState();
-  const onOffline = () => void stopTracking();
+  // Único sinal: visibilitychange. Aba visível → track. Aba escondida → untrack.
+  // O Realtime cuida do resto (heartbeat, reconexão, timeout).
+  const onVisibility = () => {
+    if (!isSubscribed) return;
+    if (document.visibilityState === "visible") {
+      void doTrack();
+    } else {
+      void channel.untrack();
+    }
+  };
 
   document.addEventListener("visibilitychange", onVisibility);
-  window.addEventListener("focus", onFocus);
-  window.addEventListener("blur", onBlur);
-  window.addEventListener("pageshow", onPageShow);
-  window.addEventListener("pagehide", onPageHide);
-  window.addEventListener("online", onOnline);
-  window.addEventListener("offline", onOffline);
-
-  // Heartbeat: a cada 20s, se está ativo, re-anuncia a presença.
-  // Garante recuperação automática se o canal cair e reconectar silenciosamente.
-  heartbeat = setInterval(() => {
-    if (isActive() && isSubscribed) {
-      void doTrack();
-    }
-  }, 20000);
 
   const stop = () => {
     document.removeEventListener("visibilitychange", onVisibility);
-    window.removeEventListener("focus", onFocus);
-    window.removeEventListener("blur", onBlur);
-    window.removeEventListener("pageshow", onPageShow);
-    window.removeEventListener("pagehide", onPageHide);
-    window.removeEventListener("online", onOnline);
-    window.removeEventListener("offline", onOffline);
-    if (heartbeat) clearInterval(heartbeat);
-    heartbeat = null;
-    void stopTracking().finally(() => {
+    if (isSubscribed) {
+      void channel.untrack().finally(() => {
+        supabase.removeChannel(channel);
+      });
+    } else {
       supabase.removeChannel(channel);
-    });
+    }
   };
 
   return { stop, setScreen };
