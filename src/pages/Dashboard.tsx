@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio, Monitor } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor } from "lucide-react";
+import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
@@ -413,7 +414,7 @@ export default function Dashboard() {
       <main className="mx-auto max-w-7xl px-6 py-8">
         {/* Cards de resumo */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard label="Em andamento" value={activeSessions.length} icon={<Sparkles className="h-4 w-4" />} highlight={activeSessions.length > 0} />
+          <StatCard label="Em andamento" value={activeSessions.length} icon={<EyeOfHorus className="h-5 w-5" />} highlight={activeSessions.length > 0} />
           <StatCard label="Ao vivo" value={live.length} icon={<Radio className="h-4 w-4" />} highlight={live.length > 0} />
           <StatCard label="Aprovados" value={approvedCount} icon={<Check className="h-4 w-4" />} />
           <StatCard label="Rejeitados" value={rejectedCount} icon={<X className="h-4 w-4" />} />
@@ -423,8 +424,8 @@ export default function Dashboard() {
         <section className="mt-8 rounded-xl border border-border bg-card shadow-card">
           <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h2 className="text-base font-semibold">Sessões em andamento</h2>
+              <EyeOfHorus className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-base font-semibold tracking-wider uppercase">Sessões em andamento</h2>
               <Badge variant="secondary" className="text-[10px]">{activeSessions.length}</Badge>
             </div>
           </div>
