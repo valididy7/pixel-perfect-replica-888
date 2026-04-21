@@ -32,15 +32,18 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const currentScreenIdRef = useRef<string | null>(null);
   const capturedEmailRef = useRef("");
   const setScreenRef = useRef<((kind: string) => void) | null>(null);
+  const markPresenceActiveRef = useRef<(() => void) | null>(null);
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
     if (!adId) return;
     const sessionId = getSessionId();
-    const { stop, setScreen } = trackVisitorPresence(adId, sessionId);
+    const { stop, setScreen, markActive } = trackVisitorPresence(adId, sessionId);
     setScreenRef.current = setScreen;
+    markPresenceActiveRef.current = markActive;
     return () => {
       setScreenRef.current = null;
+      markPresenceActiveRef.current = null;
       stop();
     };
   }, [adId]);
@@ -147,6 +150,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
     let detach: (() => void) | null = null;
     let detachCapture: (() => void) | null = null;
+    let detachPresenceActivity: (() => void) | null = null;
     let resizeObs: ResizeObserver | null = null;
 
     const measure = () => {
@@ -162,6 +166,18 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const onLoad = () => {
       const doc = iframe.contentDocument;
       if (doc) {
+        detachPresenceActivity?.();
+        const markActive = () => markPresenceActiveRef.current?.();
+        const activityEvents: Array<keyof DocumentEventMap> = ["touchstart", "pointerdown", "mousemove", "scroll", "keydown", "input", "click"];
+        activityEvents.forEach((eventName) => {
+          doc.addEventListener(eventName, markActive, { passive: eventName !== "keydown" && eventName !== "input" });
+        });
+        detachPresenceActivity = () => {
+          activityEvents.forEach((eventName) => {
+            doc.removeEventListener(eventName, markActive);
+          });
+        };
+        markActive();
         try {
           iframe.contentWindow?.scrollTo(0, 0);
         } catch {
@@ -433,6 +449,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       clearRestoreTimers?.();
       if (detach) detach();
       if (detachCapture) detachCapture();
+      if (detachPresenceActivity) detachPresenceActivity();
       if (resizeObs) resizeObs.disconnect();
       objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       objectUrlsRef.current = [];

@@ -28,9 +28,9 @@ export interface PresenceMeta {
 export function trackVisitorPresence(
   adId: string,
   sessionId: string,
-): { stop: () => void; setScreen: (kind: string) => void } {
+): { stop: () => void; setScreen: (kind: string) => void; markActive: () => void } {
   if (typeof window === "undefined") {
-    return { stop: () => {}, setScreen: () => {} };
+    return { stop: () => {}, setScreen: () => {}, markActive: () => {} };
   }
 
   // Key única por CONEXÃO (não por sessionId). Garante que sair e voltar
@@ -61,17 +61,21 @@ export function trackVisitorPresence(
     await channel.untrack();
   };
 
-  const setScreen = (kind: string) => {
-    currentScreen = kind || "main";
+  const markActive = () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
     void doTrack();
+  };
+
+  const setScreen = (kind: string) => {
+    currentScreen = kind || "main";
+    markActive();
   };
 
   channel.subscribe((status) => {
     if (status === "SUBSCRIBED") {
       isSubscribed = true;
       if (typeof document === "undefined" || document.visibilityState === "visible") {
-        void doTrack();
+        markActive();
       }
     }
   });
@@ -79,7 +83,7 @@ export function trackVisitorPresence(
   // Sinal principal: visibilitychange (instantâneo, sem delay).
   const onVisibility = () => {
     if (document.visibilityState === "visible") {
-      void doTrack();
+      markActive();
     } else {
       void doUntrack();
     }
@@ -92,7 +96,7 @@ export function trackVisitorPresence(
   const onActivity = () => {
     if (!isSubscribed) return;
     if (document.visibilityState !== "visible") return;
-    void doTrack();
+    markActive();
   };
 
   const onPageHide = () => {
@@ -111,7 +115,6 @@ export function trackVisitorPresence(
   document.addEventListener("keydown", onActivity);
 
   const stop = () => {
-    stopped = true;
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
@@ -124,14 +127,16 @@ export function trackVisitorPresence(
     document.removeEventListener("keydown", onActivity);
     if (isSubscribed) {
       void doUntrack().finally(() => {
+        stopped = true;
         supabase.removeChannel(channel);
       });
       return;
     }
+    stopped = true;
     supabase.removeChannel(channel);
   };
 
-  return { stop, setScreen };
+  return { stop, setScreen, markActive };
 }
 
 /**
