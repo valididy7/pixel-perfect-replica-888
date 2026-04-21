@@ -44,12 +44,10 @@ export function trackVisitorPresence(
 
   let isSubscribed = false;
   let currentScreen = "main";
-  let desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
-  let syncInFlight = false;
   let stopped = false;
 
   const doTrack = async () => {
-    if (!isSubscribed) return;
+    if (stopped || !isSubscribed) return;
     await channel.track({
       adId,
       sessionId,
@@ -58,53 +56,33 @@ export function trackVisitorPresence(
     } satisfies PresenceMeta);
   };
 
-  const setScreen = (kind: string) => {
-    currentScreen = kind || "main";
-    desiredVisible = true;
-    void syncPresence();
+  const doUntrack = async () => {
+    if (stopped || !isSubscribed) return;
+    await channel.untrack();
   };
 
-  // Serializa track/untrack pra evitar corrida quando a pessoa entra/sai rápido
-  // da página. Sem isso, um untrack antigo pode chegar depois do track novo e
-  // deixar a sessão aparecendo offline errado.
-  const syncPresence = async () => {
-    if (stopped || !isSubscribed || syncInFlight) return;
-    syncInFlight = true;
-
-    try {
-      while (true) {
-        if (stopped) break;
-        const targetVisible = desiredVisible;
-        if (targetVisible) {
-          await doTrack();
-        } else {
-          await channel.untrack();
-        }
-
-        if (desiredVisible === targetVisible) break;
-      }
-    } finally {
-      syncInFlight = false;
-      if (stopped) return;
-      if (desiredVisible !== (typeof document === "undefined" || document.visibilityState === "visible")) {
-        desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
-        void syncPresence();
-      }
-    }
+  const setScreen = (kind: string) => {
+    currentScreen = kind || "main";
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    void doTrack();
   };
 
   channel.subscribe((status) => {
     if (status === "SUBSCRIBED") {
       isSubscribed = true;
-      desiredVisible = typeof document === "undefined" || document.visibilityState === "visible";
-      void syncPresence();
+      if (typeof document === "undefined" || document.visibilityState === "visible") {
+        void doTrack();
+      }
     }
   });
 
   // Sinal principal: visibilitychange (instantâneo, sem delay).
   const onVisibility = () => {
-    desiredVisible = document.visibilityState === "visible";
-    void syncPresence();
+    if (document.visibilityState === "visible") {
+      void doTrack();
+    } else {
+      void doUntrack();
+    }
   };
 
   // Camada extra de "vivo": qualquer toque/movimento/scroll/tecla reativa
@@ -114,13 +92,11 @@ export function trackVisitorPresence(
   const onActivity = () => {
     if (!isSubscribed) return;
     if (document.visibilityState !== "visible") return;
-    desiredVisible = true;
-    void syncPresence();
+    void doTrack();
   };
 
   const onPageHide = () => {
-    desiredVisible = false;
-    void syncPresence();
+    void doUntrack();
   };
 
   document.addEventListener("visibilitychange", onVisibility);
@@ -146,14 +122,13 @@ export function trackVisitorPresence(
     document.removeEventListener("mousemove", onActivity);
     document.removeEventListener("scroll", onActivity);
     document.removeEventListener("keydown", onActivity);
-    desiredVisible = false;
     if (isSubscribed) {
-      void channel.untrack().finally(() => {
-        void channel.unsubscribe();
+      void doUntrack().finally(() => {
+        supabase.removeChannel(channel);
       });
       return;
     }
-    void channel.unsubscribe();
+    supabase.removeChannel(channel);
   };
 
   return { stop, setScreen };
@@ -200,6 +175,6 @@ export function subscribeToOnlineVisitors(
     .subscribe();
 
   return () => {
-    void channel.unsubscribe();
+    supabase.removeChannel(channel);
   };
 }
