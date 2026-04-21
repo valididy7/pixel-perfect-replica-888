@@ -574,6 +574,60 @@ export default function Dashboard() {
           )}
         </section>
 
+        {/* REQUISIÇÕES */}
+        <section className={`mt-8 rounded-xl border bg-card shadow-card transition-shadow ${requestsPulse ? "border-primary shadow-glow" : "border-border"}`}>
+          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Bell className={`h-4 w-4 text-primary ${requestsPulse ? "animate-pulse" : ""}`} />
+              <h2 className="font-display text-base font-semibold tracking-wider uppercase">Requisições</h2>
+              <Badge variant="secondary" className="text-[10px]">{requests.length}</Badge>
+            </div>
+          </div>
+
+          {requests.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                Quando alguém clicar em "esqueci a senha", "entrar sem senha", "ativar conta" ou "reenviar código", aparece aqui.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium">Quando</th>
+                    <th className="px-4 py-3 text-left font-medium">Requisição</th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
+                    </th>
+                    <th className="px-4 py-3 text-left font-medium">Sessão</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {requests.slice(0, 100).map((r) => (
+                    <tr key={r.id} className="border-t border-border hover:bg-muted/30">
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
+                        {formatTime(r.created_at)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                          {r.label}
+                        </span>
+                      </td>
+                      <td className="break-all px-4 py-3 font-mono text-xs">
+                        <CopyText value={r.email || ""} />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono text-[10px] text-muted-foreground">
+                        {r.session_id.slice(0, 8)}…
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
         {/* AO VIVO */}
         {live.length > 0 && (
           <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
