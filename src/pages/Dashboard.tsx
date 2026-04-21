@@ -746,7 +746,7 @@ export default function Dashboard() {
               actionable
               busy={busy}
               onAction={send}
-              onlineSessionIds={onlineSessionIds}
+              onlineSessionIds={activeOnlineSessionIds}
               liveScreens={liveScreens}
             />
           </section>
