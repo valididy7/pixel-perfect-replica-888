@@ -5,11 +5,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminGate } from "@/components/AdminGate";
+import { ADMIN_BASE } from "@/lib/admin-route";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import EditorPage from "./pages/EditorPage";
 import ScreenEditorPage from "./pages/ScreenEditorPage";
 import PublicAd from "./pages/PublicAd";
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -24,12 +27,22 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<Index />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/ad/:slug" element={<PublicAd />} />
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/editor/:id" element={<EditorPage />} />
-              <Route path="/editor/:adId/screen/:screenId" element={<ScreenEditorPage />} />
+            <Route
+              element={
+                <AdminGate>
+                  <ProtectedRoute />
+                </AdminGate>
+              }
+            >
+              <Route path={ADMIN_BASE} element={<Dashboard />} />
+              <Route path={`${ADMIN_BASE}/editor/:id`} element={<EditorPage />} />
+              <Route
+                path={`${ADMIN_BASE}/editor/:adId/screen/:screenId`}
+                element={<ScreenEditorPage />}
+              />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

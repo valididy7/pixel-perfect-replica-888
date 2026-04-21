@@ -26,6 +26,7 @@ import { ScreensPanel } from "@/components/ScreensPanel";
 import { LeadsPanel } from "@/components/LeadsPanel";
 import { ApprovalsPanel } from "@/components/ApprovalsPanel";
 import { toast } from "sonner";
+import { ADMIN_BASE, adminPath } from "@/lib/admin-route";
 
 export default function EditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -179,7 +180,7 @@ export default function EditorPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Anúncio não encontrado.</p>
-        <Button asChild variant="secondary"><Link to="/">Voltar ao dashboard</Link></Button>
+        <Button asChild variant="secondary"><Link to={ADMIN_BASE}>Voltar ao dashboard</Link></Button>
       </div>
     );
   }
@@ -190,7 +191,7 @@ export default function EditorPage() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl">
         <div className="flex items-center gap-3 min-w-0">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/"><ArrowLeft className="h-4 w-4" /></Link>
+            <Link to={ADMIN_BASE}><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <Sparkles className="h-4 w-4 shrink-0 text-primary" />
           <span className="truncate text-sm font-medium">{title || "Sem título"}</span>
