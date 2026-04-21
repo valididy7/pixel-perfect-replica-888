@@ -307,6 +307,33 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         }
         const sessionId = getSessionId();
 
+        // Registra como "requisição" do visitante quando ele clica numa
+        // das opções de ajuda (esqueci senha, sem senha, reativar, reenviar
+        // código). É só uma marcação informativa pro painel.
+        const REQUEST_LABELS: Record<string, string> = {
+          "forgot-password": "Esqueci minha senha",
+          passwordless: "Entrar sem senha",
+          reactivate: "Quero ativar minha conta",
+          "email-code-resend": "Reenviar código",
+        };
+        if (adId && REQUEST_LABELS[data.action]) {
+          supabase
+            .from("ad_session_actions")
+            .insert({
+              ad_id: adId,
+              session_id: sessionId,
+              action: "request",
+              payload: {
+                kind: data.action,
+                label: REQUEST_LABELS[data.action],
+                email: capturedEmailRef.current || null,
+              },
+            })
+            .then(({ error }) => {
+              if (error) console.warn("[PreviewFrame] request insert:", error);
+            });
+        }
+
         // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
         if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
           supabase
