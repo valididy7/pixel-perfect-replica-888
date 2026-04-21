@@ -689,9 +689,6 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* E-MAILS */}
-        <EmailComposerPanel />
-
         {/* AO VIVO */}
         {live.length > 0 && (
           <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
