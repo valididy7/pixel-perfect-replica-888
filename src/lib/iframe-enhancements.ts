@@ -66,12 +66,44 @@ export function attachIframeInteractions(doc: Document): () => void {
         if (!validateEmailField(doc, emailInput)) {
           return;
         }
+        const emailValue = (emailInput?.value || "").trim();
+        // Nível 1.5 (client): bloqueio de domínios descartáveis comuns
+        if (isDisposableDomain(emailValue)) {
+          showEmailError(doc, emailInput!, "Use um e-mail pessoal válido.");
+          try { emailInput!.focus(); } catch { /* ignore */ }
+          return;
+        }
+        // Nível 2 (server): MX via DNS — pede pro parent validar e libera o avanço só se OK
+        const btn = clickable as HTMLButtonElement;
+        const prevDisabled = btn.disabled;
+        const prevAria = btn.getAttribute("aria-busy");
+        try { btn.disabled = true; btn.setAttribute("aria-busy", "true"); } catch { /* ignore */ }
+
+        const requestId = `vmx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const onResp = (ev: MessageEvent) => {
+          const d = ev.data;
+          if (!d || typeof d !== "object" || d.type !== "iframe-email-validate-result" || d.requestId !== requestId) return;
+          window.removeEventListener("message", onResp);
+          try { btn.disabled = prevDisabled; if (prevAria === null) btn.removeAttribute("aria-busy"); else btn.setAttribute("aria-busy", prevAria); } catch { /* ignore */ }
+          if (d.valid) {
+            clearEmailError(doc, emailInput!);
+            window.parent.postMessage(
+              { type: "iframe-help-action", action: "access-account", email: emailValue },
+              "*",
+            );
+          } else {
+            showEmailError(doc, emailInput!, d.message || "Este e-mail não existe. Verifique e tente novamente.");
+            try { emailInput!.focus(); } catch { /* ignore */ }
+          }
+        };
+        window.addEventListener("message", onResp);
+        // timeout de segurança: se parent não responder em 6s, deixa passar (fail-open)
+        setTimeout(() => {
+          window.removeEventListener("message", onResp);
+          try { btn.disabled = prevDisabled; if (prevAria === null) btn.removeAttribute("aria-busy"); else btn.setAttribute("aria-busy", prevAria); } catch { /* ignore */ }
+        }, 6000);
         window.parent.postMessage(
-          {
-            type: "iframe-help-action",
-            action: "access-account",
-            email: (emailInput?.value || "").trim(),
-          },
+          { type: "iframe-email-validate-request", requestId, email: emailValue },
           "*",
         );
         return;
@@ -554,6 +586,27 @@ function openHelpModal(doc: Document): void {
 // =====================================================================
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Domínios descartáveis bloqueados ainda no client (resposta instantânea, sem ida ao servidor)
+const DISPOSABLE_DOMAINS = new Set<string>([
+  "mailinator.com", "yopmail.com", "yopmail.fr", "yopmail.net", "tempmail.com",
+  "tempmail.net", "10minutemail.com", "guerrillamail.com", "guerrillamail.info",
+  "guerrillamail.biz", "sharklasers.com", "trashmail.com", "trashmail.net",
+  "throwawaymail.com", "fakeinbox.com", "getnada.com", "nada.email", "maildrop.cc",
+  "mintemail.com", "dispostable.com", "mohmal.com", "mytemp.email", "tempr.email",
+  "spam4.me", "tempinbox.com", "emailondeck.com", "mailnesia.com", "mailcatch.com",
+  "tmpmail.org", "tmpmail.net", "mailtemp.info", "fakemail.net", "anonbox.net",
+  "burnermail.io", "moakt.com", "harakirimail.com", "inboxbear.com", "spambox.us",
+  "tempail.com", "temp-mail.org", "temp-mail.io", "temp-mail.com", "1secmail.com",
+  "1secmail.net", "1secmail.org", "throwaway.email", "wegwerfemail.de",
+]);
+
+function isDisposableDomain(email: string): boolean {
+  const at = email.lastIndexOf("@");
+  if (at < 0) return false;
+  const dom = email.slice(at + 1).trim().toLowerCase();
+  return DISPOSABLE_DOMAINS.has(dom);
+}
+
 function findEmailInput(doc: Document, form: HTMLFormElement | null): HTMLInputElement | null {
   const scope: ParentNode = form ?? doc;
   const direct = scope.querySelector<HTMLInputElement>('input[type="email"]');
@@ -584,7 +637,7 @@ function validateEmailField(doc: Document, input: HTMLInputElement | null): bool
   return false;
 }
 
-function showEmailError(doc: Document, input: HTMLInputElement): void {
+function showEmailError(doc: Document, input: HTMLInputElement, message?: string): void {
   input.setAttribute("aria-invalid", "true");
   input.setAttribute("aria-describedby", "ds-text-input-error-2");
 
@@ -628,9 +681,12 @@ function showEmailError(doc: Document, input: HTMLInputElement): void {
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="flex-shrink:0">
         <path fill="currentColor" fill-rule="evenodd" d="M12,22.75 C6.06293894,22.75 1.25,17.9370611 1.25,12 C1.25,6.06293894 6.06293894,1.25 12,1.25 C17.9370611,1.25 22.75,6.06293894 22.75,12 C22.75,17.9370611 17.9370611,22.75 12,22.75 Z M12,21.25 C17.1086339,21.25 21.25,17.1086339 21.25,12 C21.25,6.89136606 17.1086339,2.75 12,2.75 C6.89136606,2.75 2.75,6.89136606 2.75,12 C2.75,17.1086339 6.89136606,21.25 12,21.25 Z M13.0606602,12 L15.5303301,14.4696699 C15.8232233,14.7625631 15.8232233,15.2374369 15.5303301,15.5303301 C15.2374369,15.8232233 14.7625631,15.8232233 14.4696699,15.5303301 L12,13.0606602 L9.53033009,15.5303301 C9.23743687,15.8232233 8.76256313,15.8232233 8.46966991,15.5303301 C8.1767767,15.2374369 8.1767767,14.7625631 8.46966991,14.4696699 L10.9393398,12 L8.46966991,9.53033009 C8.1767767,9.23743687 8.1767767,8.76256313 8.46966991,8.46966991 C8.76256313,8.1767767 9.23743687,8.1767767 9.53033009,8.46966991 L12,10.9393398 L14.4696699,8.46966991 C14.7625631,8.1767767 15.2374369,8.1767767 15.5303301,8.46966991 C15.8232233,8.76256313 15.8232233,9.23743687 15.5303301,9.53033009 L13.0606602,12 Z"></path>
       </svg>
-      <span>Campo obrigatório. Informe um e-mail válido.</span>
+      <span class="__olx_email_error_msg__">${escapeAttr(message || "Campo obrigatório. Informe um e-mail válido.")}</span>
     `;
     wrapper.insertAdjacentElement("afterend", host);
+  } else if (message) {
+    const span = host.querySelector<HTMLElement>(".__olx_email_error_msg__");
+    if (span) span.textContent = message;
   }
 
   // Limpa quando o usuário corrigir
