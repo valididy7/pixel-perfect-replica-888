@@ -538,6 +538,7 @@ export default function Dashboard() {
               busy={busy}
               onAction={send}
               onlineSessionIds={onlineSessionIds}
+              liveScreens={liveScreens}
             />
           </section>
         )}
