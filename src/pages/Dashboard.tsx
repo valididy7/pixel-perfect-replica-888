@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio, Volume2, VolumeX, Monitor } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
@@ -116,38 +116,12 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
   );
 }
 
-/** Som de entrada de visitante (transição offline→online). */
-function playOnlineDing() {
-  try {
-    const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
-    if (!Ctx) return;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(520, ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(780, ctx.currentTime + 0.18);
-    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.55);
-    setTimeout(() => ctx.close().catch(() => {}), 800);
-  } catch { /* silencioso */ }
-}
-
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [pulse, setPulse] = useState(false);
-  const [soundOn, setSoundOn] = useState(true);
-  const soundOnRef = useRef(true);
-  useEffect(() => {
-    soundOnRef.current = soundOn;
-  }, [soundOn]);
 
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
@@ -155,29 +129,6 @@ export default function Dashboard() {
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
   /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
   const [lastKnownScreens, setLastKnownScreens] = useState<Map<string, string>>(new Map());
-
-  // Destrava AudioContext no primeiro clique (necessário pra tocar som depois sem gesto)
-  useEffect(() => {
-    const unlock = () => {
-      try {
-        const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
-        if (!Ctx) return;
-        const ctx = new Ctx();
-        const buffer = ctx.createBuffer(1, 1, 22050);
-        const src = ctx.createBufferSource();
-        src.buffer = buffer;
-        src.connect(ctx.destination);
-        src.start(0);
-        setTimeout(() => ctx.close().catch(() => {}), 200);
-      } catch { /* ignore */ }
-    };
-    window.addEventListener("pointerdown", unlock, { once: true });
-    window.addEventListener("keydown", unlock, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-  }, []);
 
   // Subscreve presença global de visitantes
   useEffect(() => {
@@ -200,12 +151,7 @@ export default function Dashboard() {
         });
       },
       (sessionId) => {
-        // Cada JOIN = transição offline→online de uma sessão.
-        // Toca som SEMPRE, mesmo se a mesma sessão entrar/sair várias vezes.
         console.info("[Dashboard] visitante online:", sessionId);
-        if (soundOnRef.current) {
-          playOnlineDing();
-        }
         setPulse(true);
         setTimeout(() => setPulse(false), 600);
       },
@@ -450,15 +396,6 @@ export default function Dashboard() {
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSoundOn((v) => !v)}
-              aria-label={soundOn ? "Silenciar notificações" : "Ativar notificações"}
-              title={soundOn ? "Som ligado — clique pra silenciar" : "Som desligado — clique pra ativar"}
-            >
-              {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 text-muted-foreground" />}
-            </Button>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
             </Button>
