@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, ExternalLink, Trash2, Edit3, FileText, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
+import { adminPath } from "@/lib/admin-route";
 
 interface ScreensPanelProps {
   adId: string;
@@ -248,7 +249,7 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
             </div>
             <div className="flex shrink-0 items-center gap-1">
               <Button asChild size="sm" variant="ghost" className="h-7 w-7 p-0" aria-label="Editar tela">
-                <Link to={`/editor/${adId}/screen/${s.id}`}>
+                <Link to={adminPath(`/editor/${adId}/screen/${s.id}`)}>
                   <Edit3 className="h-3.5 w-3.5" />
                 </Link>
               </Button>

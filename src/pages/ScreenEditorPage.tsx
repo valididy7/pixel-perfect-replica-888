@@ -11,6 +11,7 @@ import { parseAdHTML, rebuildHTMLWithEdits } from "@/lib/html-parser";
 import { PreviewFrame } from "@/components/PreviewFrame";
 import { FieldEditor } from "@/components/FieldEditor";
 import { toast } from "sonner";
+import { adminPath } from "@/lib/admin-route";
 
 export default function ScreenEditorPage() {
   const { adId, screenId } = useParams<{ adId: string; screenId: string }>();
@@ -128,7 +129,7 @@ export default function ScreenEditorPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground">Tela não encontrada.</p>
-        <Button onClick={() => navigate(`/editor/${adId}`)} variant="secondary">Voltar ao editor</Button>
+        <Button onClick={() => navigate(adminPath(`/editor/${adId}`))} variant="secondary">Voltar ao editor</Button>
       </div>
     );
   }
@@ -138,7 +139,7 @@ export default function ScreenEditorPage() {
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-xl">
         <div className="flex items-center gap-3 min-w-0">
           <Button variant="ghost" size="sm" asChild>
-            <Link to={`/editor/${adId}`}><ArrowLeft className="h-4 w-4" /></Link>
+            <Link to={adminPath(`/editor/${adId}`)}><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
           <Sparkles className="h-4 w-4 shrink-0 text-primary" />
           <span className="truncate text-sm font-medium">{title || "Tela sem título"}</span>

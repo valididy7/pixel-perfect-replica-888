@@ -10,6 +10,7 @@ import { EmailsReceivedPanel } from "@/components/EmailsReceivedPanel";
 import { Eye, ExternalLink, LogOut, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { Ad } from "@/types/ad";
 import { toast } from "sonner";
+import { ADMIN_BASE, adminPath } from "@/lib/admin-route";
 import {
   AlertDialog,
   AlertDialogAction,

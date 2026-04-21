@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Link as LinkIcon, Sparkles } from "lucide-react";
+import { adminPath } from "@/lib/admin-route";
 
 export function CloneUrlDialog({
   open,
@@ -54,7 +55,7 @@ export function CloneUrlDialog({
       toast.success("Anúncio clonado!");
       onOpenChange(false);
       setUrl("");
-      navigate(`/editor/${data.ad.id}`);
+      navigate(adminPath(`/editor/${data.ad.id}`));
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro desconhecido";
       toast.error(msg);
