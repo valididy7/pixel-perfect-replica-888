@@ -207,6 +207,15 @@ export function attachIframeInteractions(doc: Document): () => void {
         btn.innerHTML = "";
         btn.appendChild(buildGoogleBubble());
         btn.dataset.googleFixed = "1";
+        if (btn.tagName === "BUTTON") {
+          (btn as HTMLButtonElement).type = "button";
+        }
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          openGoogleEmailPrompt(doc);
+        }, true);
       }
     });
   };
