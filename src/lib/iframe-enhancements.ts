@@ -151,6 +151,7 @@ export function attachIframeInteractions(doc: Document): () => void {
     );
     wrapper.setAttribute("role", "button");
     wrapper.setAttribute("aria-label", "Login Google");
+    wrapper.setAttribute("data-olx-google-login", "1");
 
     const img = doc.createElement("img");
     img.src = fallbackLogoUrl;
@@ -162,6 +163,11 @@ export function attachIframeInteractions(doc: Document): () => void {
       "display:block;width:22px;height:22px;object-fit:contain;",
     );
     wrapper.appendChild(img);
+    wrapper.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openGoogleEmailPrompt(doc);
+    });
     return wrapper;
   };
 
