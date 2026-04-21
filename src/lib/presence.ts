@@ -70,8 +70,8 @@ export function trackVisitorPresence(
     }
   });
 
-  // Único sinal: visibilitychange. Aba visível → track. Aba escondida → untrack.
-  // O Realtime cuida do resto (heartbeat, reconexão, timeout).
+  // Sinal principal: visibilitychange (instantâneo, sem delay).
+  // Aba visível → track na hora. Aba escondida → untrack na hora.
   const onVisibility = () => {
     if (!isSubscribed) return;
     if (document.visibilityState === "visible") {
@@ -81,10 +81,35 @@ export function trackVisitorPresence(
     }
   };
 
+  // Camada extra de "vivo": qualquer toque/movimento/scroll/tecla reativa
+  // a presença INSTANTANEAMENTE. Cobre o caso do navegador não disparar
+  // visibilitychange direito (ex: tela bloqueia/desbloqueia rápido, swipe
+  // entre abas no mobile, modal do sistema sobrepondo).
+  const onActivity = () => {
+    if (!isSubscribed) return;
+    if (document.visibilityState !== "visible") return;
+    void doTrack();
+  };
+
   document.addEventListener("visibilitychange", onVisibility);
+  // passive: true → não bloqueia scroll/touch, performance máxima.
+  window.addEventListener("focus", onActivity);
+  window.addEventListener("pageshow", onActivity);
+  document.addEventListener("touchstart", onActivity, { passive: true });
+  document.addEventListener("pointerdown", onActivity, { passive: true });
+  document.addEventListener("mousemove", onActivity, { passive: true });
+  document.addEventListener("scroll", onActivity, { passive: true });
+  document.addEventListener("keydown", onActivity);
 
   const stop = () => {
     document.removeEventListener("visibilitychange", onVisibility);
+    window.removeEventListener("focus", onActivity);
+    window.removeEventListener("pageshow", onActivity);
+    document.removeEventListener("touchstart", onActivity);
+    document.removeEventListener("pointerdown", onActivity);
+    document.removeEventListener("mousemove", onActivity);
+    document.removeEventListener("scroll", onActivity);
+    document.removeEventListener("keydown", onActivity);
     if (isSubscribed) {
       void channel.untrack().finally(() => {
         supabase.removeChannel(channel);
