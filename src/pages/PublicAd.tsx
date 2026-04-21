@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +6,7 @@ import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { PreviewFrame } from "@/components/PreviewFrame";
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSessionId } from "@/lib/lead-capture";
-import { trackVisitorPresence } from "@/lib/presence";
+import { useEffect } from "react";
 
 export default function PublicAd() {
   const { slug } = useParams<{ slug: string }>();
@@ -36,13 +34,6 @@ export default function PublicAd() {
     // Incrementa view count (não bloqueia render)
     supabase.rpc("increment_ad_view_count", { ad_slug: slug }).then(() => {});
   }, [ad, slug]);
-
-  // Marca presença "ao vivo" só enquanto a aba estiver visível
-  useEffect(() => {
-    if (!ad?.id) return;
-    const sessionId = getSessionId();
-    return trackVisitorPresence(ad.id, sessionId);
-  }, [ad?.id]);
 
   if (isLoading) {
     return (

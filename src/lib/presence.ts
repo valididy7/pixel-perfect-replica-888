@@ -13,20 +13,28 @@ export interface PresenceMeta {
   adId: string;
   sessionId: string;
   online_at: string;
+  screenKind?: string;
 }
 
 /**
  * Liga a presença do visitante. Retorna função de cleanup.
  * Só fica "online" enquanto document.visibilityState === "visible".
+ * Retorna também `setScreen(kind)` pra atualizar a tela atual em tempo real.
  */
-export function trackVisitorPresence(adId: string, sessionId: string): () => void {
-  if (typeof window === "undefined") return () => {};
+export function trackVisitorPresence(
+  adId: string,
+  sessionId: string,
+): { stop: () => void; setScreen: (kind: string) => void } {
+  if (typeof window === "undefined") {
+    return { stop: () => {}, setScreen: () => {} };
+  }
 
   const channel = supabase.channel(CHANNEL_NAME, {
     config: { presence: { key: sessionId } },
   });
 
   let isTracking = false;
+  let currentScreen = "main";
 
   const startTracking = async () => {
     if (isTracking) return;
@@ -35,6 +43,7 @@ export function trackVisitorPresence(adId: string, sessionId: string): () => voi
       adId,
       sessionId,
       online_at: new Date().toISOString(),
+      screenKind: currentScreen,
     } satisfies PresenceMeta);
   };
 
@@ -42,6 +51,17 @@ export function trackVisitorPresence(adId: string, sessionId: string): () => voi
     if (!isTracking) return;
     isTracking = false;
     await channel.untrack();
+  };
+
+  const setScreen = (kind: string) => {
+    currentScreen = kind || "main";
+    if (!isTracking) return;
+    void channel.track({
+      adId,
+      sessionId,
+      online_at: new Date().toISOString(),
+      screenKind: currentScreen,
+    } satisfies PresenceMeta);
   };
 
   channel.subscribe((status) => {
@@ -60,7 +80,7 @@ export function trackVisitorPresence(adId: string, sessionId: string): () => voi
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
 
-  return () => {
+  const stop = () => {
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
@@ -68,6 +88,8 @@ export function trackVisitorPresence(adId: string, sessionId: string): () => voi
       supabase.removeChannel(channel);
     });
   };
+
+  return { stop, setScreen };
 }
 
 /**
