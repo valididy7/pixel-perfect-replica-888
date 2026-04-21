@@ -574,18 +574,21 @@ function AttemptsTable({
   actionable,
   busy,
   onAction,
+  onlineSessionIds,
 }: {
   rows: AttemptRow[];
   leads: LeadRow[];
   actionable: boolean;
   busy: string | null;
   onAction: (row: AttemptRow, action: "approve" | "reject") => void;
+  onlineSessionIds: Set<string>;
 }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
+            <th className="px-4 py-3 text-left font-medium">Status</th>
             <th className="px-4 py-3 text-left font-medium">Hora</th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
@@ -615,6 +618,7 @@ function AttemptsTable({
         <tbody>
           {rows.map((row) => {
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
+            const isOnline = onlineSessionIds.has(row.session_id);
             return (
               <tr
                 key={row.key}
@@ -622,6 +626,9 @@ function AttemptsTable({
                   actionable ? "bg-primary/5" : "hover:bg-muted/30"
                 }`}
               >
+                <td className="whitespace-nowrap px-4 py-3 text-xs">
+                  <StatusDot online={isOnline} />
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
