@@ -112,20 +112,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Nível 3: ZeroBounce SMTP — só pra confirmar caixa real
-    const zb = await checkZeroBounce(raw);
-    if (zb.blocked) {
-      const out: Result = {
-        valid: false,
-        reason: "smtp",
-        message: zb.message || "Este e-mail não existe. Verifique e tente novamente.",
-      };
-      return new Response(JSON.stringify(out), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const out: Result = { valid: true };
     return new Response(JSON.stringify(out), {
       status: 200,
