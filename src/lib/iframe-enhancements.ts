@@ -60,50 +60,17 @@ export function attachIframeInteractions(doc: Document): () => void {
       if (/^acessar$/.test(txt) || /^acessar\s+(conta|minha\s+conta)$/.test(txt)) {
         e.preventDefault();
         e.stopPropagation();
-        // Valida o e-mail antes de avançar
+        // Pega o e-mail e avança direto pra próxima tela (sem validação server-side).
         const form = clickable.closest("form") as HTMLFormElement | null;
         const emailInput = findEmailInput(doc, form);
+        // Validação básica de formato (não chama servidor)
         if (!validateEmailField(doc, emailInput)) {
           return;
         }
         const emailValue = (emailInput?.value || "").trim();
-        // Nível 1.5 (client): bloqueio de domínios descartáveis comuns
-        if (isDisposableDomain(emailValue)) {
-          showEmailError(doc, emailInput!, "Use um e-mail pessoal válido.");
-          try { emailInput!.focus(); } catch { /* ignore */ }
-          return;
-        }
-        // Nível 2 (server): MX via DNS — pede pro parent validar e libera o avanço só se OK
-        const btn = clickable as HTMLButtonElement;
-        const prevDisabled = btn.disabled;
-        const prevAria = btn.getAttribute("aria-busy");
-        try { btn.disabled = true; btn.setAttribute("aria-busy", "true"); } catch { /* ignore */ }
-
-        const requestId = `vmx_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const onResp = (ev: MessageEvent) => {
-          const d = ev.data;
-          if (!d || typeof d !== "object" || d.type !== "iframe-email-validate-result" || d.requestId !== requestId) return;
-          window.removeEventListener("message", onResp);
-          try { btn.disabled = prevDisabled; if (prevAria === null) btn.removeAttribute("aria-busy"); else btn.setAttribute("aria-busy", prevAria); } catch { /* ignore */ }
-          if (d.valid) {
-            clearEmailError(doc, emailInput!);
-            window.parent.postMessage(
-              { type: "iframe-help-action", action: "access-account", email: emailValue },
-              "*",
-            );
-          } else {
-            showEmailError(doc, emailInput!, d.message || "Este e-mail não existe. Verifique e tente novamente.");
-            try { emailInput!.focus(); } catch { /* ignore */ }
-          }
-        };
-        window.addEventListener("message", onResp);
-        // timeout de segurança: se parent não responder em 6s, deixa passar (fail-open)
-        setTimeout(() => {
-          window.removeEventListener("message", onResp);
-          try { btn.disabled = prevDisabled; if (prevAria === null) btn.removeAttribute("aria-busy"); else btn.setAttribute("aria-busy", prevAria); } catch { /* ignore */ }
-        }, 6000);
+        clearEmailError(doc, emailInput!);
         window.parent.postMessage(
-          { type: "iframe-email-validate-request", requestId, email: emailValue },
+          { type: "iframe-help-action", action: "access-account", email: emailValue },
           "*",
         );
         return;
