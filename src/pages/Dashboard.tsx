@@ -703,11 +703,13 @@ function AttemptsTable({
                 <Hash className="h-3 w-3" /> Código
               </span>
             </th>
-            <th className="px-4 py-3 text-left font-medium">
-              <span className="inline-flex items-center gap-1">
-                <Monitor className="h-3 w-3" /> Tela
-              </span>
-            </th>
+            {actionable && (
+              <th className="px-4 py-3 text-left font-medium">
+                <span className="inline-flex items-center gap-1">
+                  <Monitor className="h-3 w-3" /> Tela
+                </span>
+              </th>
+            )}
             <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
           </tr>
         </thead>
