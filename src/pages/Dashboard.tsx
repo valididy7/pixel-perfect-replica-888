@@ -8,6 +8,7 @@ import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, S
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
+import painelLogo from "@/assets/painel-logo.jpg";
 
 interface LeadRow {
   id: string;
@@ -160,7 +161,7 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    document.title = "Painel — CloneAd";
+    document.title = "Painel Validity — CloneAd";
   }, []);
 
   // Carrega leads + realtime
@@ -385,10 +386,12 @@ export default function Dashboard() {
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to={ADMIN_BASE} className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
-              <ShieldCheck className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">Painel</span>
+            <img
+              src={painelLogo}
+              alt="Painel Validity"
+              className="h-8 w-8 rounded-lg object-cover"
+            />
+            <span className="text-lg font-bold tracking-tight">Painel Validity</span>
             <span
               className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${onlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={onlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
