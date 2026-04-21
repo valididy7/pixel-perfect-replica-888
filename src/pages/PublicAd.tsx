@@ -12,6 +12,19 @@ type PublicAdProps = {
   defaultSlug?: string;
 };
 
+const formatTitleFromSlug = (value?: string) => {
+  if (!value) return "Minha conta OLX";
+
+  const normalized = value
+    .replace(/-[a-z0-9]{6,}$/i, "")
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+  return normalized || "Minha conta OLX";
+};
+
 export default function PublicAd({ defaultSlug }: PublicAdProps) {
   const { slug: routeSlug } = useParams<{ slug: string }>();
   const slug = routeSlug ?? defaultSlug;
@@ -30,6 +43,11 @@ export default function PublicAd({ defaultSlug }: PublicAdProps) {
     },
     enabled: !!slug,
   });
+
+  useEffect(() => {
+    if (!slug) return;
+    document.title = formatTitleFromSlug(slug);
+  }, [slug]);
 
   useEffect(() => {
     if (!ad || !slug) return;
