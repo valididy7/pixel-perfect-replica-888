@@ -533,10 +533,10 @@ export default function Dashboard() {
               Painel Valididy
             </span>
             <span
-              className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${onlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
-              aria-label={onlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
+              className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
+              aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
-              {onlineSessionIds.size > 0 ? "online" : "offline"}
+              {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
             </span>
           </Link>
           <div className="flex items-center gap-3">
