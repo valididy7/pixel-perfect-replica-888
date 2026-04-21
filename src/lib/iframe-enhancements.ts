@@ -166,8 +166,9 @@ export function attachIframeInteractions(doc: Document): () => void {
     wrapper.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
+      e.stopImmediatePropagation();
       openGoogleEmailPrompt(doc);
-    });
+    }, true);
     return wrapper;
   };
 
