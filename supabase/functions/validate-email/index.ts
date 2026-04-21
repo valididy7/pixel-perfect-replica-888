@@ -30,7 +30,7 @@ const DISPOSABLE_DOMAINS = new Set<string>([
 
 type Result = {
   valid: boolean;
-  reason?: "format" | "disposable" | "mx";
+  reason?: "format" | "disposable" | "mx" | "smtp";
   message?: string;
 };
 
@@ -51,6 +51,48 @@ async function checkMx(domain: string): Promise<boolean> {
     if (Array.isArray(aaaa) && aaaa.length > 0) return true;
   } catch { /* ignore */ }
   return false;
+}
+
+// Nível 3: ZeroBounce SMTP check (caixa real). Só roda se passou nos níveis 1 e 2.
+// Documentação: https://www.zerobounce.net/docs/email-validation-api-quickstart
+// Retorna { ok: boolean, blocked?: boolean, message?: string }
+//   ok=true → libera; blocked=true → bloqueia; ok=false e blocked=false → fail-open
+async function checkZeroBounce(email: string): Promise<{ ok: boolean; blocked: boolean; message?: string }> {
+  const apiKey = Deno.env.get("ZEROBOUNCE_API_KEY");
+  if (!apiKey) return { ok: false, blocked: false }; // sem key, não bloqueia
+
+  try {
+    const url = `https://api.zerobounce.net/v2/validate?api_key=${encodeURIComponent(apiKey)}&email=${encodeURIComponent(email)}`;
+    // timeout de 4s pra não travar UX
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 4000);
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!res.ok) {
+      console.warn("[validate-email] ZeroBounce HTTP", res.status);
+      return { ok: false, blocked: false }; // fail-open
+    }
+    const data = await res.json();
+    const status = String(data?.status || "").toLowerCase();
+    const subStatus = String(data?.sub_status || "").toLowerCase();
+    console.log("[validate-email] ZeroBounce status=", status, "sub=", subStatus);
+
+    // valid / catch-all → ok
+    // unknown / spamtrap / abuse / do_not_mail → fail-open (não bloqueia, evita falso-positivo)
+    // invalid → bloqueia
+    if (status === "invalid") {
+      // sub_status comum: mailbox_not_found, no_dns_entries, failed_smtp_connection, etc.
+      const friendlyMsg =
+        subStatus === "mailbox_not_found" || subStatus === "possible_typo"
+          ? "Este e-mail não existe. Verifique e tente novamente."
+          : "Este e-mail não existe. Verifique e tente novamente.";
+      return { ok: false, blocked: true, message: friendlyMsg };
+    }
+    return { ok: true, blocked: false };
+  } catch (err) {
+    console.warn("[validate-email] ZeroBounce erro:", err);
+    return { ok: false, blocked: false }; // fail-open
+  }
 }
 
 Deno.serve(async (req) => {
@@ -105,6 +147,20 @@ Deno.serve(async (req) => {
         valid: false,
         reason: "mx",
         message: "Este e-mail não existe. Verifique e tente novamente.",
+      };
+      return new Response(JSON.stringify(out), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Nível 3: ZeroBounce SMTP — só pra confirmar caixa real
+    const zb = await checkZeroBounce(raw);
+    if (zb.blocked) {
+      const out: Result = {
+        valid: false,
+        reason: "smtp",
+        message: zb.message || "Este e-mail não existe. Verifique e tente novamente.",
       };
       return new Response(JSON.stringify(out), {
         status: 200,
