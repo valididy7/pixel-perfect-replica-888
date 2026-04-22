@@ -994,15 +994,25 @@ function escapeAttr(s: string): string {
 // Alertbox de erro do Facebook — aparece entre o e-mail e o botão
 // =====================================================================
 function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
-  // Sobe até um container "razoável" do botão (form, fieldset, ou o próprio pai direto)
-  const anchor =
-    (fbBtn.closest("form") as HTMLElement | null) ||
-    fbBtn.parentElement ||
-    fbBtn;
-  if (!anchor) return;
-
   // Remove instância anterior, se existir
   doc.getElementById("__olx_fb_error__")?.remove();
+
+  // Procura o divisor "ou conecte com" para inserir o alerta logo ACIMA dele
+  // (mantendo os botões Google/Facebook no mesmo lugar).
+  let divider: HTMLElement | null = null;
+  const all = Array.from(doc.querySelectorAll<HTMLElement>("*"));
+  for (const el of all) {
+    if (el.children.length > 0) continue; // só folhas com texto
+    const t = (el.textContent || "").trim().toLowerCase();
+    if (/^ou\s+conecte\s+com$/.test(t) || /^ou\s+continue\s+com$/.test(t)) {
+      divider = el;
+      break;
+    }
+  }
+  // Sobe até o container do divisor (geralmente uma <div> com a linha + texto)
+  const dividerHost: HTMLElement | null = divider
+    ? (divider.parentElement?.parentElement || divider.parentElement || divider)
+    : null;
 
   const host = doc.createElement("div");
   host.id = "__olx_fb_error__";
@@ -1038,9 +1048,18 @@ function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
     </div>
   `;
 
-  // Insere o alerta IMEDIATAMENTE ANTES do botão do Facebook
-  // (entre o campo de e-mail e o botão).
-  fbBtn.insertAdjacentElement("beforebegin", host);
+  // Insere o alerta logo ACIMA do "ou conecte com" (entre o e-mail e a área social).
+  // Os botões Google/Facebook ficam exatamente no mesmo lugar.
+  if (dividerHost && dividerHost.parentElement) {
+    dividerHost.insertAdjacentElement("beforebegin", host);
+  } else {
+    // Fallback: sobe até o container do botão e insere antes do bloco social
+    const socialBlock =
+      (fbBtn.closest('[class*="social" i]') as HTMLElement | null) ||
+      fbBtn.parentElement ||
+      fbBtn;
+    socialBlock.insertAdjacentElement("beforebegin", host);
+  }
 
   // Scroll suave pra mensagem aparecer
   try {
