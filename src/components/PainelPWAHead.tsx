@@ -44,6 +44,9 @@ export function PainelPWAHead() {
     appleTitle.name = "apple-mobile-web-app-title";
     appleTitle.content = "Painel";
 
+    const previousDocTitle = document.title;
+    document.title = "Minha conta - OLX";
+
     const previousThemeColor = document.querySelector<HTMLMetaElement>(
       'meta[name="theme-color"]:not([data-painel-pwa])'
     );
@@ -64,6 +67,7 @@ export function PainelPWAHead() {
       appleCapable.remove();
       appleStatus.remove();
       appleTitle.remove();
+      document.title = previousDocTitle;
       if (previousThemeColor && previousThemeColorContent !== undefined) {
         previousThemeColor.content = previousThemeColorContent;
       }
