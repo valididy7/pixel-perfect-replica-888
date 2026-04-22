@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 
 /**
  * Injeta dinamicamente as tags PWA (manifest, theme-color, apple-touch-icon)
@@ -6,7 +8,15 @@ import { useEffect } from "react";
  * Permite "Adicionar à tela de início" pelo navegador, sem afetar o anúncio público.
  */
 export function PainelPWAHead() {
+  const { pathname } = useLocation();
+  const isPainelArea =
+    pathname === ADMIN_BASE ||
+    pathname.startsWith(`${ADMIN_BASE}/`) ||
+    pathname === ADMIN_LOGIN_PATH ||
+    pathname.startsWith(`${ADMIN_LOGIN_PATH}/`);
+
   useEffect(() => {
+    if (!isPainelArea) return;
     const head = document.head;
 
     const manifest = document.createElement("link");
@@ -58,7 +68,7 @@ export function PainelPWAHead() {
         previousThemeColor.content = previousThemeColorContent;
       }
     };
-  }, []);
+  }, [isPainelArea]);
 
   return null;
 }
