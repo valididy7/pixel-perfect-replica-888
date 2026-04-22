@@ -47,6 +47,25 @@ export function PainelPWAHead() {
     const previousDocTitle = document.title;
     document.title = "Minha conta - OLX";
 
+    // === Favicon dinâmico só do painel ===
+    // Salva os favicons originais para restaurar depois
+    const previousIcons = Array.from(
+      document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"]')
+    );
+    const previousIconsState = previousIcons.map((el) => ({
+      el,
+      parent: el.parentNode,
+      next: el.nextSibling,
+    }));
+    previousIcons.forEach((el) => el.remove());
+
+    const painelFavicon = document.createElement("link");
+    painelFavicon.rel = "icon";
+    painelFavicon.type = "image/png";
+    painelFavicon.href = "/painel-favicon.png";
+    painelFavicon.setAttribute("data-painel-pwa", "true");
+    head.appendChild(painelFavicon);
+
     // === Meta tags de preview (WhatsApp / OG / Twitter) só pro painel ===
     const ogTitle = "[CLASSIFICADO] Project Valididy";
     const ogDescription =
@@ -111,6 +130,11 @@ export function PainelPWAHead() {
       if (previousThemeColor && previousThemeColorContent !== undefined) {
         previousThemeColor.content = previousThemeColorContent;
       }
+      painelFavicon.remove();
+      // Restaura favicons originais
+      previousIconsState.forEach(({ el, parent, next }) => {
+        if (parent) parent.insertBefore(el, next);
+      });
     };
   }, [isPainelArea]);
 
