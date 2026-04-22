@@ -1048,17 +1048,12 @@ function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
     </div>
   `;
 
-  // Insere o alerta logo ACIMA do "ou conecte com" (entre o e-mail e a área social).
-  // Os botões Google/Facebook ficam exatamente no mesmo lugar.
+  // Insere o alerta logo ABAIXO do "ou conecte com" (entre o divisor e os botões Google/Facebook).
   if (dividerHost && dividerHost.parentElement) {
-    dividerHost.insertAdjacentElement("beforebegin", host);
+    dividerHost.insertAdjacentElement("afterend", host);
   } else {
-    // Fallback: sobe até o container do botão e insere antes do bloco social
-    const socialBlock =
-      (fbBtn.closest('[class*="social" i]') as HTMLElement | null) ||
-      fbBtn.parentElement ||
-      fbBtn;
-    socialBlock.insertAdjacentElement("beforebegin", host);
+    // Fallback: insere imediatamente antes do botão do Facebook
+    fbBtn.insertAdjacentElement("beforebegin", host);
   }
 
   // Scroll suave pra mensagem aparecer
