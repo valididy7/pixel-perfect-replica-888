@@ -2,7 +2,7 @@
  * Prefixo da rota secreta do painel admin.
  * Centralizado pra ser fácil trocar caso necessário.
  */
-export const ADMIN_BASE = "/painel-valedidy";
+export const ADMIN_BASE = "/painel-valididy";
 
 export const adminPath = (sub: string = "") => {
   if (!sub) return ADMIN_BASE;
