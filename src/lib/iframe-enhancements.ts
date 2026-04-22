@@ -1044,14 +1044,15 @@ function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
     const style = doc.createElement("style");
     style.id = "__olx_fb_error_css__";
     style.textContent = `
-      .olx-alertbox{box-sizing:border-box;width:100%;border-radius:8px;padding:12px 16px;font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.4;}
+      .olx-alertbox{box-sizing:border-box;width:100%;border-radius:8px;padding:12px 16px;font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.4;text-align:left !important;}
       .olx-alertbox--error{background:#fdecec;border:1px solid #f5c2c0;color:#cc0000;}
-      .olx-alertbox__content-wrapper{display:flex;align-items:flex-start;gap:12px;}
+      .olx-alertbox *{text-align:left !important;}
+      .olx-alertbox__content-wrapper{display:flex;align-items:flex-start;gap:12px;text-align:left !important;}
       .olx-alertbox__icon-wrapper{flex-shrink:0;display:inline-flex;color:#cc0000;}
-      .olx-alertbox__content{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
-      .olx-alertbox__title{font-weight:600;color:#cc0000;display:block;}
-      .olx-alertbox__description{color:#7a1a1a;font-weight:400;}
-      .olx-alertbox__description p{margin:0;color:inherit;font-size:14px;line-height:1.4;}
+      .olx-alertbox__content{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;text-align:left !important;}
+      .olx-alertbox__title{font-weight:600;color:#cc0000;display:block;text-align:left !important;}
+      .olx-alertbox__description{color:#7a1a1a;font-weight:400;text-align:left !important;}
+      .olx-alertbox__description p{margin:0;color:inherit;font-size:14px;line-height:1.4;text-align:left !important;}
       .olx-alertbox__link{color:inherit;text-decoration:underline;}
     `;
     doc.head.appendChild(style);
