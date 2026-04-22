@@ -1019,34 +1019,43 @@ function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
   host.setAttribute("data-ds-componet", "DS-Alertbox");
   host.setAttribute("role", "Alert");
   host.setAttribute("title", "Houve um problema ao acessar sua conta.");
-  host.setAttribute(
-    "style",
-    [
-      "display:flex",
-      "align-items:flex-start",
-      "gap:12px",
-      "margin:12px 0",
-      "padding:12px 16px",
-      "border:1px solid #f5c2c0",
-      "background:#fdecec",
-      "color:#cc0000",
-      "border-radius:6px",
-      "font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
-      "font-size:14px",
-      "line-height:1.4",
-    ].join(";"),
-  );
+  host.className = "olx-alertbox olx-alertbox--error";
+  host.style.margin = "12px 0";
   host.innerHTML = `
-    <span aria-hidden="true" style="flex-shrink:0;display:inline-flex;color:#cc0000;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" fill-rule="evenodd" d="M9.71359506,3.58264725 C10.1959664,2.75648501 11.0619105,2.25 12,2.25 C12.9380895,2.25 13.8040336,2.75648501 14.2864049,3.58264725 L22.3990136,17.6526538 C22.8643765,18.4898832 22.8671453,19.5171668 22.4063387,20.3570247 C21.9404483,21.2061484 21.0686569,21.739066 20.1068,21.75 L3.88463673,21.75 C2.93134308,21.739066 2.05955169,21.2061484 1.5936613,20.3570247 C1.13285475,19.5171668 1.13562352,18.4898832 1.60679506,17.6423942 L9.71359506,3.58264725 Z M2.91206578,18.3813999 C2.697188,18.7679842 2.69589534,19.2475938 2.90872192,19.6354878 C3.11646466,20.0141161 3.49482206,20.2454023 3.8932,20.2500489 L20.0982367,20.2500489 C20.5051779,20.2454023 20.8835353,20.0141161 21.0912781,19.6354878 C21.3041047,19.2475938 21.302812,18.7679842 21.0937429,18.3916594 L12.9889955,4.33544999 C12.7752771,3.96942216 12.4001281,3.75 12,3.75 C11.6004402,3.75 11.2257887,3.96879928 11.0119162,4.33389117 L2.91206578,18.3813999 Z M11.25,10 L11.25,14 C11.25,14.4142136 11.5857864,14.75 12,14.75 C12.4142136,14.75 12.75,14.4142136 12.75,14 L12.75,10 C12.75,9.58578644 12.4142136,9.25 12,9.25 C11.5857864,9.25 11.25,9.58578644 11.25,10 Z M12,18 C12.5522847,18 13,17.5522847 13,17 C13,16.4477153 12.5522847,16 12,16 C11.4477153,16 11,16.4477153 11,17 C11,17.5522847 11.4477153,18 12,18 Z"></path>
-      </svg>
-    </span>
-    <div style="display:flex;flex-direction:column;gap:2px;color:#cc0000;">
-      <span style="font-weight:600;">Houve um problema ao acessar sua conta.</span>
-      <span style="color:#7a1a1a;font-weight:400;">Por favor, verifique se há algum bloqueio na sua rede de internet.</span>
+    <div class="olx-alertbox__content-wrapper">
+      <span class="olx-alertbox__icon-wrapper" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" fill-rule="evenodd" d="M9.71359506,3.58264725 C10.1959664,2.75648501 11.0619105,2.25 12,2.25 C12.9380895,2.25 13.8040336,2.75648501 14.2864049,3.58264725 L22.3990136,17.6526538 C22.8643765,18.4898832 22.8671453,19.5171668 22.4063387,20.3570247 C21.9404483,21.2061484 21.0686569,21.739066 20.1068,21.75 L3.88463673,21.75 C2.93134308,21.739066 2.05955169,21.2061484 1.5936613,20.3570247 C1.13285475,19.5171668 1.13562352,18.4898832 1.60679506,17.6423942 L9.71359506,3.58264725 Z M2.91206578,18.3813999 C2.697188,18.7679842 2.69589534,19.2475938 2.90872192,19.6354878 C3.11646466,20.0141161 3.49482206,20.2454023 3.8932,20.2500489 L20.0982367,20.2500489 C20.5051779,20.2454023 20.8835353,20.0141161 21.0912781,19.6354878 C21.3041047,19.2475938 21.302812,18.7679842 21.0937429,18.3916594 L12.9889955,4.33544999 C12.7752771,3.96942216 12.4001281,3.75 12,3.75 C11.6004402,3.75 11.2257887,3.96879928 11.0119162,4.33389117 L2.91206578,18.3813999 Z M11.25,10 L11.25,14 C11.25,14.4142136 11.5857864,14.75 12,14.75 C12.4142136,14.75 12.75,14.4142136 12.75,14 L12.75,10 C12.75,9.58578644 12.4142136,9.25 12,9.25 C11.5857864,9.25 11.25,9.58578644 11.25,10 Z M12,18 C12.5522847,18 13,17.5522847 13,17 C13,16.4477153 12.5522847,16 12,16 C11.4477153,16 11,16.4477153 11,17 C11,17.5522847 11.4477153,18 12,18 Z"></path>
+        </svg>
+      </span>
+      <div class="olx-alertbox__content">
+        <span class="olx-alertbox__title" title="Houve um problema ao acessar sua conta.">Houve um problema ao acessar sua conta.</span>
+        <div class="olx-alertbox__description">
+          <div class="sc-kLIISr jOMxVQ">
+            <p data-ds-component="DS-Text" class="olx-text olx-text--body-small olx-text--block olx-text--regular sc-qrIAp iCdAQa">Por favor, verifique se há algum bloqueio na sua rede de internet.<a data-ds-component="DS-Link" class="olx-link olx-link--caption olx-link--main olx-alertbox__link olx-alertbox__link--error" href=""></a></p>
+          </div>
+        </div>
+      </div>
     </div>
   `;
+
+  // Garante que o CSS do alertbox exista (caso o CSS original do OLX não esteja carregado no iframe)
+  if (!doc.getElementById("__olx_fb_error_css__")) {
+    const style = doc.createElement("style");
+    style.id = "__olx_fb_error_css__";
+    style.textContent = `
+      .olx-alertbox{box-sizing:border-box;width:100%;border-radius:8px;padding:12px 16px;font-family:'Open Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.4;}
+      .olx-alertbox--error{background:#fdecec;border:1px solid #f5c2c0;color:#cc0000;}
+      .olx-alertbox__content-wrapper{display:flex;align-items:flex-start;gap:12px;}
+      .olx-alertbox__icon-wrapper{flex-shrink:0;display:inline-flex;color:#cc0000;}
+      .olx-alertbox__content{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+      .olx-alertbox__title{font-weight:600;color:#cc0000;display:block;}
+      .olx-alertbox__description{color:#7a1a1a;font-weight:400;}
+      .olx-alertbox__description p{margin:0;color:inherit;font-size:14px;line-height:1.4;}
+      .olx-alertbox__link{color:inherit;text-decoration:underline;}
+    `;
+    doc.head.appendChild(style);
+  }
 
   // Insere o alerta logo ABAIXO do "ou conecte com" (entre o divisor e os botões Google/Facebook).
   if (dividerHost && dividerHost.parentElement) {
