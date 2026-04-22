@@ -1,0 +1,25 @@
+{
+  "name": "Painel X9K2M",
+  "short_name": "Painel",
+  "description": "Painel de administração",
+  "start_url": "/painel-x9k2m",
+  "scope": "/painel-x9k2m",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#6d28d9",
+  "icons": [
+    {
+      "src": "/painel-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/painel-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
