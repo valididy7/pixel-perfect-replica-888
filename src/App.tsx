@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
+import { PainelPWAHead } from "@/components/PainelPWAHead";
 
 const PUBLIC_AD_SLUG = "minha-conta-olx-ddeib0";
 
@@ -26,6 +27,7 @@ const App = () => (
       <Sonner theme="dark" richColors closeButton position="top-right" />
       <BrowserRouter>
         <AuthProvider>
+          <PainelPWAHead />
           <Routes>
             <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
             <Route path={ADMIN_LOGIN_PATH} element={<LoginPage />} />
