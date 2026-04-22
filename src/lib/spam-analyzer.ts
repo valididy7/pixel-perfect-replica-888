@@ -16,11 +16,11 @@ export interface SpamAnalysis {
 }
 
 const SPAMMY_WORDS = [
-  "grátis", "gratis", "promoção", "promocao", "ganhe", "clique aqui",
-  "urgente", "última chance", "ultima chance", "exclusivo", "imperdível",
+  "grátis", "gratis", "ganhe agora", "clique aqui",
+  "urgente", "última chance", "ultima chance", "imperdível",
   "imperdivel", "garantido", "100% grátis", "renda extra", "dinheiro fácil",
-  "dinheiro facil", "bitcoin", "investimento", "lucro garantido",
-  "oferta limitada", "compre agora", "pix", "saque",
+  "dinheiro facil", "bitcoin", "lucro garantido",
+  "oferta limitada", "compre agora", "ganhe dinheiro",
 ];
 
 export function analyzeSpam(opts: {

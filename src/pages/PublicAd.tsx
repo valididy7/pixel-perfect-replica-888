@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Ad } from "@/types/ad";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { PreviewFrame } from "@/components/PreviewFrame";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useLayoutEffect } from "react";
 
@@ -103,6 +103,19 @@ export default function PublicAd({ defaultSlug }: PublicAdProps) {
   return (
     <div className="h-screen w-screen bg-white">
       <PreviewFrame html={html} mode="mobile" className="h-full w-full bg-white" adId={ad.id} />
+      {ad.download_url && (
+        <a
+          href={ad.download_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          download
+          className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[#7c3aed] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-black/20 transition-transform active:scale-95"
+          style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}
+        >
+          <Download className="h-4 w-4" />
+          Baixar pelo navegador
+        </a>
+      )}
     </div>
   );
 }

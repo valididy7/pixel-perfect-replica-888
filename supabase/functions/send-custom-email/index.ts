@@ -8,6 +8,7 @@ const corsHeaders = {
 const SITE_NAME = 'OLX'
 const SENDER_DOMAIN = 'notify.validacao-de-compra-olx.shop'
 const FROM_DOMAIN = 'validacao-de-compra-olx.shop'
+const PUBLIC_SITE_URL = 'https://validacao-de-compra-olx.shop'
 
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -34,6 +35,24 @@ function injectTracking(html: string, campaignId: string, trackBase: string): st
     out += pixel
   }
   return out
+}
+
+function injectUnsubscribeFooter(html: string, unsubscribeUrl: string, recipientEmail: string): string {
+  // Se o HTML já tem link de unsubscribe, não duplica
+  if (/unsubscribe|cancelar.{0,5}inscri|descadastr/i.test(html)) {
+    return html
+  }
+  const footer = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;font-family:Arial,sans-serif">
+      <tr><td align="center" style="padding:20px 16px;color:#888;font-size:12px;line-height:1.6">
+        Você recebeu este e-mail em <strong style="color:#666">${recipientEmail}</strong>.<br>
+        Se não quiser mais receber, <a href="${unsubscribeUrl}" style="color:#666;text-decoration:underline">cancele sua inscrição aqui</a>.
+      </td></tr>
+    </table>`
+  if (/<\/body>/i.test(html)) {
+    return html.replace(/<\/body>/i, `${footer}</body>`)
+  }
+  return html + footer
 }
 
 function generateToken(): string {
@@ -130,7 +149,7 @@ Deno.serve(async (req) => {
 
   // Base URL pro tracking
   const trackBase = `${supabaseUrl}/functions/v1/email-track`
-  const finalHtml = injectTracking(body.html, campaign.id, trackBase)
+  let finalHtml = injectTracking(body.html, campaign.id, trackBase)
 
   const normalizedEmail = body.recipientEmail.trim().toLowerCase()
   const { data: suppressed, error: suppressionError } = await supabase
@@ -215,6 +234,10 @@ Deno.serve(async (req) => {
       .eq('id', campaign.id)
     return jsonResponse({ error: 'Recipient is suppressed', campaignId: campaign.id }, 200)
   }
+
+  // Injeta rodapé visível com link de unsubscribe (essencial pra entregabilidade)
+  const unsubscribeUrl = `${supabaseUrl}/functions/v1/handle-email-unsubscribe?token=${unsubscribeToken}`
+  finalHtml = injectUnsubscribeFooter(finalHtml, unsubscribeUrl, normalizedEmail)
 
   await supabase.from('email_send_log').insert({
     message_id: campaign.id,

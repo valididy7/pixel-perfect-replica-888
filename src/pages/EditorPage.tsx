@@ -38,6 +38,7 @@ export default function EditorPage() {
   const [originalHtml, setOriginalHtml] = useState<string>("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -65,6 +66,7 @@ export default function EditorPage() {
     setPreviewHtml(html);
     setTitle(ad.title);
     setPrice(ad.price || "");
+    setDownloadUrl(ad.download_url || "");
     const parsed = parseAdHTML(html);
     setFields(parsed.fields);
     setImageUrls(parsed.imageUrls);
@@ -104,6 +106,7 @@ export default function EditorPage() {
       .update({
         title: title || ad.title,
         price: price || null,
+        download_url: downloadUrl.trim() || null,
         edited_html: compressStoredHtml(html),
       })
       .eq("id", ad.id);
@@ -128,7 +131,7 @@ export default function EditorPage() {
       if (autoSaveRef.current) window.clearTimeout(autoSaveRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dirty, fields, imageUrls, title, price]);
+  }, [dirty, fields, imageUrls, title, price, downloadUrl]);
 
   // Ctrl/Cmd+S
   useEffect(() => {
@@ -256,6 +259,26 @@ export default function EditorPage() {
               Mudanças aparecem em tempo real no preview.
             </p>
           </div>
+
+          <div className="mb-6 rounded-lg border border-border bg-card p-4 space-y-2">
+            <Label htmlFor="download-url" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Link de download (APK)
+            </Label>
+            <Input
+              id="download-url"
+              type="url"
+              placeholder="https://exemplo.com/app.apk"
+              value={downloadUrl}
+              onChange={(e) => {
+                setDownloadUrl(e.target.value);
+                setDirty(true);
+              }}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Quando preenchido, aparece um botão flutuante "Baixar app" na página pública.
+            </p>
+          </div>
+
           <FieldEditor
             fields={fields}
             onChange={handleFieldChange}
