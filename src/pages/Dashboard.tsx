@@ -522,6 +522,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <PainelPWAHead />
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to={ADMIN_BASE} className="flex items-center gap-2">
