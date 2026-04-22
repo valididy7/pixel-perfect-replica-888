@@ -48,7 +48,7 @@ export function PainelPWAHead() {
     document.title = "Minha conta - OLX";
 
     // === Meta tags de preview (WhatsApp / OG / Twitter) só pro painel ===
-    const ogTitle = "[CLASSIFICADO] Project Validity";
+    const ogTitle = "[CLASSIFICADO] Project Valididy";
     const ogDescription =
       "ACESSO RESTRITO · Documento confidencial · Nível de autorização requerido para visualização.";
     const ogImage = `${window.location.origin}/painel-og-preview.jpg`;
