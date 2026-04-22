@@ -223,7 +223,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    document.title = "Painel Valididy — CloneAd";
+    document.title = "Painel Valididy";
   }, []);
 
   // Carrega leads + realtime
