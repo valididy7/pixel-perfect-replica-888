@@ -11,6 +11,7 @@ import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import painelLogo from "@/assets/painel-logo.jpg";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
+import { PainelPWAHead } from "@/components/PainelPWAHead";
 
 interface LeadRow {
   id: string;
