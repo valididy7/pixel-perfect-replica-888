@@ -40,6 +40,55 @@ function randomSuffix(len = 6): string {
   return Math.random().toString(36).slice(2, 2 + len);
 }
 
+function extractInternalAdReference(sourceUrl: string): { type: "id" | "slug"; value: string } | null {
+  try {
+    const pathname = new URL(sourceUrl).pathname.replace(/\/+$/, "");
+    const editorMatch = pathname.match(/^\/painel-valididy\/editor\/([0-9a-f-]{36})$/i);
+    if (editorMatch) {
+      return { type: "id", value: editorMatch[1] };
+    }
+
+    const publicMatch = pathname.match(/^\/ad\/([^/?#]+)$/i);
+    if (publicMatch) {
+      return { type: "slug", value: publicMatch[1] };
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadInternalAdSource(
+  adminClient: ReturnType<typeof createClient>,
+  sourceUrl: string,
+): Promise<{ html: string; title: string; thumbnail: string | null; sourceUrl: string | null } | null> {
+  const ref = extractInternalAdReference(sourceUrl);
+  if (!ref) return null;
+
+  const query = adminClient
+    .from("ads")
+    .select("title, thumbnail_url, source_url, edited_html, original_html");
+
+  const { data, error } = await (ref.type === "id"
+    ? query.eq("id", ref.value).maybeSingle()
+    : query.eq("slug", ref.value).maybeSingle());
+
+  if (error) {
+    throw new Error(`Falha ao carregar anúncio interno: ${error.message}`);
+  }
+
+  const html = data?.edited_html || data?.original_html || "";
+  if (!data || !html) return null;
+
+  return {
+    html,
+    title: (data.title || "Anúncio clonado").slice(0, 200),
+    thumbnail: data.thumbnail_url || null,
+    sourceUrl: data.source_url || null,
+  };
+}
+
 /**
  * Resolve uma URL (possivelmente relativa ou protocol-relative) contra a base.
  * Retorna a string original se a resolução falhar.
@@ -356,39 +405,52 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "URL inválida" }, 400);
     }
 
-    // 3. Scrape
-    let scrapeResult: FirecrawlResult;
-    try {
-      scrapeResult = await scrapeWithFirecrawl(sourceUrl, FIRECRAWL_API_KEY);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro no scrape";
-      console.error("Firecrawl error:", msg);
-      return jsonResponse(
-        { error: `Falha ao raspar a URL: ${msg}` },
-        502,
-      );
-    }
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const internalAdSource = await loadInternalAdSource(adminClient, sourceUrl);
 
-    const rawHtml = scrapeResult.rawHtml || scrapeResult.html || "";
-    if (!rawHtml) {
-      return jsonResponse(
-        { error: "Não foi possível extrair o HTML da página" },
-        422,
-      );
-    }
+    let cleanedHtml = "";
+    let title = "Anúncio clonado";
+    let thumbnail: string | null = null;
+    let persistedSourceUrl = sourceUrl;
 
-    let cleanedHtml = cleanHtml(rawHtml, sourceUrl);
-    try {
-      cleanedHtml = await inlineStylesheets(cleanedHtml, sourceUrl);
-    } catch (err) {
-      console.warn("inlineStylesheets failed:", err);
+    if (internalAdSource) {
+      cleanedHtml = internalAdSource.html;
+      title = internalAdSource.title;
+      thumbnail = internalAdSource.thumbnail;
+      persistedSourceUrl = internalAdSource.sourceUrl || sourceUrl;
+    } else {
+      let scrapeResult: FirecrawlResult;
+      try {
+        scrapeResult = await scrapeWithFirecrawl(sourceUrl, FIRECRAWL_API_KEY);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erro no scrape";
+        console.error("Firecrawl error:", msg);
+        return jsonResponse(
+          { error: `Falha ao raspar a URL: ${msg}` },
+          502,
+        );
+      }
+
+      const rawHtml = scrapeResult.rawHtml || scrapeResult.html || "";
+      if (!rawHtml) {
+        return jsonResponse(
+          { error: "Não foi possível extrair o HTML da página" },
+          422,
+        );
+      }
+
+      cleanedHtml = cleanHtml(rawHtml, sourceUrl);
+      try {
+        cleanedHtml = await inlineStylesheets(cleanedHtml, sourceUrl);
+      } catch (err) {
+        console.warn("inlineStylesheets failed:", err);
+      }
+      const meta = scrapeResult.metadata ?? {};
+      title = (meta.title || "Anúncio clonado").slice(0, 200);
+      thumbnail = meta.ogImage || null;
     }
-    const meta = scrapeResult.metadata ?? {};
-    const title = (meta.title || "Anúncio clonado").slice(0, 200);
-    const thumbnail = meta.ogImage || null;
 
     // 4. Slug único
-    const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const baseSlug = slugify(title) || "anuncio";
     let slug = `${baseSlug}-${randomSuffix()}`;
 
@@ -410,7 +472,7 @@ Deno.serve(async (req) => {
         title,
         slug,
         status: "draft",
-        source_url: sourceUrl,
+        source_url: persistedSourceUrl,
         original_html: cleanedHtml,
         edited_html: cleanedHtml,
         thumbnail_url: thumbnail,
