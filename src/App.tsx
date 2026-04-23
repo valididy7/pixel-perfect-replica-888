@@ -9,6 +9,8 @@ import { AdminGate } from "@/components/AdminGate";
 import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
+import EditorPage from "./pages/EditorPage";
+import ScreenEditorPage from "./pages/ScreenEditorPage";
 import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
@@ -41,6 +43,8 @@ const App = () => (
               }
             >
               <Route path={ADMIN_BASE} element={<Dashboard />} />
+              <Route path={`${ADMIN_BASE}/editor/:id`} element={<EditorPage />} />
+              <Route path={`${ADMIN_BASE}/editor/:adId/screen/:screenId`} element={<ScreenEditorPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
