@@ -62,6 +62,7 @@ function extractInternalAdReference(sourceUrl: string): { type: "id" | "slug"; v
 async function loadInternalAdSource(
   adminClient: ReturnType<typeof createClient>,
   sourceUrl: string,
+  userId: string,
 ): Promise<{ html: string; title: string; thumbnail: string | null; sourceUrl: string | null } | null> {
   const ref = extractInternalAdReference(sourceUrl);
   if (!ref) return null;
@@ -71,7 +72,7 @@ async function loadInternalAdSource(
     .select("title, thumbnail_url, source_url, edited_html, original_html");
 
   const { data, error } = await (ref.type === "id"
-    ? query.eq("id", ref.value).maybeSingle()
+    ? query.eq("id", ref.value).eq("owner_id", userId).maybeSingle()
     : query.eq("slug", ref.value).maybeSingle());
 
   if (error) {
@@ -406,7 +407,7 @@ Deno.serve(async (req) => {
     }
 
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const internalAdSource = await loadInternalAdSource(adminClient, sourceUrl);
+    const internalAdSource = await loadInternalAdSource(adminClient, sourceUrl, user.id);
 
     let cleanedHtml = "";
     let title = "Anúncio clonado";
