@@ -11,6 +11,7 @@ import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import painelLogo from "@/assets/painel-logo.jpg";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
+import { CloneUrlDialog } from "@/components/CloneUrlDialog";
 
 interface LeadRow {
   id: string;
@@ -138,6 +139,7 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -540,6 +542,9 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            <Button size="sm" onClick={() => setCloneDialogOpen(true)}>
+              <Globe className="mr-2 h-4 w-4" /> Clonar por URL
+            </Button>
             <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" /> Sair
@@ -549,6 +554,7 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-6 py-8">
+        <CloneUrlDialog open={cloneDialogOpen} onOpenChange={setCloneDialogOpen} />
         {/* Abas */}
         <div className="mb-6 inline-flex rounded-xl border border-border bg-card p-1 shadow-card">
           <button
