@@ -34,8 +34,9 @@ export function CloneUrlDialog({
     if (!user) return;
 
     const trimmedUrl = url.trim();
+    let resolvedUrl = trimmedUrl;
     try {
-      new URL(trimmedUrl);
+      resolvedUrl = new URL(trimmedUrl, window.location.origin).toString();
     } catch {
       return toast.error("URL inválida");
     }
@@ -45,7 +46,7 @@ export function CloneUrlDialog({
 
     try {
       const { data, error } = await supabase.functions.invoke("clone-url-ad", {
-        body: { url: trimmedUrl },
+        body: { url: resolvedUrl },
       });
 
       if (error) throw new Error(error.message || "Falha ao chamar a função");
