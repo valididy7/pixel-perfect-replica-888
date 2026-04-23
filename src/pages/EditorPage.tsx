@@ -22,6 +22,7 @@ import { compressStoredHtml, decompressStoredHtml } from "@/lib/ad-html-storage"
 import { parseAdHTML, rebuildHTMLWithEdits } from "@/lib/html-parser";
 import { PreviewFrame } from "@/components/PreviewFrame";
 import { FieldEditor } from "@/components/FieldEditor";
+import { ScreensPanel } from "@/components/ScreensPanel";
 import { LeadsPanel } from "@/components/LeadsPanel";
 import { ApprovalsPanel } from "@/components/ApprovalsPanel";
 import { toast } from "sonner";
@@ -284,6 +285,8 @@ export default function EditorPage() {
             imageUrls={imageUrls}
             onImageChange={handleImageChange}
           />
+
+          <ScreensPanel adId={ad.id} />
 
           <ApprovalsPanel adId={ad.id} />
 
