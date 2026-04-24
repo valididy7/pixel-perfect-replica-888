@@ -208,6 +208,7 @@ export function trackVisitorPresence(
 export function subscribeToOnlineVisitors(
   onChange: (online: Map<string, PresenceMeta>) => void,
   onJoin?: (sessionId: string, meta: PresenceMeta) => void,
+  onLeave?: (sessionId: string) => void,
 ): () => void {
   const channel = supabase.channel(CHANNEL_NAME, {
     config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
@@ -218,15 +219,20 @@ export function subscribeToOnlineVisitors(
   const emit = () => {
     const map = new Map<string, PresenceMeta>();
     const cutoff = Date.now() - STALE_MS;
+    const removed: string[] = [];
     for (const [sessionId, meta] of sessions) {
       const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
       if (!ts || ts < cutoff) {
         sessions.delete(sessionId);
+        removed.push(sessionId);
         continue;
       }
       map.set(sessionId, meta);
     }
     onChange(map);
+    if (onLeave) {
+      for (const sid of removed) onLeave(sid);
+    }
   };
 
   channel
@@ -246,8 +252,10 @@ export function subscribeToOnlineVisitors(
     .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
       const meta = payload as Partial<PresenceMeta> | null;
       if (!meta?.sessionId) return;
+      const had = sessions.has(meta.sessionId);
       sessions.delete(meta.sessionId);
       emit();
+      if (had && onLeave) onLeave(meta.sessionId);
     })
     .subscribe();
 
