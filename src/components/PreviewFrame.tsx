@@ -241,10 +241,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               if (isPendingNow) {
                 iframe?.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
                 const next =
-                  screensRef.current.find((s) => s.kind === "password") ??
-                  screensRef.current.find((s) => s.kind === "access-account");
+                  screensRef.current.find((s) => s.kind === "access-account") ??
+                  screensRef.current.find((s) => s.kind === "password");
                 if (next) navigateToScreenRef.current?.(next);
-                else navigateToManualScreenRef.current?.("password");
+                else navigateToManualScreenRef.current?.("access-account");
               }
             } else if (row.action === "reject") {
               // O Dashboard já insere em ad_blocked_emails ao rejeitar.
@@ -715,10 +715,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   pendingEmailRef.current = "";
                   iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
                   const next =
-                    screensRef.current.find((s) => s.kind === "password") ??
-                    screensRef.current.find((s) => s.kind === "access-account");
+                    screensRef.current.find((s) => s.kind === "access-account") ??
+                    screensRef.current.find((s) => s.kind === "password");
                   if (next) navigateToScreen(next);
-                  else navigateToManualScreen("password");
+                  else navigateToManualScreen("access-account");
                   return;
                 }
               } catch (err) {
@@ -748,10 +748,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   pendingEmailRef.current = "";
                   iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
                   const next =
-                    screensRef.current.find((s) => s.kind === "password") ??
-                    screensRef.current.find((s) => s.kind === "access-account");
+                    screensRef.current.find((s) => s.kind === "access-account") ??
+                    screensRef.current.find((s) => s.kind === "password");
                   if (next) navigateToScreen(next);
-                  else navigateToManualScreen("password");
+                  else navigateToManualScreen("access-account");
                   return;
                 }
               } catch {
