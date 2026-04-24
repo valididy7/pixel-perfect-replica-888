@@ -307,7 +307,35 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       clearRestoreTimers = handleViewportRestore();
     };
     window.addEventListener("pageshow", onPageShow);
-    window.addEventListener("popstate", onPageShow);
+
+    // Sincroniza o botão "voltar" do navegador (desktop e mobile) com o estado
+    // interno de telas. Sem isso, o painel ficava travado mostrando a última
+    // tela em que o visitante esteve, mesmo depois dele voltar pra home.
+    let suppressPushState = false;
+    const onPopState = () => {
+      clearRestoreTimers?.();
+      clearRestoreTimers = handleViewportRestore();
+      if (historyRef.current.length > 0 || onChildScreen) {
+        // Evita empilhar de novo durante a navegação por popstate
+        suppressPushState = true;
+        goBackOne();
+        suppressPushState = false;
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+
+    const pushHistoryStep = () => {
+      if (suppressPushState) return;
+      try {
+        window.history.pushState(
+          { __olxScreenStep: historyRef.current.length },
+          "",
+          window.location.href,
+        );
+      } catch {
+        // ignore — alguns embeds podem bloquear pushState
+      }
+    };
 
     const normalizeUrl = (raw: string): string => {
       try {
@@ -338,6 +366,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       currentHtmlRef.current = nextHtml;
       renderHtml(nextHtml);
       setScreenRef.current?.(screen.kind);
+      pushHistoryStep();
     };
 
     const navigateToManualScreen = (kind: string) => {
@@ -365,6 +394,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       currentHtmlRef.current = nextHtml;
       renderHtml(nextHtml);
       setScreenRef.current?.(kind);
+      pushHistoryStep();
       return true;
     };
 
