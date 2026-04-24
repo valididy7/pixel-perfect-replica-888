@@ -159,7 +159,7 @@ export function trackVisitorPresence(
   window.addEventListener("blur", () => {
     // blur sozinho não é suficiente (pode ser focus em outra área da página),
     // mas se a aba ficou oculta nesse momento, o syncVisibility resolve.
-    if (document.visibilityState !== "visible") untrackPresence();
+    if (document.visibilityState !== "visible") sendOffline();
   });
   window.addEventListener("pageshow", syncVisibility);
 
@@ -173,7 +173,19 @@ export function trackVisitorPresence(
     window.removeEventListener("focus", syncVisibility);
     window.removeEventListener("pageshow", syncVisibility);
     void enqueue(async () => {
-      if (announcedOnline) sendOffline();
+      if (announcedOnline) {
+        try {
+          await channel.send({
+            type: "broadcast",
+            event: OFFLINE_EVENT,
+            payload: { adId, sessionId },
+          });
+        } catch {
+          // ignore final offline send failure
+        } finally {
+          announcedOnline = false;
+        }
+      }
 
       try {
         await channel.unsubscribe();
