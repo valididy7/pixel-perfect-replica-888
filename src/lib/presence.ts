@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CHANNEL_NAME = "online-visitors-global";
 
+// Heartbeat: visitante manda track() a cada HEARTBEAT_MS enquanto a aba tá visível.
+// Painel marca como offline qualquer presença cujo `online_at` seja mais antigo
+// que STALE_MS. Isso garante detecção mesmo se o WebSocket não mandar leave.
+const HEARTBEAT_MS = 2000;
+const STALE_MS = 5000;
+
 export interface PresenceMeta {
   adId: string;
   sessionId: string;
