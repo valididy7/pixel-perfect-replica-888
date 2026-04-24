@@ -598,42 +598,42 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:px-6">
-          <Link to={ADMIN_BASE} className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-display text-sm font-semibold uppercase tracking-[0.14em] text-gradient sm:text-lg sm:tracking-[0.18em]">
+        <div className="mx-auto flex h-12 max-w-7xl items-center justify-between gap-1.5 px-2 xs:h-14 xs:gap-2 xs:px-3 sm:h-16 sm:px-6">
+          <Link to={ADMIN_BASE} className="flex min-w-0 items-center gap-1.5 xs:gap-2">
+            <span className="truncate font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-gradient xs:text-sm xs:tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
               Painel Valididy
             </span>
             <span
-              className={`ml-1 inline-flex shrink-0 items-center text-[10px] font-medium uppercase sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
+              className={`ml-0.5 hidden shrink-0 items-center text-[9px] font-medium uppercase xs:ml-1 xs:inline-flex xs:text-[10px] sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
               {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
             </span>
           </Link>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1 xs:gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleSound}
-              className="h-9 px-2 sm:px-3"
+              className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3"
               title={soundOn ? "Som ligado — clique pra desligar" : "Som desligado — clique pra ligar"}
               aria-label={soundOn ? "Desativar som" : "Ativar som"}
             >
               {soundOn ? (
-                <Volume2 className="h-4 w-4 text-success" />
+                <Volume2 className="h-3.5 w-3.5 text-success xs:h-4 xs:w-4" />
               ) : (
-                <VolumeX className="h-4 w-4 text-muted-foreground" />
+                <VolumeX className="h-3.5 w-3.5 text-muted-foreground xs:h-4 xs:w-4" />
               )}
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 px-2 sm:px-3">
-              <LogOut className="h-4 w-4 sm:mr-2" />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3">
+              <LogOut className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-7xl px-2 py-3 xs:px-3 xs:py-4 sm:px-6 sm:py-8">
         {/* Abas */}
         <div className="mb-6 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card sm:w-auto">
           <button
