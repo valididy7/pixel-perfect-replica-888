@@ -324,7 +324,7 @@ export function attachIframeInteractions(doc: Document): () => void {
         // Pequeno delay pra UI reagir, então dispara o "Acessar"
         setTimeout(() => {
           window.parent.postMessage(
-            { type: "iframe-help-action", action: "access-account", email },
+            { type: "iframe-help-action", action: "access-account", email, fromGoogle: true },
             "*",
           );
         }, 150);
