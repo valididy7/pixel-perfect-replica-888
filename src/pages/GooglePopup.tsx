@@ -72,16 +72,9 @@ export default function GooglePopup() {
     <div
       style={{
         minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
         background: "#fff",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-        color: "#5f6368",
-        fontSize: 14,
       }}
-    >
-      Conectando com o Google…
-    </div>
+      aria-hidden
+    />
   );
 }
