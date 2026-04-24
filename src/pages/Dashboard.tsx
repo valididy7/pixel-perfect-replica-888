@@ -842,7 +842,7 @@ export default function Dashboard() {
                       </span>
                       <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
                     </div>
-                    {pending && (
+                    {pending && pending.kind !== "email" && (
                       <div className="mt-2 space-y-2 rounded-md border border-primary/40 bg-primary/5 p-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
