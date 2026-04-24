@@ -39,29 +39,48 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(263_85%_65%/0.08),transparent_50%),radial-gradient(circle_at_80%_80%,hsl(190_95%_55%/0.06),transparent_50%)]" />
 
       <div className="relative w-full max-w-md animate-fade-in">
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center sm:mb-8">
           <Link to={ADMIN_BASE} className="inline-flex items-center gap-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold tracking-tight">CloneAd</span>
+            <span className="text-xl font-bold tracking-tight sm:text-2xl">CloneAd</span>
           </Link>
           <p className="mt-3 text-sm text-muted-foreground">
             Clone qualquer anúncio com um link.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/50 p-6 backdrop-blur-xl shadow-elegant">
+        <div className="rounded-2xl border border-border bg-card/50 p-5 shadow-elegant backdrop-blur-xl sm:p-6">
           <form onSubmit={onLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
+              <Input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@email.com"
+                className="h-11 text-base sm:h-10 sm:text-sm"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="h-11 text-base sm:h-10 sm:text-sm"
+              />
             </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-gradient-primary hover:opacity-90 shadow-glow">
+            <Button type="submit" disabled={submitting} className="h-11 w-full bg-gradient-primary shadow-glow hover:opacity-90 sm:h-10">
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
