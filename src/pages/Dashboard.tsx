@@ -1021,7 +1021,7 @@ export default function Dashboard() {
           )}
         </section>
         </>
-        )}
+        </div>
       </main>
     </div>
   );
