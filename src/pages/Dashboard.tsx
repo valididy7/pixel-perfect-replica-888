@@ -745,7 +745,7 @@ export default function Dashboard() {
                     // Tela em tempo real tem prioridade; se a sessão saiu, usa a ÚLTIMA conhecida
                     // (não inferimos pelos dados — isso causa pulos errados ao trocar de tela).
                     const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
-                    const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
+                    const style = getScreenStyle(liveKind);
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
@@ -761,8 +761,8 @@ export default function Dashboard() {
                           <CopyText value={s.password !== "—" ? s.password : ""} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                            {screenLabel}
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${style.className}`}>
+                            {style.label}
                           </span>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
