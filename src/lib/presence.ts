@@ -8,10 +8,11 @@ import { supabase } from "@/integrations/supabase/client";
  */
 
 const CHANNEL_NAME = "online-visitors-global";
+const HEARTBEAT_EVENT = "visitor-heartbeat";
+const OFFLINE_EVENT = "visitor-offline";
 
-// Heartbeat: visitante manda track() a cada HEARTBEAT_MS enquanto a aba tá visível.
-// Painel marca como offline qualquer presença cujo `online_at` seja mais antigo
-// que STALE_MS. Isso garante detecção mesmo se o WebSocket não mandar leave.
+// Heartbeat: visitante envia um ping a cada HEARTBEAT_MS enquanto a aba tá visível.
+// O painel mantém online só quem enviou heartbeat recente e remove no OFFLINE_EVENT.
 const HEARTBEAT_MS = 2000;
 const STALE_MS = 5000;
 
@@ -51,8 +52,7 @@ export function trackVisitorPresence(
   let currentScreen = "main";
   let stopped = false;
   let subscribed = false;
-  let tracked = false;
-  let lastTrackedScreen = "";
+  let announcedOnline = false;
 
   const channel = supabase.channel(CHANNEL_NAME, {
     config: { presence: { key: presenceKey } },
@@ -64,36 +64,42 @@ export function trackVisitorPresence(
     return queue;
   };
 
-  const trackPresence = (force = false) => {
+  const sendHeartbeat = () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    // Heartbeat: SEMPRE re-track pra atualizar `online_at`, exceto se um track
-    // anterior ainda tá na fila (queue serializa). Sem isso, o painel não tem
-    // como saber que a aba continua aberta.
-    void force; // mantido por compat — agora sempre tracka enquanto visível
     void enqueue(async () => {
       if (stopped || !subscribed) return;
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-      await channel.track({
-        adId,
-        sessionId,
-        online_at: new Date().toISOString(),
-        screenKind: currentScreen,
-      } satisfies PresenceMeta);
-      tracked = true;
-      lastTrackedScreen = currentScreen;
+      try {
+        await channel.send({
+          type: "broadcast",
+          event: HEARTBEAT_EVENT,
+          payload: {
+            adId,
+            sessionId,
+            online_at: new Date().toISOString(),
+            screenKind: currentScreen,
+          } satisfies PresenceMeta,
+        });
+        announcedOnline = true;
+      } catch {
+        // ignore heartbeat send errors during reconnects
+      }
     });
   };
 
-  const untrackPresence = () => {
+  const sendOffline = () => {
     void enqueue(async () => {
-      if (!subscribed || !tracked) return;
+      if (!subscribed || !announcedOnline) return;
       try {
-        await channel.untrack();
+        await channel.send({
+          type: "broadcast",
+          event: OFFLINE_EVENT,
+          payload: { adId, sessionId },
+        });
       } catch {
-        // ignore untrack errors during teardown / rapid tab switches
+        // ignore offline send errors during teardown / rapid tab switches
       } finally {
-        tracked = false;
-        lastTrackedScreen = "";
+        announcedOnline = false;
       }
     });
   };
@@ -102,55 +108,48 @@ export function trackVisitorPresence(
     if (stopped) return;
     if (status === "SUBSCRIBED") {
       subscribed = true;
-      trackPresence(true);
+      sendHeartbeat();
       return;
     }
 
     if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
       subscribed = false;
-      tracked = false;
-      lastTrackedScreen = "";
+      announcedOnline = false;
     }
   });
 
-  // Heartbeat ativo: a cada HEARTBEAT_MS, se a aba tá visível, manda novo track().
-  // Se não tá visível, manda untrack() pra ficar offline imediato.
   const heartbeat = setInterval(() => {
     if (stopped) return;
     if (typeof document === "undefined") return;
     if (document.visibilityState === "visible") {
-      trackPresence();
-    } else if (tracked) {
-      untrackPresence();
+      sendHeartbeat();
+    } else if (announcedOnline) {
+      sendOffline();
     }
   }, HEARTBEAT_MS);
 
-  // Garante o estado correto sempre que a visibilidade mudar.
   const syncVisibility = () => {
     if (document.visibilityState === "visible") {
-      trackPresence();
+      sendHeartbeat();
     } else {
-      untrackPresence();
+      sendOffline();
     }
   };
 
-  // markActive existe pra compatibilidade com o PreviewFrame, mas agora é
-  // basicamente um no-op: só re-track se por algum motivo perdemos o tracked
-  // (ex: WebSocket caiu e voltou). Não faz spam de track().
   const markActive = () => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    if (!tracked) trackPresence();
+    sendHeartbeat();
   };
 
   const setScreen = (kind: string) => {
     const next = kind || "main";
-    if (next === currentScreen && tracked) return;
+    if (next === currentScreen && announcedOnline) return;
     currentScreen = next;
-    trackPresence();
+    sendHeartbeat();
   };
 
   const onVisibility = () => syncVisibility();
-  const onPageHide = () => untrackPresence();
+  const onPageHide = () => sendOffline();
 
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
@@ -160,7 +159,7 @@ export function trackVisitorPresence(
   window.addEventListener("blur", () => {
     // blur sozinho não é suficiente (pode ser focus em outra área da página),
     // mas se a aba ficou oculta nesse momento, o syncVisibility resolve.
-    if (document.visibilityState !== "visible") untrackPresence();
+    if (document.visibilityState !== "visible") sendOffline();
   });
   window.addEventListener("pageshow", syncVisibility);
 
@@ -174,13 +173,17 @@ export function trackVisitorPresence(
     window.removeEventListener("focus", syncVisibility);
     window.removeEventListener("pageshow", syncVisibility);
     void enqueue(async () => {
-      if (tracked) {
+      if (announcedOnline) {
         try {
-          await channel.untrack();
+          await channel.send({
+            type: "broadcast",
+            event: OFFLINE_EVENT,
+            payload: { adId, sessionId },
+          });
         } catch {
-          // ignore final untrack failure
+          // ignore final offline send failure
         } finally {
-          tracked = false;
+          announcedOnline = false;
         }
       }
 
@@ -210,54 +213,49 @@ export function subscribeToOnlineVisitors(
     config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
   });
 
-  const seenJoined = new Set<string>();
+  const sessions = new Map<string, PresenceMeta>();
 
   const emit = () => {
-    const state = channel.presenceState<PresenceMeta>();
     const map = new Map<string, PresenceMeta>();
     const cutoff = Date.now() - STALE_MS;
-    for (const key of Object.keys(state)) {
-      const metas = state[key];
-      if (!metas?.length) continue;
-      for (const meta of metas) {
-        if (!meta?.sessionId) continue;
-        // Filtra presenças "fantasmas" cujo último heartbeat é mais antigo que STALE_MS.
-        const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
-        if (!ts || ts < cutoff) continue;
-        const current = map.get(meta.sessionId);
-        if (!current || (meta.online_at ?? "") > (current.online_at ?? "")) {
-          map.set(meta.sessionId, meta);
-        }
+    for (const [sessionId, meta] of sessions) {
+      const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
+      if (!ts || ts < cutoff) {
+        sessions.delete(sessionId);
+        continue;
       }
-    }
-    // Limpa "joined" pra quem saiu — assim se voltar, dispara onJoin de novo.
-    for (const sid of Array.from(seenJoined)) {
-      if (!map.has(sid)) seenJoined.delete(sid);
+      map.set(sessionId, meta);
     }
     onChange(map);
   };
 
   channel
-    .on("presence", { event: "sync" }, emit)
-    .on("presence", { event: "join" }, ({ newPresences }) => {
+    .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
+      const meta = payload as PresenceMeta | null;
+      if (!meta?.sessionId) return;
+      const current = sessions.get(meta.sessionId);
+      const cutoff = Date.now() - STALE_MS;
+      const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
+      const wasOnline = !!currentTs && currentTs >= cutoff;
+      sessions.set(meta.sessionId, meta);
       emit();
-      if (!onJoin) return;
-      for (const p of newPresences as unknown as PresenceMeta[]) {
-        if (p?.sessionId && !seenJoined.has(p.sessionId)) {
-          seenJoined.add(p.sessionId);
-          onJoin(p.sessionId, p);
-        }
+      if (!wasOnline && onJoin) {
+        onJoin(meta.sessionId, meta);
       }
     })
-    .on("presence", { event: "leave" }, emit)
+    .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
+      const meta = payload as Partial<PresenceMeta> | null;
+      if (!meta?.sessionId) return;
+      sessions.delete(meta.sessionId);
+      emit();
+    })
     .subscribe();
 
-  // Re-emite a cada HEARTBEAT_MS pra remover presenças cujo último heartbeat
-  // expirou (caso o leave do Realtime não tenha chegado).
   const sweep = setInterval(emit, HEARTBEAT_MS);
 
   return () => {
     clearInterval(sweep);
+    sessions.clear();
     void channel.unsubscribe();
   };
 }
