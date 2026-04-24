@@ -15,6 +15,8 @@ import {
   setSoundEnabled,
   useCountIncreaseNotifier,
   useTitleBadge,
+  playVisitorOnline,
+  playVisitorOffline,
 } from "@/lib/notify";
 import { getScreenStyle } from "@/lib/screen-style";
 import { Volume2, VolumeX } from "lucide-react";
@@ -233,6 +235,11 @@ export default function Dashboard() {
         console.info("[Dashboard] visitante online:", sessionId);
         setPulse(true);
         setTimeout(() => setPulse(false), 600);
+        playVisitorOnline();
+      },
+      (sessionId) => {
+        console.info("[Dashboard] visitante offline:", sessionId);
+        playVisitorOffline();
       },
     );
     return off;
