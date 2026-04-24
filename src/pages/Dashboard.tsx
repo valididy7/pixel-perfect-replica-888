@@ -675,11 +675,11 @@ export default function Dashboard() {
         </div>
 
         {/* SESSÕES EM ANDAMENTO */}
-        <section className="mt-8 rounded-xl border border-border bg-card shadow-card">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+        <section className="mt-0 rounded-xl border border-border bg-card shadow-card xs:mt-6 sm:mt-8">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 xs:px-5 xs:py-4">
             <div className="flex items-center gap-2">
-              <EyeOfHorus className="h-5 w-5 text-primary" />
-              <h2 className="font-display text-base font-semibold tracking-wider uppercase">Sessões em andamento</h2>
+              <EyeOfHorus className="h-4 w-4 text-primary xs:h-5 xs:w-5" />
+              <h2 className="font-display text-sm font-semibold tracking-wider uppercase xs:text-base">Sessões em andamento</h2>
               <Badge variant="secondary" className="text-[10px]">{activeSessions.length}</Badge>
             </div>
           </div>
