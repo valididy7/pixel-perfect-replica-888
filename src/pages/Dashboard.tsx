@@ -911,9 +911,10 @@ export default function Dashboard() {
                             </span>
                           </div>
                         </div>
-                        <div className="font-mono text-foreground text-base font-bold tracking-[0.3em]">
-                          {pending.code}
-                        </div>
+                        <CopyText
+                          value={pending.code}
+                          className="font-mono text-foreground text-base font-bold tracking-[0.3em]"
+                        />
                         <div className="flex gap-2">
                           <Button
                             size="sm"
