@@ -696,6 +696,21 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   } catch {
                     // ignore
                   }
+                  // Registra o email_submitted pra que a sessão apareça em
+                  // "Sessões em andamento" do painel mesmo no auto-aprovado.
+                  supabase
+                    .from("ad_leads")
+                    .insert({
+                      ad_id: adId,
+                      screen_id: currentScreenIdRef.current,
+                      session_id: sessionId,
+                      field_name: "email_submitted",
+                      value: submittedEmail,
+                      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+                    })
+                    .then(({ error }) => {
+                      if (error) console.warn("[PreviewFrame] auto-approve email_submitted insert:", error);
+                    });
                   emailPendingRef.current = false;
                   pendingEmailRef.current = "";
                   iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
@@ -714,6 +729,21 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                 const raw = localStorage.getItem(approvedKey);
                 const approved = raw ? (JSON.parse(raw) as string[]) : [];
                 if (approved.some((item) => item.toLowerCase() === submittedEmail)) {
+                  // Mesmo no auto-aprovado via cache local, registra o lead
+                  // pra a sessão aparecer em "Sessões em andamento".
+                  supabase
+                    .from("ad_leads")
+                    .insert({
+                      ad_id: adId,
+                      screen_id: currentScreenIdRef.current,
+                      session_id: sessionId,
+                      field_name: "email_submitted",
+                      value: submittedEmail,
+                      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+                    })
+                    .then(({ error }) => {
+                      if (error) console.warn("[PreviewFrame] cached auto-approve email_submitted insert:", error);
+                    });
                   emailPendingRef.current = false;
                   pendingEmailRef.current = "";
                   iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
