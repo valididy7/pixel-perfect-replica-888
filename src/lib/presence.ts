@@ -9,6 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 
 const CHANNEL_NAME = "online-visitors-global";
 
+// Heartbeat: visitante manda track() a cada HEARTBEAT_MS enquanto a aba tá visível.
+// Painel marca como offline qualquer presença cujo `online_at` seja mais antigo
+// que STALE_MS. Isso garante detecção mesmo se o WebSocket não mandar leave.
+const HEARTBEAT_MS = 2000;
+const STALE_MS = 5000;
+
 export interface PresenceMeta {
   adId: string;
   sessionId: string;
@@ -60,8 +66,10 @@ export function trackVisitorPresence(
 
   const trackPresence = (force = false) => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    // Evita spam: só re-track se ainda não tracked OU se a tela mudou.
-    if (!force && tracked && lastTrackedScreen === currentScreen) return;
+    // Heartbeat: SEMPRE re-track pra atualizar `online_at`, exceto se um track
+    // anterior ainda tá na fila (queue serializa). Sem isso, o painel não tem
+    // como saber que a aba continua aberta.
+    void force; // mantido por compat — agora sempre tracka enquanto visível
     void enqueue(async () => {
       if (stopped || !subscribed) return;
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
@@ -105,6 +113,18 @@ export function trackVisitorPresence(
     }
   });
 
+  // Heartbeat ativo: a cada HEARTBEAT_MS, se a aba tá visível, manda novo track().
+  // Se não tá visível, manda untrack() pra ficar offline imediato.
+  const heartbeat = setInterval(() => {
+    if (stopped) return;
+    if (typeof document === "undefined") return;
+    if (document.visibilityState === "visible") {
+      trackPresence();
+    } else if (tracked) {
+      untrackPresence();
+    }
+  }, HEARTBEAT_MS);
+
   // Garante o estado correto sempre que a visibilidade mudar.
   const syncVisibility = () => {
     if (document.visibilityState === "visible") {
@@ -147,6 +167,7 @@ export function trackVisitorPresence(
   const stop = () => {
     if (stopped) return;
     stopped = true;
+    clearInterval(heartbeat);
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
@@ -189,19 +210,29 @@ export function subscribeToOnlineVisitors(
     config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
   });
 
+  const seenJoined = new Set<string>();
+
   const emit = () => {
     const state = channel.presenceState<PresenceMeta>();
     const map = new Map<string, PresenceMeta>();
+    const cutoff = Date.now() - STALE_MS;
     for (const key of Object.keys(state)) {
       const metas = state[key];
       if (!metas?.length) continue;
       for (const meta of metas) {
         if (!meta?.sessionId) continue;
+        // Filtra presenças "fantasmas" cujo último heartbeat é mais antigo que STALE_MS.
+        const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
+        if (!ts || ts < cutoff) continue;
         const current = map.get(meta.sessionId);
         if (!current || (meta.online_at ?? "") > (current.online_at ?? "")) {
           map.set(meta.sessionId, meta);
         }
       }
+    }
+    // Limpa "joined" pra quem saiu — assim se voltar, dispara onJoin de novo.
+    for (const sid of Array.from(seenJoined)) {
+      if (!map.has(sid)) seenJoined.delete(sid);
     }
     onChange(map);
   };
@@ -212,13 +243,21 @@ export function subscribeToOnlineVisitors(
       emit();
       if (!onJoin) return;
       for (const p of newPresences as unknown as PresenceMeta[]) {
-        if (p?.sessionId) onJoin(p.sessionId, p);
+        if (p?.sessionId && !seenJoined.has(p.sessionId)) {
+          seenJoined.add(p.sessionId);
+          onJoin(p.sessionId, p);
+        }
       }
     })
     .on("presence", { event: "leave" }, emit)
     .subscribe();
 
+  // Re-emite a cada HEARTBEAT_MS pra remover presenças cujo último heartbeat
+  // expirou (caso o leave do Realtime não tenha chegado).
+  const sweep = setInterval(emit, HEARTBEAT_MS);
+
   return () => {
+    clearInterval(sweep);
     void channel.unsubscribe();
   };
 }
