@@ -66,8 +66,10 @@ export function trackVisitorPresence(
 
   const trackPresence = (force = false) => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    // Evita spam: só re-track se ainda não tracked OU se a tela mudou.
-    if (!force && tracked && lastTrackedScreen === currentScreen) return;
+    // Heartbeat: SEMPRE re-track pra atualizar `online_at`, exceto se um track
+    // anterior ainda tá na fila (queue serializa). Sem isso, o painel não tem
+    // como saber que a aba continua aberta.
+    void force; // mantido por compat — agora sempre tracka enquanto visível
     void enqueue(async () => {
       if (stopped || !subscribed) return;
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
