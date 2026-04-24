@@ -69,6 +69,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   // mostrar o alertbox "Não existe uma conta com este e-mail.".
   const emailPendingRef = useRef(false);
   const emailPendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Refs pras funções de navegação (criadas dentro do effect principal).
+  // Usadas pelo listener de actions (que vive em outro effect) pra avançar
+  // de tela quando o admin aprova o e-mail.
+  const navigateToScreenRef = useRef<((screen: AdScreen) => void) | null>(null);
+  const navigateToManualScreenRef = useRef<((kind: string) => boolean) | null>(null);
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
