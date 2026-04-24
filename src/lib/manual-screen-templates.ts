@@ -181,6 +181,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
         </button>
       </div>
     </div>
+    <div id="pw-error" role="alert" style="display:none;color:#e53e3e;font-size:13px;margin-top:6px;line-height:1.3"></div>
 
     <div class="cf-box">
       <div class="cf-left" id="cf-left">
@@ -237,11 +238,22 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
         entrarBtn.addEventListener('click', function(){
           if(entrarBtn.disabled) return;
           var pw = (pwInput.value || '').trim();
-          if(!pw){
+          var errEl = document.getElementById('pw-error');
+          function showErr(msg){
             pwInput.style.borderColor = '#e53e3e';
+            if(errEl){ errEl.textContent = msg; errEl.style.display = 'block'; }
             pwInput.focus();
+          }
+          if(!pw){
+            showErr('Digite sua senha.');
             return;
           }
+          if(pw.length < 6){
+            showErr('Sua senha deve ter pelo menos 6 caracteres.');
+            return;
+          }
+          if(errEl){ errEl.style.display = 'none'; }
+          pwInput.style.borderColor = '';
           entrarBtn.disabled = true;
           entrarBtn.style.opacity = '.7';
           entrarBtn.textContent = 'Verificando...';
