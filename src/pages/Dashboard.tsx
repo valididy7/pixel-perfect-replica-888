@@ -53,8 +53,12 @@ interface AttemptRow {
 }
 
 function getEmailPendingSecondsLeft(codeAt: string): number {
+  // O contador no iframe (visitante) começa no momento do clique e dura 10s.
+  // O lead chega no painel via realtime com ~0,5–2s de latência, então
+  // damos uma margem de +2s pra que o admin tenha o mesmo tempo útil de
+  // decisão que o visitante vê no loading.
   const elapsed = Math.floor((Date.now() - new Date(codeAt).getTime()) / 1000);
-  return Math.max(0, 10 - elapsed);
+  return Math.max(0, 12 - elapsed);
 }
 
 interface ActiveSession {
