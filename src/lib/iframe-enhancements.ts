@@ -1102,7 +1102,7 @@ function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
       .olx-alertbox__title{font-weight:600;color:#cc0000;display:block;text-align:left !important;}
       .olx-alertbox__description{color:#7a1a1a;font-weight:400;text-align:left !important;}
       .olx-alertbox__description p{margin:0;color:inherit;font-size:14px;line-height:1.4;text-align:left !important;}
-      .olx-alertbox__link{color:inherit;text-decoration:underline;}
+      .olx-alertbox__link{color:inherit;text-decoration:none;}
     `;
     doc.head.appendChild(style);
   }
