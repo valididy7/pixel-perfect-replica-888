@@ -432,7 +432,7 @@ export default function Dashboard() {
 
   // Separa em "ao vivo" (acionáveis) e "histórico" (resto)
   const live = attempts.filter((a) => actionableKeys.has(a.key));
-  const history = attempts.filter((a) => !actionableKeys.has(a.key));
+  const historyFromAttempts = attempts.filter((a) => !actionableKeys.has(a.key));
 
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
