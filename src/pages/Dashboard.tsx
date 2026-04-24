@@ -850,7 +850,7 @@ export default function Dashboard() {
         </section>
 
         {/* REQUISIÇÕES */}
-        <section className={`mt-8 rounded-xl border bg-card shadow-card transition-shadow ${requestsPulse ? "border-primary shadow-glow" : "border-border"}`}>
+        <section className={`mt-8 hidden rounded-xl border bg-card shadow-card transition-shadow xs:block ${requestsPulse ? "border-primary shadow-glow" : "border-border"}`}>
           <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
             <div className="flex items-center gap-2">
               <Bell className={`h-4 w-4 text-primary ${requestsPulse ? "animate-pulse" : ""}`} />
@@ -943,7 +943,7 @@ export default function Dashboard() {
 
         {/* AO VIVO */}
         {live.length > 0 && (
-          <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
+          <section className="mt-8 hidden rounded-xl border border-primary/30 bg-card shadow-glow xs:block">
             <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2.5 w-2.5">
@@ -967,7 +967,7 @@ export default function Dashboard() {
         )}
 
         {/* HISTÓRICO */}
-        <section className="mt-6 rounded-xl border border-border bg-card shadow-card">
+        <section className="mt-6 hidden rounded-xl border border-border bg-card shadow-card xs:block">
           <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
             <div className="flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />
