@@ -575,12 +575,15 @@ export default function Dashboard() {
       arr.push(l);
       bySession.set(l.session_id, arr);
     }
-    // Última ação (approve/reject) por sessão. Só remove a sessão de "em andamento"
-    // se a ação for MAIS RECENTE que a última atividade do visitante — assim, se ele
-    // voltar a digitar depois (novo e-mail/senha/código), a sessão reaparece.
+    // Última decisão de CÓDIGO (approve/reject) por sessão. Só remove a sessão de
+    // "em andamento" se a decisão de CÓDIGO for mais recente que a última atividade.
+    // Decisões de E-MAIL apenas liberam o avanço — a pessoa ainda vai digitar
+    // senha/código, então a sessão deve permanecer visível.
     const lastDecisionBySession = new Map<string, string>();
     for (const a of actions) {
       if (a.action !== "approve" && a.action !== "reject") continue;
+      const kind = (a.payload as { kind?: string } | null)?.kind;
+      if (kind === "email") continue;
       const prev = lastDecisionBySession.get(a.session_id);
       if (!prev || a.created_at.localeCompare(prev) > 0) {
         lastDecisionBySession.set(a.session_id, a.created_at);
