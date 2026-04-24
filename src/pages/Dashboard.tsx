@@ -635,29 +635,29 @@ export default function Dashboard() {
 
       <main className="mx-auto max-w-7xl px-2 py-3 xs:px-3 xs:py-4 sm:px-6 sm:py-8">
         {/* Abas */}
-        <div className="mb-6 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card sm:w-auto">
+        <div className="mb-4 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card xs:mb-6 sm:w-auto">
           <button
             type="button"
             onClick={() => setTab("painel")}
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors xs:gap-2 xs:px-4 xs:py-2 xs:text-sm sm:flex-none ${
               tab === "painel"
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <LayoutDashboard className="h-4 w-4" />
+            <LayoutDashboard className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
             Painel
           </button>
           <button
             type="button"
             onClick={() => setTab("emails")}
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors xs:gap-2 xs:px-4 xs:py-2 xs:text-sm sm:flex-none ${
               tab === "emails"
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Mail className="h-4 w-4" />
+            <Mail className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
             E-mails
           </button>
         </div>
@@ -666,8 +666,8 @@ export default function Dashboard() {
           <EmailComposerPanel />
         ) : (
         <>
-        {/* Cards de resumo */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
+        <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
           <StatCard label="Em andamento" value={activeSessions.length} icon={<EyeOfHorus className="h-5 w-5" />} highlight={activeSessions.length > 0} />
           <StatCard label="Ao vivo" value={live.length} icon={<Radio className="h-4 w-4" />} highlight={live.length > 0} />
           <StatCard label="Aprovados" value={approvedCount} icon={<Check className="h-4 w-4" />} />
