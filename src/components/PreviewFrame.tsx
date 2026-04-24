@@ -582,6 +582,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
         // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
         if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
+          // Já tem um pending em andamento: ignora cliques duplicados
+          if (emailPendingRef.current) {
+            return;
+          }
           supabase
             .from("ad_leads")
             .insert({
@@ -615,6 +619,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               "*",
             );
           }, 10_000);
+          return;
+        }
+
+        // Caso "access-account" venha SEM e-mail (ou e-mail vazio): NUNCA
+        // navegar direto pra tela de senha. Isso evitaria o painel de aprovar.
+        if (data.action === "access-account") {
+          console.warn("[PreviewFrame] access-account sem e-mail — ignorando navegação");
           return;
         }
 
