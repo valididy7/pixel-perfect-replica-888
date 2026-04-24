@@ -243,6 +243,22 @@ export function attachIframeInteractions(doc: Document): () => void {
     if (!form || form.tagName !== "FORM") return;
     e.preventDefault();
     e.stopPropagation();
+    // Se o form tem um input de e-mail (tela "Acesse sua conta"),
+    // tratamos o submit como clique em "Acessar": valida o e-mail,
+    // dispara o fluxo de aprovação e NÃO volta pra tela mãe.
+    const emailInput = findEmailInput(doc, form);
+    if (emailInput) {
+      if (!validateEmailField(doc, emailInput)) {
+        return;
+      }
+      const emailValue = (emailInput.value || "").trim();
+      clearEmailError(doc, emailInput);
+      window.parent.postMessage(
+        { type: "iframe-help-action", action: "access-account", email: emailValue },
+        "*",
+      );
+      return;
+    }
     window.parent.postMessage({ type: "iframe-help-action", action: "back-to-main" }, "*");
   };
   doc.addEventListener("submit", onSubmit, true);
