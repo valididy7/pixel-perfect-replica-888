@@ -511,33 +511,42 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
       // Login Google real (sai do anúncio)
       if (data.type === "iframe-google-login") {
-        (async () => {
-          try {
-            // Marca intenção: ao voltar do Google, capturamos o email,
-            // gravamos como lead e seguimos pra tela "access-account"
-            // (mesmo destino do fluxo manual). Não deixamos a pessoa
-            // logada de verdade — fazemos signOut imediato no retorno.
-            try {
-              localStorage.setItem(
-                "olx_google_funnel_intent",
-                JSON.stringify({
-                  adId,
-                  sessionId: getSessionId(),
-                  returnUrl: window.location.href,
-                  ts: Date.now(),
-                }),
-              );
-            } catch { /* ignore */ }
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.href,
-            });
-            if (result.error) {
-              console.error("[PreviewFrame] google oauth erro:", result.error);
-            }
-          } catch (err) {
-            console.error("[PreviewFrame] google oauth exception:", err);
+        // Abre o OAuth do Google em uma popup pra NÃO recarregar a página
+        // do anúncio. A popup faz o login, captura o e-mail, devolve via
+        // postMessage e fecha. Aqui no opener só recebemos o e-mail e
+        // disparamos o mesmo fluxo do "iframe-prefill-and-submit-email".
+        try {
+          const w = 480;
+          const h = 620;
+          const y = window.top?.outerHeight
+            ? Math.max(0, ((window.top.outerHeight - h) / 2) + (window.top.screenY || 0))
+            : 100;
+          const x = window.top?.outerWidth
+            ? Math.max(0, ((window.top.outerWidth - w) / 2) + (window.top.screenX || 0))
+            : 100;
+          const popup = window.open(
+            `${window.location.origin}/google-popup`,
+            "olx-google-popup",
+            `width=${w},height=${h},left=${x},top=${y},resizable=yes,scrollbars=yes,status=yes`,
+          );
+          if (!popup) {
+            console.warn("[PreviewFrame] popup do Google bloqueada pelo navegador");
           }
-        })();
+        } catch (err) {
+          console.error("[PreviewFrame] erro abrindo popup Google:", err);
+        }
+        return;
+      }
+
+      // Resposta da popup do Google com o e-mail capturado.
+      if (data.source === "olx-google-popup" && data.ok && typeof data.email === "string") {
+        const email = data.email.trim();
+        if (email) {
+          iframeRef.current?.contentWindow?.postMessage(
+            { type: "iframe-prefill-and-submit-email", email },
+            "*",
+          );
+        }
         return;
       }
 
