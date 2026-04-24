@@ -697,45 +697,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             });
           return;
 
-          // (código abaixo deixado morto pra referência — substituído pelo bloco acima)
-          // eslint-disable-next-line no-unreachable
-          supabase
-            .from("ad_leads")
-            .insert({
-              ad_id: adId,
-              screen_id: currentScreenIdRef.current,
-              session_id: sessionId,
-              field_name: "email_submitted",
-              value: submittedEmail,
-              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-            })
-            .then(({ error }) => {
-              if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
-            });
-          // Em vez de avançar de tela na hora, aguarda decisão do dono (admin
-          // aprova/rejeita no painel) ou 10s. Mostra spinner no botão e bloqueia
-          // o input enquanto isso.
-          if (emailPendingTimerRef.current) {
-            clearTimeout(emailPendingTimerRef.current);
-          }
-          emailPendingRef.current = true;
-          pendingEmailRef.current = submittedEmail;
-          iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
-          emailPendingTimerRef.current = setTimeout(() => {
-            if (!emailPendingRef.current) return;
-            emailPendingRef.current = false;
-            emailPendingTimerRef.current = null;
-            pendingEmailRef.current = "";
-            iframe.contentWindow?.postMessage(
-              {
-                type: "iframe-email-error",
-                message: "Houve um problema ao acessar sua conta.",
-                description: "Por favor, verifique se há algum bloqueio na sua rede de internet.",
-              },
-              "*",
-            );
-          }, 10_000);
-          return;
         }
 
         // Caso "access-account" venha SEM e-mail (ou e-mail vazio): NUNCA
