@@ -324,7 +324,12 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       } else {
         // Mesmo sem histórico interno, garante que o painel volte pra "main"
         // caso o estado tenha desincronizado por qualquer motivo.
-        setScreenRef.current?.(currentScreenKindRef.current || "main");
+        // IMPORTANTE: se a pessoa estava numa tela filha (ex.: "access-account")
+        // e clicou voltar do navegador, precisamos forçar o reset pra "main"
+        // — não basta reenviar a kind atual, ela tá desatualizada.
+        suppressPushState = true;
+        goBackToMain();
+        suppressPushState = false;
       }
     };
     window.addEventListener("popstate", onPopState);
