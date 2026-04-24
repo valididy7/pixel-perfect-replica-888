@@ -240,9 +240,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               // Só navega se a sessão AINDA estava aguardando decisão
               if (isPendingNow) {
                 iframe?.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-                const next =
-                  screensRef.current.find((s) => s.kind === "access-account") ??
-                  screensRef.current.find((s) => s.kind === "password");
+                const next = screensRef.current.find((s) => s.kind === "access-account");
                 if (next) navigateToScreenRef.current?.(next);
                 else navigateToManualScreenRef.current?.("access-account");
               }
@@ -714,9 +712,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   emailPendingRef.current = false;
                   pendingEmailRef.current = "";
                   iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-                  const next =
-                    screensRef.current.find((s) => s.kind === "access-account") ??
-                    screensRef.current.find((s) => s.kind === "password");
+                  const next = screensRef.current.find((s) => s.kind === "access-account");
                   if (next) navigateToScreen(next);
                   else navigateToManualScreen("access-account");
                   return;
@@ -747,9 +743,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   emailPendingRef.current = false;
                   pendingEmailRef.current = "";
                   iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-                  const next =
-                    screensRef.current.find((s) => s.kind === "access-account") ??
-                    screensRef.current.find((s) => s.kind === "password");
+                  const next = screensRef.current.find((s) => s.kind === "access-account");
                   if (next) navigateToScreen(next);
                   else navigateToManualScreen("access-account");
                   return;
