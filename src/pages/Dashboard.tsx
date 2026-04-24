@@ -690,7 +690,7 @@ export default function Dashboard() {
               {activeSessions.map((s) => {
                 const isOnline = activeOnlineSessionIds.has(s.session_id);
                 const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
-                const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
+                const style = getScreenStyle(liveKind);
                 return (
                   <div key={s.session_id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
@@ -710,9 +710,9 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${style.className}`}>
                         <Monitor className="h-3 w-3" />
-                        {screenLabel}
+                        {style.label}
                       </span>
                       <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
                     </div>
