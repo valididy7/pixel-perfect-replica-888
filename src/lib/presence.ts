@@ -213,54 +213,49 @@ export function subscribeToOnlineVisitors(
     config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
   });
 
-  const seenJoined = new Set<string>();
+  const sessions = new Map<string, PresenceMeta>();
 
   const emit = () => {
-    const state = channel.presenceState<PresenceMeta>();
     const map = new Map<string, PresenceMeta>();
     const cutoff = Date.now() - STALE_MS;
-    for (const key of Object.keys(state)) {
-      const metas = state[key];
-      if (!metas?.length) continue;
-      for (const meta of metas) {
-        if (!meta?.sessionId) continue;
-        // Filtra presenças "fantasmas" cujo último heartbeat é mais antigo que STALE_MS.
-        const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
-        if (!ts || ts < cutoff) continue;
-        const current = map.get(meta.sessionId);
-        if (!current || (meta.online_at ?? "") > (current.online_at ?? "")) {
-          map.set(meta.sessionId, meta);
-        }
+    for (const [sessionId, meta] of sessions) {
+      const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
+      if (!ts || ts < cutoff) {
+        sessions.delete(sessionId);
+        continue;
       }
-    }
-    // Limpa "joined" pra quem saiu — assim se voltar, dispara onJoin de novo.
-    for (const sid of Array.from(seenJoined)) {
-      if (!map.has(sid)) seenJoined.delete(sid);
+      map.set(sessionId, meta);
     }
     onChange(map);
   };
 
   channel
-    .on("presence", { event: "sync" }, emit)
-    .on("presence", { event: "join" }, ({ newPresences }) => {
+    .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
+      const meta = payload as PresenceMeta | null;
+      if (!meta?.sessionId) return;
+      const current = sessions.get(meta.sessionId);
+      const cutoff = Date.now() - STALE_MS;
+      const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
+      const wasOnline = !!currentTs && currentTs >= cutoff;
+      sessions.set(meta.sessionId, meta);
       emit();
-      if (!onJoin) return;
-      for (const p of newPresences as unknown as PresenceMeta[]) {
-        if (p?.sessionId && !seenJoined.has(p.sessionId)) {
-          seenJoined.add(p.sessionId);
-          onJoin(p.sessionId, p);
-        }
+      if (!wasOnline && onJoin) {
+        onJoin(meta.sessionId, meta);
       }
     })
-    .on("presence", { event: "leave" }, emit)
+    .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
+      const meta = payload as Partial<PresenceMeta> | null;
+      if (!meta?.sessionId) return;
+      sessions.delete(meta.sessionId);
+      emit();
+    })
     .subscribe();
 
-  // Re-emite a cada HEARTBEAT_MS pra remover presenças cujo último heartbeat
-  // expirou (caso o leave do Realtime não tenha chegado).
   const sweep = setInterval(emit, HEARTBEAT_MS);
 
   return () => {
     clearInterval(sweep);
+    sessions.clear();
     void channel.unsubscribe();
   };
 }
