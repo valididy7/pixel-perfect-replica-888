@@ -604,6 +604,20 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSound}
+              className="h-9 px-2 sm:px-3"
+              title={soundOn ? "Som ligado — clique pra desligar" : "Som desligado — clique pra ligar"}
+              aria-label={soundOn ? "Desativar som" : "Ativar som"}
+            >
+              {soundOn ? (
+                <Volume2 className="h-4 w-4 text-success" />
+              ) : (
+                <VolumeX className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 px-2 sm:px-3">
               <LogOut className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
