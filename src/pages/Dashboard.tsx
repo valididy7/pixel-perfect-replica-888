@@ -164,6 +164,13 @@ export default function Dashboard() {
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [requestsPulse, setRequestsPulse] = useState(false);
 
+  /** Tick que avança a cada minuto pra reavaliar o TTL das sessões em andamento. */
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
   // Subscreve presença global de visitantes
   useEffect(() => {
     if (!user) return;
