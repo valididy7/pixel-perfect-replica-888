@@ -846,6 +846,56 @@ export default function Dashboard() {
                       </span>
                       <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
                     </div>
+                    {pending && pending.kind === "email" && (() => {
+                      const secondsLeft = getEmailPendingSecondsLeft(pending.codeAt);
+                      const urgent = secondsLeft <= 5;
+                      return (
+                        <div className={`mt-2 space-y-2 rounded-md border-2 p-2 ${urgent ? "border-destructive/60 bg-destructive/5" : "border-primary/50 bg-primary/5"}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
+                              Confirmar e-mail
+                            </span>
+                            <div className={`flex items-baseline gap-1 rounded-full px-2 py-0.5 font-mono-tabular ${urgent ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>
+                              <span className="text-sm font-bold leading-none">{secondsLeft}</span>
+                              <span className="text-[10px] leading-none">s</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => send(pending, "approve")}
+                              disabled={busy === `${pending.key}-approve`}
+                              className="h-10 flex-1 bg-success text-success-foreground hover:bg-success/90 text-xs font-semibold"
+                            >
+                              {busy === `${pending.key}-approve` ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <>
+                                  <Check className="mr-1 h-3.5 w-3.5" />
+                                  Aprovar
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => send(pending, "reject")}
+                              disabled={busy === `${pending.key}-reject`}
+                              className="h-10 flex-1 text-xs font-semibold"
+                            >
+                              {busy === `${pending.key}-reject` ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <>
+                                  <X className="mr-1 h-3.5 w-3.5" />
+                                  Rejeitar
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     {pending && pending.kind !== "email" && (
                       <div className="mt-2 space-y-2 rounded-md border border-primary/40 bg-primary/5 p-2">
                         <div className="flex items-center justify-between gap-2">
