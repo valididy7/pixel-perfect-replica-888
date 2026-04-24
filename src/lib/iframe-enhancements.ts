@@ -1154,6 +1154,9 @@ function findAccessButton(doc: Document): HTMLButtonElement | HTMLInputElement |
     doc.querySelectorAll<HTMLElement>("button, input[type='submit'], [role='button']"),
   );
   for (const el of candidates) {
+    if (el.getAttribute("data-olx-access-button") === "1") {
+      return el as HTMLButtonElement | HTMLInputElement;
+    }
     const txt = (el.textContent || (el as HTMLInputElement).value || "").trim().toLowerCase();
     if (
       /^acessar$/.test(txt) ||
@@ -1174,6 +1177,7 @@ function setEmailButtonLoading(doc: Document, loading: boolean): void {
   const btn = findAccessButton(doc);
   const emailInput = findEmailInput(doc, null);
   if (!btn) return;
+   btn.setAttribute("data-olx-access-button", "1");
   ensureLoadingCss(doc);
   if (loading) {
     if (!btn.dataset.olxOriginalText) {
