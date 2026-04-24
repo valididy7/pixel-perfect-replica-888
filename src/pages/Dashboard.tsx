@@ -598,66 +598,66 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:px-6">
-          <Link to={ADMIN_BASE} className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-display text-sm font-semibold uppercase tracking-[0.14em] text-gradient sm:text-lg sm:tracking-[0.18em]">
+        <div className="mx-auto flex h-12 max-w-7xl items-center justify-between gap-1.5 px-2 xs:h-14 xs:gap-2 xs:px-3 sm:h-16 sm:px-6">
+          <Link to={ADMIN_BASE} className="flex min-w-0 items-center gap-1.5 xs:gap-2">
+            <span className="truncate font-display text-[11px] font-semibold uppercase tracking-[0.1em] text-gradient xs:text-sm xs:tracking-[0.14em] sm:text-lg sm:tracking-[0.18em]">
               Painel Valididy
             </span>
             <span
-              className={`ml-1 inline-flex shrink-0 items-center text-[10px] font-medium uppercase sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
+              className={`ml-0.5 hidden shrink-0 items-center text-[9px] font-medium uppercase xs:ml-1 xs:inline-flex xs:text-[10px] sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
               {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
             </span>
           </Link>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1 xs:gap-2 sm:gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleSound}
-              className="h-9 px-2 sm:px-3"
+              className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3"
               title={soundOn ? "Som ligado — clique pra desligar" : "Som desligado — clique pra ligar"}
               aria-label={soundOn ? "Desativar som" : "Ativar som"}
             >
               {soundOn ? (
-                <Volume2 className="h-4 w-4 text-success" />
+                <Volume2 className="h-3.5 w-3.5 text-success xs:h-4 xs:w-4" />
               ) : (
-                <VolumeX className="h-4 w-4 text-muted-foreground" />
+                <VolumeX className="h-3.5 w-3.5 text-muted-foreground xs:h-4 xs:w-4" />
               )}
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 px-2 sm:px-3">
-              <LogOut className="h-4 w-4 sm:mr-2" />
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3">
+              <LogOut className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-7xl px-2 py-3 xs:px-3 xs:py-4 sm:px-6 sm:py-8">
         {/* Abas */}
-        <div className="mb-6 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card sm:w-auto">
+        <div className="mb-4 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card xs:mb-6 sm:w-auto">
           <button
             type="button"
             onClick={() => setTab("painel")}
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors xs:gap-2 xs:px-4 xs:py-2 xs:text-sm sm:flex-none ${
               tab === "painel"
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <LayoutDashboard className="h-4 w-4" />
+            <LayoutDashboard className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
             Painel
           </button>
           <button
             type="button"
             onClick={() => setTab("emails")}
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
+            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors xs:gap-2 xs:px-4 xs:py-2 xs:text-sm sm:flex-none ${
               tab === "emails"
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Mail className="h-4 w-4" />
+            <Mail className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
             E-mails
           </button>
         </div>
@@ -666,8 +666,8 @@ export default function Dashboard() {
           <EmailComposerPanel />
         ) : (
         <>
-        {/* Cards de resumo */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
+        <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
           <StatCard label="Em andamento" value={activeSessions.length} icon={<EyeOfHorus className="h-5 w-5" />} highlight={activeSessions.length > 0} />
           <StatCard label="Ao vivo" value={live.length} icon={<Radio className="h-4 w-4" />} highlight={live.length > 0} />
           <StatCard label="Aprovados" value={approvedCount} icon={<Check className="h-4 w-4" />} />
@@ -675,11 +675,11 @@ export default function Dashboard() {
         </div>
 
         {/* SESSÕES EM ANDAMENTO */}
-        <section className="mt-8 rounded-xl border border-border bg-card shadow-card">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
+        <section className="mt-0 rounded-xl border border-border bg-card shadow-card xs:mt-6 sm:mt-8">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 xs:px-5 xs:py-4">
             <div className="flex items-center gap-2">
-              <EyeOfHorus className="h-5 w-5 text-primary" />
-              <h2 className="font-display text-base font-semibold tracking-wider uppercase">Sessões em andamento</h2>
+              <EyeOfHorus className="h-4 w-4 text-primary xs:h-5 xs:w-5" />
+              <h2 className="font-display text-sm font-semibold tracking-wider uppercase xs:text-base">Sessões em andamento</h2>
               <Badge variant="secondary" className="text-[10px]">{activeSessions.length}</Badge>
             </div>
           </div>
@@ -964,17 +964,17 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-xl border bg-card p-4 shadow-card transition ${
+      className={`rounded-xl border bg-card p-3 shadow-card transition xs:p-4 ${
         highlight ? "border-primary/40 shadow-glow" : "border-border"
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground xs:text-xs">{label}</span>
         <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${highlight ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>
           {icon}
         </span>
       </div>
-      <div className="mt-2 text-2xl font-bold tracking-tight">{value}</div>
+      <div className="mt-1.5 text-xl font-bold tracking-tight xs:mt-2 xs:text-2xl">{value}</div>
     </div>
   );
 }
