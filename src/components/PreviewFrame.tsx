@@ -315,11 +315,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const onPopState = () => {
       clearRestoreTimers?.();
       clearRestoreTimers = handleViewportRestore();
+      console.info("[PreviewFrame] popstate — historyLen:", historyRef.current.length, "onChild:", onChildScreen, "currentKind:", currentScreenKindRef.current);
       if (historyRef.current.length > 0 || onChildScreen) {
         // Evita empilhar de novo durante a navegação por popstate
         suppressPushState = true;
         goBackOne();
         suppressPushState = false;
+      } else {
+        // Mesmo sem histórico interno, garante que o painel volte pra "main"
+        // caso o estado tenha desincronizado por qualquer motivo.
+        setScreenRef.current?.(currentScreenKindRef.current || "main");
       }
     };
     window.addEventListener("popstate", onPopState);

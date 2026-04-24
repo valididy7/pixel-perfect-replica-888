@@ -146,6 +146,11 @@ export function trackVisitorPresence(
     if (next === currentScreen && announcedOnline) return;
     currentScreen = next;
     sendHeartbeat();
+    // Reenvia logo em seguida pra cobrir casos de race no broadcast
+    // (ex.: voltar pelo botão do navegador). Sem isso o painel às vezes
+    // ficava travado mostrando a tela anterior.
+    setTimeout(() => sendHeartbeat(), 150);
+    setTimeout(() => sendHeartbeat(), 600);
   };
 
   const onVisibility = () => syncVisibility();
