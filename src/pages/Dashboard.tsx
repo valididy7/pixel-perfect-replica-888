@@ -656,8 +656,8 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-2 py-3 xs:px-3 xs:py-4 sm:px-6 sm:py-8">
-        {/* Abas */}
-        <div className="mb-4 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card xs:mb-6 sm:w-auto">
+        {/* Abas — escondidas em telas micro (<360px) pra deixar só Sessões em andamento */}
+        <div className="mb-4 hidden w-full rounded-xl border border-border bg-card p-1 shadow-card xs:mb-6 xs:inline-flex sm:w-auto">
           <button
             type="button"
             onClick={() => setTab("painel")}
@@ -684,9 +684,14 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {tab === "emails" ? (
-          <EmailComposerPanel />
-        ) : (
+        {tab === "emails" && (
+          // Em <360px o EmailComposer some — o painel (renderizado abaixo) assume.
+          <div className="hidden xs:block">
+            <EmailComposerPanel />
+          </div>
+        )}
+        {/* Painel: sempre visível em <360px, e em ≥360px só quando tab=painel */}
+        <div className={tab === "painel" ? "" : "xs:hidden"}>
         <>
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
         <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
@@ -1016,7 +1021,7 @@ export default function Dashboard() {
           )}
         </section>
         </>
-        )}
+        </div>
       </main>
     </div>
   );
