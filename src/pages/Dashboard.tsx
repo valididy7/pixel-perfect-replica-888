@@ -684,13 +684,14 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {tab === "emails" ? (
+        {tab === "emails" && (
           // Em <360px o EmailComposer some — o painel (renderizado abaixo) assume.
           <div className="hidden xs:block">
             <EmailComposerPanel />
           </div>
-        ) : null}
-        {(tab === "painel" || true) && (
+        )}
+        {/* Painel: sempre visível em <360px, e em ≥360px só quando tab=painel */}
+        <div className={tab === "painel" ? "" : "xs:hidden"}>
         <>
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
         <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
