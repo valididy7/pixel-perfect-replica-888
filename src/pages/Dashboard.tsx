@@ -1118,6 +1118,9 @@ export default function Dashboard() {
             />
           )}
         </section>
+
+        {/* E-MAILS BANIDOS */}
+        <BlockedEmailsPanel />
         </>
         </div>
       </main>
