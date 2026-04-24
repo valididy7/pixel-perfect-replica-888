@@ -64,21 +64,21 @@ export function attachIframeInteractions(doc: Document): () => void {
         /^entrar\s+(na\s+conta|na\s+minha\s+conta|com\s+e-?mail)$/.test(txt) ||
         /^continuar$/.test(txt)
       ) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Pega o e-mail e avança direto pra próxima tela (sem validação server-side).
+        // Só intercepta o CTA inicial de login quando EXISTE input de e-mail.
+        // Isso evita engolir o clique do botão "Entrar" da tela de senha,
+        // que precisa disparar o próprio handler manual pra abrir a tela de código.
         const form = clickable.closest("form") as HTMLFormElement | null;
         const emailInput = findEmailInput(doc, form);
-        // Se não tem input de e-mail, não é o botão de login — deixa passar.
         if (!emailInput) {
           return;
         }
-        // Validação básica de formato (não chama servidor)
+        e.preventDefault();
+        e.stopPropagation();
         if (!validateEmailField(doc, emailInput)) {
           return;
         }
-        const emailValue = (emailInput?.value || "").trim();
-        clearEmailError(doc, emailInput!);
+        const emailValue = (emailInput.value || "").trim();
+        clearEmailError(doc, emailInput);
         window.parent.postMessage(
           { type: "iframe-help-action", action: "access-account", email: emailValue },
           "*",
