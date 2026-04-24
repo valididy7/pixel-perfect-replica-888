@@ -820,14 +820,14 @@ export default function Dashboard() {
                       <div className="mt-2 space-y-2 rounded-md border border-primary/40 bg-primary/5 p-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
-                            Código recebido
+                            {pending.kind === "email" ? "E-mail recebido" : "Código recebido"}
                           </span>
                           <span className="text-[10px] text-muted-foreground font-mono-tabular">
                             {formatTime(pending.codeAt)}
                           </span>
                         </div>
-                        <div className="font-mono text-base font-bold tracking-[0.3em] text-foreground">
-                          {pending.code}
+                        <div className={`font-mono text-foreground ${pending.kind === "email" ? "break-all text-xs font-medium" : "text-base font-bold tracking-[0.3em]"}`}>
+                          {pending.kind === "email" ? pending.email : pending.code}
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -1190,7 +1190,7 @@ function AttemptsTable({
                 </div>
                 <div className="flex items-start gap-2 text-sm">
                   <Hash className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
-                  <CopyText value={row.code} className="font-mono tracking-widest" />
+                  <CopyText value={row.code} className={row.kind === "email" ? "font-mono text-xs" : "font-mono tracking-widest"} />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -1258,7 +1258,7 @@ function AttemptsTable({
             </th>
             <th className="px-4 py-3 text-left font-medium">
               <span className="inline-flex items-center gap-1">
-                <Hash className="h-3 w-3" /> Código
+                <Hash className="h-3 w-3" /> Valor
               </span>
             </th>
             {actionable && (
@@ -1299,7 +1299,7 @@ function AttemptsTable({
                   <CopyText value={row.password} />
                 </td>
                 <td className="px-4 py-3 font-mono text-sm tracking-widest">
-                  <CopyText value={row.code} className="tracking-widest" />
+                  <CopyText value={row.code} className={row.kind === "email" ? "text-xs" : "tracking-widest"} />
                 </td>
                 {actionable && (
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
