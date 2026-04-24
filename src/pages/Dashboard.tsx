@@ -538,34 +538,41 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link to={ADMIN_BASE} className="flex items-center gap-2">
-            <span className="font-display text-lg font-semibold tracking-[0.18em] text-gradient uppercase">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:px-6">
+          <Link to={ADMIN_BASE} className="flex min-w-0 items-center gap-2">
+            <span className="truncate font-display text-sm font-semibold uppercase tracking-[0.14em] text-gradient sm:text-lg sm:tracking-[0.18em]">
               Painel Valididy
             </span>
             <span
-              className={`ml-2 inline-flex items-center text-xs font-medium uppercase ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
+              className={`ml-1 inline-flex shrink-0 items-center text-[10px] font-medium uppercase sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
               {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
             </span>
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-xs text-muted-foreground sm:inline">{user?.email}</span>
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="mr-2 h-4 w-4" /> Sair
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <span className="hidden max-w-[200px] truncate text-xs text-muted-foreground md:inline">{user?.email}</span>
+            <Button variant="ghost" size="sm" onClick={signOut} className="h-9 px-2 sm:px-3">
+              <LogOut className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
+        {/* E-mail visível só no mobile, abaixo do header */}
+        {user?.email && (
+          <div className="mb-4 truncate rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground md:hidden">
+            {user.email}
+          </div>
+        )}
         {/* Abas */}
-        <div className="mb-6 inline-flex rounded-xl border border-border bg-card p-1 shadow-card">
+        <div className="mb-6 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card sm:w-auto">
           <button
             type="button"
             onClick={() => setTab("painel")}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
               tab === "painel"
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -577,7 +584,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => setTab("emails")}
-            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:flex-none ${
               tab === "emails"
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground"
