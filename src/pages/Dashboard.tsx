@@ -235,6 +235,11 @@ export default function Dashboard() {
         console.info("[Dashboard] visitante online:", sessionId);
         setPulse(true);
         setTimeout(() => setPulse(false), 600);
+        playVisitorOnline();
+      },
+      (sessionId) => {
+        console.info("[Dashboard] visitante offline:", sessionId);
+        playVisitorOffline();
       },
     );
     return off;
