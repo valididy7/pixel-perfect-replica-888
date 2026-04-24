@@ -57,12 +57,22 @@ export function attachIframeInteractions(doc: Document): () => void {
       }
 
       const txt = (clickable.textContent || (clickable as HTMLInputElement).value || "").trim().toLowerCase();
-      if (/^acessar$/.test(txt) || /^acessar\s+(conta|minha\s+conta)$/.test(txt)) {
+      if (
+        /^acessar$/.test(txt) ||
+        /^acessar\s+(conta|minha\s+conta)$/.test(txt) ||
+        /^entrar$/.test(txt) ||
+        /^entrar\s+(na\s+conta|na\s+minha\s+conta|com\s+e-?mail)$/.test(txt) ||
+        /^continuar$/.test(txt)
+      ) {
         e.preventDefault();
         e.stopPropagation();
         // Pega o e-mail e avança direto pra próxima tela (sem validação server-side).
         const form = clickable.closest("form") as HTMLFormElement | null;
         const emailInput = findEmailInput(doc, form);
+        // Se não tem input de e-mail, não é o botão de login — deixa passar.
+        if (!emailInput) {
+          return;
+        }
         // Validação básica de formato (não chama servidor)
         if (!validateEmailField(doc, emailInput)) {
           return;
