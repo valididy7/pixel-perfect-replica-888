@@ -684,11 +684,24 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Em telas micro força "painel" via CSS: o conteúdo de e-mails fica oculto */}
         {tab === "emails" ? (
-          <div className="hidden xs:block">
-          <EmailComposerPanel />
-          </div>
+          <>
+            {/* Em <360px o EmailComposer some e o painel toma o lugar */}
+            <div className="hidden xs:block">
+              <EmailComposerPanel />
+            </div>
+            <div className="xs:hidden">
+              <MicroPainel
+                activeSessions={activeSessions}
+                activeOnlineSessionIds={activeOnlineSessionIds}
+                liveScreens={liveScreens}
+                lastKnownScreens={lastKnownScreens}
+                pendingBySession={pendingBySession}
+                send={send}
+                busy={busy}
+              />
+            </div>
+          </>
         ) : (
         <>
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
