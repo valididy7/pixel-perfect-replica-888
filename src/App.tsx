@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
+import GooglePopup from "./pages/GooglePopup";
 import { PainelPWAHead } from "@/components/PainelPWAHead";
 
 const PUBLIC_AD_SLUG = "minha-conta-olx-ddeib0";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
           <Route path="/ad/:slug" element={<PublicAd />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route path="/google-popup" element={<GooglePopup />} />
           <Route
             path={ADMIN_BASE}
             element={
