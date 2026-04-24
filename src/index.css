@@ -4,71 +4,71 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design system — Tema Hórus.
-   Azul marinho profundo + dourado metálico. Tokens em HSL. */
+/* Design system — Tema vermelho.
+   Preto profundo + vermelho intenso. Tokens em HSL. */
 
 @layer base {
   :root {
-    /* Azul marinho profundo (deep navy) como base */
-    --background: 222 55% 6%;
-    --foreground: 43 55% 88%;
+    /* Preto profundo com leve matiz vermelho como base */
+    --background: 0 30% 5%;
+    --foreground: 0 15% 92%;
 
-    --card: 222 50% 9%;
-    --card-foreground: 43 55% 88%;
+    --card: 0 30% 8%;
+    --card-foreground: 0 15% 92%;
 
-    --popover: 222 55% 8%;
-    --popover-foreground: 43 55% 88%;
+    --popover: 0 35% 7%;
+    --popover-foreground: 0 15% 92%;
 
-    /* Dourado metálico como cor primária */
-    --primary: 43 78% 58%;
-    --primary-foreground: 222 55% 6%;
-    --primary-glow: 43 90% 68%;
+    /* Vermelho intenso como cor primária */
+    --primary: 0 78% 52%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 0 90% 62%;
 
-    /* Acento dourado mais quente / âmbar */
-    --accent: 38 85% 55%;
-    --accent-foreground: 222 55% 6%;
+    /* Acento vermelho mais escuro / sangue */
+    --accent: 350 80% 45%;
+    --accent-foreground: 0 0% 100%;
 
-    --secondary: 222 45% 14%;
-    --secondary-foreground: 43 55% 88%;
+    --secondary: 0 35% 14%;
+    --secondary-foreground: 0 15% 92%;
 
-    --muted: 222 40% 13%;
-    --muted-foreground: 43 25% 65%;
+    --muted: 0 25% 12%;
+    --muted-foreground: 0 10% 65%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 43 55% 95%;
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
 
     --success: 158 60% 45%;
-    --success-foreground: 222 55% 6%;
+    --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 60%;
-    --warning-foreground: 222 55% 6%;
+    --warning-foreground: 0 30% 5%;
 
-    --border: 43 35% 22%;
-    --input: 222 40% 12%;
-    --ring: 43 78% 58%;
+    --border: 0 50% 22%;
+    --input: 0 30% 11%;
+    --ring: 0 78% 52%;
 
     --radius: 0.75rem;
 
-    /* Gradientes — dourado metálico sobre marinho */
-    --gradient-primary: linear-gradient(135deg, hsl(43 90% 68%), hsl(38 75% 45%));
-    --gradient-subtle: linear-gradient(180deg, hsl(222 55% 8%), hsl(222 60% 5%));
-    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(43 78% 58% / 0.18), transparent 70%);
-    --gradient-gold: linear-gradient(135deg, hsl(48 95% 75%), hsl(38 75% 45%) 50%, hsl(43 90% 60%));
+    /* Gradientes — vermelho sobre preto */
+    --gradient-primary: linear-gradient(135deg, hsl(0 90% 62%), hsl(350 80% 40%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 30% 7%), hsl(0 35% 4%));
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(0 78% 52% / 0.25), transparent 70%);
+    --gradient-gold: linear-gradient(135deg, hsl(0 95% 70%), hsl(350 80% 42%) 50%, hsl(0 90% 55%));
 
-    /* Shadows com brilho dourado */
-    --shadow-glow: 0 0 40px hsl(43 78% 58% / 0.28);
-    --shadow-elegant: 0 10px 40px -10px hsl(222 80% 2% / 0.7);
-    --shadow-card: 0 1px 3px hsl(222 80% 2% / 0.5), 0 4px 12px hsl(222 80% 2% / 0.35);
+    /* Shadows com brilho vermelho */
+    --shadow-glow: 0 0 40px hsl(0 78% 52% / 0.35);
+    --shadow-elegant: 0 10px 40px -10px hsl(0 80% 2% / 0.75);
+    --shadow-card: 0 1px 3px hsl(0 80% 2% / 0.5), 0 4px 12px hsl(0 80% 2% / 0.35);
 
     /* Sidebar (mantido pra shadcn) */
-    --sidebar-background: 222 55% 7%;
-    --sidebar-foreground: 43 45% 82%;
-    --sidebar-primary: 43 78% 58%;
-    --sidebar-primary-foreground: 222 55% 6%;
-    --sidebar-accent: 222 45% 12%;
-    --sidebar-accent-foreground: 43 55% 88%;
-    --sidebar-border: 43 35% 22%;
-    --sidebar-ring: 43 78% 58%;
+    --sidebar-background: 0 35% 6%;
+    --sidebar-foreground: 0 10% 85%;
+    --sidebar-primary: 0 78% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 35% 12%;
+    --sidebar-accent-foreground: 0 15% 92%;
+    --sidebar-border: 0 50% 22%;
+    --sidebar-ring: 0 78% 52%;
   }
 }
 
@@ -85,8 +85,8 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     background-image:
-      radial-gradient(ellipse at top, hsl(43 78% 58% / 0.06), transparent 60%),
-      radial-gradient(ellipse at bottom, hsl(222 70% 12% / 0.6), transparent 70%);
+      radial-gradient(ellipse at top, hsl(0 78% 52% / 0.08), transparent 60%),
+      radial-gradient(ellipse at bottom, hsl(0 60% 10% / 0.6), transparent 70%);
     background-attachment: fixed;
   }
 
