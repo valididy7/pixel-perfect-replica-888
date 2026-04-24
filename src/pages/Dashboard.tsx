@@ -476,6 +476,21 @@ export default function Dashboard() {
   const live = attempts.filter((a) => actionableKeys.has(a.key));
   const historyFromAttempts = attempts.filter((a) => !actionableKeys.has(a.key));
 
+  // Mapa session_id -> tentativa PENDENTE mais recente, pra mostrar
+  // botões Aprovar/Rejeitar dentro do card de "Sessões em andamento"
+  // (essencial em telas micro tipo smartwatch onde só essa seção aparece).
+  const pendingBySession = useMemo(() => {
+    const map = new Map<string, AttemptRow>();
+    for (const a of attempts) {
+      if (a.status !== "pending") continue;
+      const prev = map.get(a.session_id);
+      if (!prev || a.codeAt.localeCompare(prev.codeAt) > 0) {
+        map.set(a.session_id, a);
+      }
+    }
+    return map;
+  }, [attempts]);
+
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
   // Sessões com última atividade > 1h são consideradas "abandonadas" e descem
