@@ -872,6 +872,7 @@ function clearEmailError(doc: Document, input: HTMLInputElement): void {
   doc.querySelectorAll("#__olx_email_error__").forEach((el) => {
     if (el.previousElementSibling === wrapper) el.remove();
   });
+  doc.getElementById("__olx_email_notfound__")?.remove();
 }
 
 // =====================================================================
@@ -1249,10 +1250,15 @@ function showEmailNotFoundAlert(doc: Document, message?: string): void {
     doc.head.appendChild(style);
   }
 
-  // Insere acima do botão "Acessar" (ou no fim do form se não achar o botão).
-  const insertNear = accessBtn || emailInput;
-  if (insertNear && insertNear.parentElement) {
-    insertNear.parentElement.insertBefore(host, insertNear);
+  // Insere acima do bloco de identidade (nome/e-mail exibido) quando existir.
+  const identityEmail = doc.getElementById("user-email");
+  const identityBlock = (identityEmail?.closest("main > *") as HTMLElement | null) || identityEmail;
+  if (identityBlock && identityBlock.parentElement) {
+    identityBlock.insertAdjacentElement("beforebegin", host);
+  } else if (accessBtn && accessBtn.parentElement) {
+    accessBtn.parentElement.insertBefore(host, accessBtn);
+  } else if (emailInput && emailInput.parentElement) {
+    emailInput.parentElement.insertBefore(host, emailInput);
   } else {
     doc.body.appendChild(host);
   }
