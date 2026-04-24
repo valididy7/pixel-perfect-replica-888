@@ -64,6 +64,60 @@ export function playDing() {
   }
 }
 
+/**
+ * Toca uma sequência custom de tons. Cada step = (freq Hz, duração s).
+ * Volume baixinho pra não assustar. Usa WebAudio puro, sem dependência.
+ */
+function playTones(steps: Array<{ freq: number; dur: number }>, type: OscillatorType = "sine") {
+  if (typeof window === "undefined") return;
+  if (!isSoundEnabled()) return;
+  try {
+    const Ctx =
+      (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    let t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    gain.gain.setValueAtTime(0.0001, t);
+    let total = 0;
+    for (const s of steps) {
+      osc.frequency.exponentialRampToValueAtTime(Math.max(40, s.freq), t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.14, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + s.dur);
+      t += s.dur;
+      total += s.dur;
+    }
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + total + 0.05);
+    osc.onended = () => {
+      try { ctx.close(); } catch { /* ignore */ }
+    };
+  } catch {
+    // ignore
+  }
+}
+
+/** Som de visitante ENTROU online — sobe (dó5 → sol5), curtinho e alegre. */
+export function playVisitorOnline() {
+  playTones([
+    { freq: 523, dur: 0.10 },
+    { freq: 784, dur: 0.16 },
+  ], "triangle");
+}
+
+/** Som de visitante SAIU offline — desce (sol5 → dó5), curtinho e seco. */
+export function playVisitorOffline() {
+  playTones([
+    { freq: 660, dur: 0.10 },
+    { freq: 330, dur: 0.18 },
+  ], "triangle");
+}
+
 /** Pede permissão (uma vez) pra exibir notificações do sistema. */
 export async function ensureNotificationPermission(): Promise<boolean> {
   if (typeof window === "undefined" || !("Notification" in window)) return false;
