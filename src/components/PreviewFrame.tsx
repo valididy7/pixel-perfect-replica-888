@@ -55,10 +55,12 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const [height, setHeight] = useState<number>(800);
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
+  const historyScreenRef = useRef<Array<{ kind: string; screenId: string | null }>>([]);
   const currentHtmlRef = useRef<string>("");
   const objectUrlsRef = useRef<string[]>([]);
   const leadsRef = useRef<LeadValue[]>([]);
   const currentScreenIdRef = useRef<string | null>(null);
+  const currentScreenKindRef = useRef<string>("main");
   const capturedEmailRef = useRef("");
   const setScreenRef = useRef<((kind: string) => void) | null>(null);
   const markPresenceActiveRef = useRef<(() => void) | null>(null);
