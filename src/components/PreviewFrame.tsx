@@ -817,7 +817,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             });
           const next = screensRef.current.find((s) => s.kind === "email-code");
           if (next) navigateToScreen(next);
-          else console.warn("[PreviewFrame] Sem tela 'email-code' vinculada");
+          else navigateToManualScreen("email-code");
           return;
         }
 
