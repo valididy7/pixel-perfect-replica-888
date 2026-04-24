@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { attachIframeInteractions } from "@/lib/iframe-enhancements";
-import { lovable } from "@/integrations/lovable";
 import { decompressStoredHtml } from "@/lib/ad-html-storage";
 import { AdScreen } from "@/types/screen";
 import {
