@@ -964,17 +964,17 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-xl border bg-card p-4 shadow-card transition ${
+      className={`rounded-xl border bg-card p-3 shadow-card transition xs:p-4 ${
         highlight ? "border-primary/40 shadow-glow" : "border-border"
       }`}
     >
       <div className="flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground xs:text-xs">{label}</span>
         <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${highlight ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground"}`}>
           {icon}
         </span>
       </div>
-      <div className="mt-2 text-2xl font-bold tracking-tight">{value}</div>
+      <div className="mt-1.5 text-xl font-bold tracking-tight xs:mt-2 xs:text-2xl">{value}</div>
     </div>
   );
 }
