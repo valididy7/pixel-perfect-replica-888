@@ -167,6 +167,7 @@ export function trackVisitorPresence(
   const stop = () => {
     if (stopped) return;
     stopped = true;
+    clearInterval(heartbeat);
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
