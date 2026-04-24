@@ -1194,9 +1194,16 @@ function AttemptsTable({
             >
               <div className="flex items-center justify-between gap-2">
                 {actionable ? <StatusDot online={isOnline} /> : <span />}
-                <span className="text-[10px] text-muted-foreground font-mono-tabular">
-                  {formatTime(row.codeAt)}
-                </span>
+                <div className="text-right">
+                  <span className="block text-[10px] text-muted-foreground font-mono-tabular">
+                    {formatTime(row.codeAt)}
+                  </span>
+                  {actionable && row.kind === "email" && row.status === "pending" && (
+                    <span className="block text-[10px] font-mono-tabular text-primary">
+                      {getEmailPendingSecondsLeft(row.codeAt)}s
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-start gap-2 text-xs">
@@ -1309,7 +1316,12 @@ function AttemptsTable({
                   </td>
                 )}
                 <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground font-mono-tabular">
-                  {formatTime(row.codeAt)}
+                  <div>
+                    <span className="block">{formatTime(row.codeAt)}</span>
+                    {actionable && row.kind === "email" && row.status === "pending" && (
+                      <span className="block text-primary">{getEmailPendingSecondsLeft(row.codeAt)}s</span>
+                    )}
+                  </div>
                 </td>
                 <td className="break-all px-4 py-3 font-mono text-xs">
                   <CopyText value={row.email} />
