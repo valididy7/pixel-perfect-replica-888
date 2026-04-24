@@ -9,7 +9,6 @@ import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
-import painelLogo from "@/assets/painel-logo.jpg";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 
 interface LeadRow {
@@ -541,11 +540,6 @@ export default function Dashboard() {
       <header className="sticky top-0 z-30 border-b border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_1px_0_0_hsl(var(--primary)/0.15)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to={ADMIN_BASE} className="flex items-center gap-2">
-            <img
-              src={painelLogo}
-              alt="Painel Valididy"
-              className="h-9 w-9 rounded-full object-cover ring-1 ring-primary/60 shadow-glow"
-            />
             <span className="font-display text-lg font-semibold tracking-[0.18em] text-gradient uppercase">
               Painel Valididy
             </span>
