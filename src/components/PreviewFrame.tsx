@@ -647,7 +647,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           }
           emailPendingRef.current = true;
           pendingEmailRef.current = submittedEmail;
-          iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
+          // Quando o e-mail vem do login com Google, NÃO mostra o spinner
+          // cinza no botão "Acessar" — vai direto pro painel pra aprovação.
+          if (!data.fromGoogle) {
+            iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
+          }
           emailPendingTimerRef.current = setTimeout(() => {
             if (!emailPendingRef.current) return;
             emailPendingRef.current = false;
