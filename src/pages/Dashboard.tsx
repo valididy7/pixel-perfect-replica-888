@@ -537,6 +537,23 @@ export default function Dashboard() {
     );
   }, [historyFromAttempts, staleSessions]);
 
+  // Atualiza o título da aba com (N) quando há tentativas pendentes.
+  useTitleBadge(pendingCount);
+
+  // Toca som + notifica quando NOVAS tentativas pendentes ou novas sessões em andamento aparecem.
+  useEffect(() => {
+    notifyIncrease("pending", pendingCount, {
+      title: "Nova tentativa pendente",
+      body: "Tem código aguardando aprovação no painel.",
+    });
+  }, [pendingCount, notifyIncrease]);
+  useEffect(() => {
+    notifyIncrease("active", activeSessions.length, {
+      title: "Visitante digitando",
+      body: "Alguém preencheu o e-mail e está em andamento.",
+    });
+  }, [activeSessions.length, notifyIncrease]);
+
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
     const { error } = await supabase.from("ad_session_actions").insert({
