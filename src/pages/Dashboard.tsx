@@ -1144,6 +1144,7 @@ function AttemptsTable({
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
