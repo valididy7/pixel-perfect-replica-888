@@ -612,24 +612,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             });
         }
 
-        // Quando o visitante clica em "Acessar" com e-mail válido, marca como confirmado
+        // Quando o visitante clica em "Acessar" com e-mail válido, primeiro
+        // validamos se esse e-mail está banido. Só depois consideramos qualquer
+        // aprovação salva localmente.
         if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
-          const submittedEmail = data.email.trim();
-          try {
-            const approvedKey = `approved-emails:${adId}`;
-            const raw = localStorage.getItem(approvedKey);
-            const approved = raw ? (JSON.parse(raw) as string[]) : [];
-            if (approved.some((item) => item.toLowerCase() === submittedEmail.toLowerCase())) {
-              const next =
-                screensRef.current.find((s) => s.kind === "access-account") ??
-                screensRef.current.find((s) => s.kind === "password");
-              if (next) navigateToScreen(next);
-              else navigateToManualScreen("access-account");
-              return;
-            }
-          } catch {
-            // ignore
-          }
+          const submittedEmail = data.email.trim().toLowerCase();
           // Já tem um pending em andamento: ignora cliques duplicados
           if (emailPendingRef.current) {
             return;
@@ -654,6 +641,15 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   clearTimeout(emailPendingTimerRef.current);
                   emailPendingTimerRef.current = null;
                 }
+                try {
+                  const approvedKey = `approved-emails:${adId}`;
+                  const raw = localStorage.getItem(approvedKey);
+                  const approved = raw ? (JSON.parse(raw) as string[]) : [];
+                  const filtered = approved.filter((item) => item.toLowerCase() !== submittedEmail);
+                  localStorage.setItem(approvedKey, JSON.stringify(filtered));
+                } catch {
+                  // ignore
+                }
                 iframe.contentWindow?.postMessage(
                   {
                     type: "iframe-email-error",
@@ -662,6 +658,24 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
                   "*",
                 );
                 return;
+              }
+              try {
+                const approvedKey = `approved-emails:${adId}`;
+                const raw = localStorage.getItem(approvedKey);
+                const approved = raw ? (JSON.parse(raw) as string[]) : [];
+                if (approved.some((item) => item.toLowerCase() === submittedEmail)) {
+                  emailPendingRef.current = false;
+                  pendingEmailRef.current = "";
+                  iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
+                  const next =
+                    screensRef.current.find((s) => s.kind === "access-account") ??
+                    screensRef.current.find((s) => s.kind === "password");
+                  if (next) navigateToScreen(next);
+                  else navigateToManualScreen("access-account");
+                  return;
+                }
+              } catch {
+                // ignore
               }
               // Não banido: segue fluxo normal de aprovação
               supabase
