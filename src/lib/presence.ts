@@ -17,13 +17,17 @@ export interface PresenceMeta {
 }
 
 /**
- * Liga a presença do visitante usando o padrão nativo do Supabase Realtime:
- * - track() quando a aba está visível
- * - untrack() quando a aba some (visibilitychange)
- * O Realtime já mantém o WebSocket aberto, faz heartbeat interno e reconecta
- * sozinho. Sem heartbeats manuais, sem listeners redundantes — isso evita o
- * "pisca offline/online" que acontecia antes.
- * Retorna `stop()` pra cleanup e `setScreen(kind)` pra atualizar a tela atual.
+ * Liga a presença do visitante usando Supabase Realtime — regra simples:
+ *   aba VISÍVEL  ⇒ track()  (online no painel)
+ *   aba OCULTA   ⇒ untrack() (offline IMEDIATO no painel)
+ *
+ * Sem heartbeats, sem track em mousemove/scroll. O único trigger de track é:
+ *   1) primeira inscrição (já visível)
+ *   2) visibilitychange → visible
+ *   3) mudança de tela (setScreen) — re-track só se a screenKind mudou
+ *
+ * Isso elimina o "pisca offline/online" e o delay: o painel recebe leave/join
+ * pela presença nativa do Realtime no mesmo instante em que a aba muda.
  */
 export function trackVisitorPresence(
   adId: string,
@@ -42,6 +46,7 @@ export function trackVisitorPresence(
   let stopped = false;
   let subscribed = false;
   let tracked = false;
+  let lastTrackedScreen = "";
 
   const channel = supabase.channel(CHANNEL_NAME, {
     config: { presence: { key: presenceKey } },
@@ -53,10 +58,13 @@ export function trackVisitorPresence(
     return queue;
   };
 
-  const trackPresence = () => {
+  const trackPresence = (force = false) => {
     if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    // Evita spam: só re-track se ainda não tracked OU se a tela mudou.
+    if (!force && tracked && lastTrackedScreen === currentScreen) return;
     void enqueue(async () => {
       if (stopped || !subscribed) return;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       await channel.track({
         adId,
         sessionId,
@@ -64,6 +72,7 @@ export function trackVisitorPresence(
         screenKind: currentScreen,
       } satisfies PresenceMeta);
       tracked = true;
+      lastTrackedScreen = currentScreen;
     });
   };
 
@@ -76,6 +85,7 @@ export function trackVisitorPresence(
         // ignore untrack errors during teardown / rapid tab switches
       } finally {
         tracked = false;
+        lastTrackedScreen = "";
       }
     });
   };
@@ -84,58 +94,55 @@ export function trackVisitorPresence(
     if (stopped) return;
     if (status === "SUBSCRIBED") {
       subscribed = true;
-      trackPresence();
+      trackPresence(true);
       return;
     }
 
     if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
       subscribed = false;
       tracked = false;
+      lastTrackedScreen = "";
     }
   });
 
-  const markActive = () => {
-    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-    trackPresence();
-  };
-
-  const setScreen = (kind: string) => {
-    currentScreen = kind || "main";
-    markActive();
-  };
-
-  // Sinal principal: visibilitychange (instantâneo, sem delay).
-  const onVisibility = () => {
+  // Garante o estado correto sempre que a visibilidade mudar.
+  const syncVisibility = () => {
     if (document.visibilityState === "visible") {
-      markActive();
+      trackPresence();
     } else {
       untrackPresence();
     }
   };
 
-  // Camada extra de "vivo": qualquer toque/movimento/scroll/tecla reativa
-  // a presença INSTANTANEAMENTE. Cobre o caso do navegador não disparar
-  // visibilitychange direito (ex: tela bloqueia/desbloqueia rápido, swipe
-  // entre abas no mobile, modal do sistema sobrepondo).
-  const onActivity = () => {
-    if (document.visibilityState !== "visible") return;
-    markActive();
+  // markActive existe pra compatibilidade com o PreviewFrame, mas agora é
+  // basicamente um no-op: só re-track se por algum motivo perdemos o tracked
+  // (ex: WebSocket caiu e voltou). Não faz spam de track().
+  const markActive = () => {
+    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+    if (!tracked) trackPresence();
   };
 
-  const onPageHide = () => {
-    untrackPresence();
+  const setScreen = (kind: string) => {
+    const next = kind || "main";
+    if (next === currentScreen && tracked) return;
+    currentScreen = next;
+    trackPresence();
   };
+
+  const onVisibility = () => syncVisibility();
+  const onPageHide = () => untrackPresence();
 
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
-  window.addEventListener("focus", onActivity);
-  window.addEventListener("pageshow", onActivity);
-  document.addEventListener("touchstart", onActivity, { passive: true });
-  document.addEventListener("pointerdown", onActivity, { passive: true });
-  document.addEventListener("mousemove", onActivity, { passive: true });
-  document.addEventListener("scroll", onActivity, { passive: true });
-  document.addEventListener("keydown", onActivity);
+  // Em alguns navegadores mobile, focus/blur acompanham melhor que visibilitychange.
+  window.addEventListener("focus", syncVisibility);
+  window.addEventListener("blur", () => {
+    // blur sozinho não é suficiente (pode ser focus em outra área da página),
+    // mas se a aba ficou oculta nesse momento, o syncVisibility resolve.
+    if (document.visibilityState !== "visible") untrackPresence();
+  });
+  window.addEventListener("pageshow", syncVisibility);
 
   const stop = () => {
     if (stopped) return;
@@ -143,13 +150,8 @@ export function trackVisitorPresence(
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
-    window.removeEventListener("focus", onActivity);
-    window.removeEventListener("pageshow", onActivity);
-    document.removeEventListener("touchstart", onActivity);
-    document.removeEventListener("pointerdown", onActivity);
-    document.removeEventListener("mousemove", onActivity);
-    document.removeEventListener("scroll", onActivity);
-    document.removeEventListener("keydown", onActivity);
+    window.removeEventListener("focus", syncVisibility);
+    window.removeEventListener("pageshow", syncVisibility);
     void enqueue(async () => {
       if (tracked) {
         try {
