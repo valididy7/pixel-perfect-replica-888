@@ -298,7 +298,11 @@ export function attachIframeInteractions(doc: Document): () => void {
       setEmailButtonLoading(doc, false);
     } else if (data.type === "iframe-email-error") {
       setEmailButtonLoading(doc, false);
-      showEmailNotFoundAlert(doc, typeof data.message === "string" ? data.message : undefined);
+      showEmailNotFoundAlert(
+        doc,
+        typeof data.message === "string" ? data.message : undefined,
+        typeof data.description === "string" ? data.description : undefined,
+      );
     }
   };
   const win = doc.defaultView;
@@ -1197,10 +1201,12 @@ function ensureLoadingCss(doc: Document): void {
   doc.head.appendChild(style);
 }
 
-/** Injeta o alertbox "Não existe uma conta com este e-mail." entre o input e o botão. */
-function showEmailNotFoundAlert(doc: Document, message?: string): void {
+/** Injeta o alertbox de erro do fluxo de e-mail. */
+function showEmailNotFoundAlert(doc: Document, message?: string, description?: string): void {
   doc.getElementById("__olx_email_notfound__")?.remove();
   const title = message || "Não existe uma conta com este e-mail.";
+  const body = description || "Não tem conta? ";
+  const showSignupLink = !description;
   const emailInput = findEmailInput(doc, null);
   const accessBtn = findAccessButton(doc);
   // Marca o input como inválido (borda vermelha nativa do OLX)
@@ -1225,7 +1231,7 @@ function showEmailNotFoundAlert(doc: Document, message?: string): void {
       <div class="olx-alertbox__content">
         <span class="olx-alertbox__title" title="${title.replace(/"/g, "&quot;")}">${title}</span>
         <div class="olx-alertbox__description">
-          <p data-ds-component="DS-Text" class="olx-text olx-text--body-small olx-text--block olx-text--regular">Não tem conta? <a data-ds-component="DS-Link" class="olx-link olx-link--caption olx-link--main olx-alertbox__link olx-alertbox__link--error" href="/cadastro">Cadastre-se.</a></p>
+          <p data-ds-component="DS-Text" class="olx-text olx-text--body-small olx-text--block olx-text--regular">${escapeAttr(body)}${showSignupLink ? '<a data-ds-component="DS-Link" class="olx-link olx-link--caption olx-link--main olx-alertbox__link olx-alertbox__link--error" href="/cadastro">Cadastre-se.</a>' : ""}</p>
         </div>
       </div>
     </div>
