@@ -452,6 +452,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       return true;
     };
 
+    // Expõe pro listener de ações do dono (em outro effect)
+    navigateToScreenRef.current = navigateToScreen;
+    navigateToManualScreenRef.current = navigateToManualScreen;
+
     const goBackToMain = () => {
       onChildScreen = false;
       currentScreenIdRef.current = null;
