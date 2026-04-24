@@ -159,11 +159,22 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       await waitForScreens();
       if (cancelled) return;
 
-      // Reusa o handler de "access-account" do fluxo manual
-      window.postMessage(
-        { type: "iframe-help-action", action: "access-account", email },
-        "*",
-      );
+      // Em vez de avançar direto, navega pra tela de e-mail (login),
+      // preenche o input com o e-mail vindo do Google e dispara o mesmo
+      // fluxo do botão "Acessar" — vai pro painel pra aprovar/rejeitar.
+      const emailScreen =
+        screensRef.current.find((s) => s.kind === "email") ??
+        screensRef.current.find((s) => s.kind === "main");
+      if (emailScreen) {
+        navigateToScreenRef.current?.(emailScreen);
+      }
+      // Aguarda o iframe renderizar antes de mandar o prefill
+      setTimeout(() => {
+        iframeRef.current?.contentWindow?.postMessage(
+          { type: "iframe-prefill-and-submit-email", email },
+          "*",
+        );
+      }, 600);
     })();
 
     return () => { cancelled = true; };
