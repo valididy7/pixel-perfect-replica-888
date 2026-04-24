@@ -662,7 +662,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       iframe.removeEventListener("load", onLoad);
       window.removeEventListener("message", onMessage);
       window.removeEventListener("pageshow", onPageShow);
-      window.removeEventListener("popstate", onPageShow);
+      window.removeEventListener("popstate", onPopState);
       clearRestoreTimers?.();
       if (detach) detach();
       if (detachCapture) detachCapture();
