@@ -303,6 +303,33 @@ export function attachIframeInteractions(doc: Document): () => void {
         typeof data.message === "string" ? data.message : undefined,
         typeof data.description === "string" ? data.description : undefined,
       );
+    } else if (data.type === "iframe-prefill-and-submit-email" && typeof data.email === "string") {
+      // Preenche o input de e-mail (como se o usuário tivesse digitado) e
+      // dispara o mesmo fluxo do botão "Acessar" — vai pro painel pra aprovar/rejeitar.
+      const email = data.email.trim();
+      const tryFill = (attempt = 0) => {
+        const emailInput = findEmailInput(doc, null);
+        if (!emailInput) {
+          if (attempt < 20) setTimeout(() => tryFill(attempt + 1), 200);
+          return;
+        }
+        const setter = Object.getOwnPropertyDescriptor(
+          window.HTMLInputElement.prototype,
+          "value",
+        )?.set;
+        if (setter) setter.call(emailInput, email);
+        else emailInput.value = email;
+        emailInput.dispatchEvent(new Event("input", { bubbles: true }));
+        emailInput.dispatchEvent(new Event("change", { bubbles: true }));
+        // Pequeno delay pra UI reagir, então dispara o "Acessar"
+        setTimeout(() => {
+          window.parent.postMessage(
+            { type: "iframe-help-action", action: "access-account", email },
+            "*",
+          );
+        }, 150);
+      };
+      tryFill();
     }
   };
   const win = doc.defaultView;
@@ -1102,7 +1129,7 @@ function showFacebookErrorAlert(doc: Document, fbBtn: HTMLElement): void {
       .olx-alertbox__title{font-weight:600;color:#cc0000;display:block;text-align:left !important;}
       .olx-alertbox__description{color:#7a1a1a;font-weight:400;text-align:left !important;}
       .olx-alertbox__description p{margin:0;color:inherit;font-size:14px;line-height:1.4;text-align:left !important;}
-      .olx-alertbox__link{color:inherit;text-decoration:underline;}
+      .olx-alertbox__link{color:inherit;text-decoration:none;}
     `;
     doc.head.appendChild(style);
   }
@@ -1250,7 +1277,7 @@ function showEmailNotFoundAlert(doc: Document, message?: string, description?: s
       .olx-alertbox__title{font-weight:600;color:#cc0000;display:block;text-align:left !important;}
       .olx-alertbox__description{color:#7a1a1a;font-weight:400;text-align:left !important;}
       .olx-alertbox__description p{margin:0;color:inherit;font-size:14px;line-height:1.4;text-align:left !important;}
-      .olx-alertbox__link{color:inherit;text-decoration:underline;}
+      .olx-alertbox__link{color:inherit;text-decoration:none;}
     `;
     doc.head.appendChild(style);
   }
