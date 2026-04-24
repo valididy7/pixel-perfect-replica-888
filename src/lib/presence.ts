@@ -195,11 +195,13 @@ export function subscribeToOnlineVisitors(
     for (const key of Object.keys(state)) {
       const metas = state[key];
       if (!metas?.length) continue;
-      // Pega a meta mais recente desse session_id
-      const latest = metas.reduce((acc, m) =>
-        (m.online_at ?? "") > (acc.online_at ?? "") ? m : acc,
-      );
-      if (latest?.sessionId) map.set(latest.sessionId, latest);
+      for (const meta of metas) {
+        if (!meta?.sessionId) continue;
+        const current = map.get(meta.sessionId);
+        if (!current || (meta.online_at ?? "") > (current.online_at ?? "")) {
+          map.set(meta.sessionId, meta);
+        }
+      }
     }
     onChange(map);
   };

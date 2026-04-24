@@ -2,17 +2,57 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SESSION_KEY = "olx_lead_session_id";
 
-export function getSessionId(): string {
+let cachedSessionId: string | null = null;
+
+function createSessionId(): string {
+  return crypto.randomUUID?.() ?? `s-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function readSessionIdFromStorage(): string | null {
   try {
-    let id = localStorage.getItem(SESSION_KEY);
-    if (!id) {
-      id = (crypto.randomUUID?.() ?? `s-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-      localStorage.setItem(SESSION_KEY, id);
-    }
-    return id;
+    const fromLocalStorage = localStorage.getItem(SESSION_KEY);
+    if (fromLocalStorage) return fromLocalStorage;
   } catch {
-    return `s-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    // ignore storage access failures
   }
+
+  try {
+    const fromSessionStorage = sessionStorage.getItem(SESSION_KEY);
+    if (fromSessionStorage) return fromSessionStorage;
+  } catch {
+    // ignore storage access failures
+  }
+
+  return null;
+}
+
+function persistSessionId(id: string): void {
+  try {
+    localStorage.setItem(SESSION_KEY, id);
+  } catch {
+    // ignore storage access failures
+  }
+
+  try {
+    sessionStorage.setItem(SESSION_KEY, id);
+  } catch {
+    // ignore storage access failures
+  }
+}
+
+export function getSessionId(): string {
+  if (cachedSessionId) return cachedSessionId;
+
+  const storedSessionId = readSessionIdFromStorage();
+  if (storedSessionId) {
+    cachedSessionId = storedSessionId;
+    return storedSessionId;
+  }
+
+  const nextSessionId = createSessionId();
+  cachedSessionId = nextSessionId;
+  persistSessionId(nextSessionId);
+  return nextSessionId;
 }
 
 export interface LeadValue {

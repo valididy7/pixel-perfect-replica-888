@@ -55,10 +55,12 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const [height, setHeight] = useState<number>(800);
   const screensRef = useRef<AdScreen[]>([]);
   const historyRef = useRef<string[]>([]);
+  const historyScreenRef = useRef<Array<{ kind: string; screenId: string | null }>>([]);
   const currentHtmlRef = useRef<string>("");
   const objectUrlsRef = useRef<string[]>([]);
   const leadsRef = useRef<LeadValue[]>([]);
   const currentScreenIdRef = useRef<string | null>(null);
+  const currentScreenKindRef = useRef<string>("main");
   const capturedEmailRef = useRef("");
   const setScreenRef = useRef<((kind: string) => void) | null>(null);
   const markPresenceActiveRef = useRef<(() => void) | null>(null);
@@ -230,8 +232,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     renderHtml(injected);
     let onChildScreen = false;
     currentScreenIdRef.current = null;
+    currentScreenKindRef.current = "main";
     currentHtmlRef.current = injected;
     historyRef.current = [];
+    historyScreenRef.current = [];
     setScreenRef.current?.("main");
 
     let detach: (() => void) | null = null;
@@ -327,8 +331,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
       // Empilha o HTML atual pra permitir "voltar" pra tela anterior em vez de pular pra tela mãe
       historyRef.current.push(currentHtmlRef.current);
+      historyScreenRef.current.push({ kind: currentScreenKindRef.current, screenId: currentScreenIdRef.current });
       onChildScreen = true;
       currentScreenIdRef.current = screen.id;
+      currentScreenKindRef.current = screen.kind;
       currentHtmlRef.current = nextHtml;
       renderHtml(nextHtml);
       setScreenRef.current?.(screen.kind);
@@ -352,8 +358,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       historyRef.current.push(currentHtmlRef.current);
+      historyScreenRef.current.push({ kind: currentScreenKindRef.current, screenId: currentScreenIdRef.current });
       onChildScreen = true;
       currentScreenIdRef.current = null;
+      currentScreenKindRef.current = kind;
       currentHtmlRef.current = nextHtml;
       renderHtml(nextHtml);
       setScreenRef.current?.(kind);
@@ -363,7 +371,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const goBackToMain = () => {
       onChildScreen = false;
       currentScreenIdRef.current = null;
+      currentScreenKindRef.current = "main";
       historyRef.current = [];
+      historyScreenRef.current = [];
       currentHtmlRef.current = injected;
       renderHtml(injected);
       setScreenRef.current?.("main");
@@ -371,9 +381,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
     const goBackOne = () => {
       const prev = historyRef.current.pop();
+      const prevScreen = historyScreenRef.current.pop();
       if (prev && prev !== injected) {
+        currentScreenIdRef.current = prevScreen?.screenId ?? null;
+        currentScreenKindRef.current = prevScreen?.kind ?? "main";
         currentHtmlRef.current = prev;
         renderHtml(prev);
+        setScreenRef.current?.(currentScreenKindRef.current);
         return;
       }
       goBackToMain();
