@@ -619,7 +619,7 @@ export default function Dashboard() {
               Painel Valididy
             </span>
             <span
-              className={`ml-0.5 hidden shrink-0 items-center text-[9px] font-medium uppercase xs:ml-1 xs:inline-flex xs:text-[10px] sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
+              className={`ml-0.5 inline-flex shrink-0 items-center text-[8px] font-medium uppercase xs:ml-1 xs:text-[10px] sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
               {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
