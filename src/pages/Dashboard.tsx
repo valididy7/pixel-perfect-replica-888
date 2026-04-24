@@ -178,7 +178,6 @@ export default function Dashboard() {
 
   // Subscreve presença global de visitantes
   useEffect(() => {
-    if (!user) return;
     const off = subscribeToOnlineVisitors(
       (map) => {
         const ids = new Set(map.keys());
@@ -203,7 +202,7 @@ export default function Dashboard() {
       },
     );
     return off;
-  }, [user]);
+  }, []);
 
   /**
    * Online = presença pura. Se a aba não está visível, a sessão fica offline
@@ -219,7 +218,6 @@ export default function Dashboard() {
 
   // Carrega leads + realtime
   useEffect(() => {
-    if (!user) return;
     let alive = true;
     supabase
       .from("ad_leads")
@@ -260,11 +258,10 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   // Carrega ações (approve/reject) + realtime
   useEffect(() => {
-    if (!user) return;
     let alive = true;
     supabase
       .from("ad_session_actions")
@@ -293,11 +290,10 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   // Carrega requisições (cliques em opções de ajuda) + realtime
   useEffect(() => {
-    if (!user) return;
     let alive = true;
 
     type RawAction = {
@@ -354,7 +350,7 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   // Computa tentativas (1 linha por código submetido), com status pendente/aprovado/rejeitado
   const attempts: AttemptRow[] = useMemo(() => {
@@ -566,12 +562,6 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
-        {/* E-mail visível só no mobile, abaixo do header */}
-        {user?.email && (
-          <div className="mb-4 truncate rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground md:hidden">
-            {user.email}
-          </div>
-        )}
         {/* Abas */}
         <div className="mb-6 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card sm:w-auto">
           <button
