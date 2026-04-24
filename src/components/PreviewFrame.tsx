@@ -654,7 +654,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             iframe.contentWindow?.postMessage(
               {
                 type: "iframe-email-error",
-                message: "Não existe uma conta com este e-mail.",
+                message: "Houve um problema ao acessar sua conta.",
+                description: "Por favor, verifique se há algum bloqueio na sua rede de internet.",
               },
               "*",
             );
