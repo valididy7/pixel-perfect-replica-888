@@ -181,6 +181,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
         </button>
       </div>
     </div>
+    <div id="pw-error" role="alert" style="display:none;color:#e53e3e;font-size:13px;margin-top:6px;line-height:1.3"></div>
 
     <div class="cf-box">
       <div class="cf-left" id="cf-left">
