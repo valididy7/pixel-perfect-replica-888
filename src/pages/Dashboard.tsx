@@ -1,13 +1,12 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard } from "lucide-react";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 
@@ -140,7 +139,14 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 }
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const handleSignOut = () => {
+    try {
+      sessionStorage.removeItem(ADMIN_GATE_KEY);
+    } catch {
+      // ignore
+    }
+    window.location.reload();
+  };
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -172,7 +178,6 @@ export default function Dashboard() {
 
   // Subscreve presença global de visitantes
   useEffect(() => {
-    if (!user) return;
     const off = subscribeToOnlineVisitors(
       (map) => {
         const ids = new Set(map.keys());
@@ -197,7 +202,7 @@ export default function Dashboard() {
       },
     );
     return off;
-  }, [user]);
+  }, []);
 
   /**
    * Online = presença pura. Se a aba não está visível, a sessão fica offline
@@ -213,7 +218,6 @@ export default function Dashboard() {
 
   // Carrega leads + realtime
   useEffect(() => {
-    if (!user) return;
     let alive = true;
     supabase
       .from("ad_leads")
@@ -254,11 +258,10 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   // Carrega ações (approve/reject) + realtime
   useEffect(() => {
-    if (!user) return;
     let alive = true;
     supabase
       .from("ad_session_actions")
@@ -287,11 +290,10 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   // Carrega requisições (cliques em opções de ajuda) + realtime
   useEffect(() => {
-    if (!user) return;
     let alive = true;
 
     type RawAction = {
@@ -348,7 +350,7 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, [user]);
+  }, []);
 
   // Computa tentativas (1 linha por código submetido), com status pendente/aprovado/rejeitado
   const attempts: AttemptRow[] = useMemo(() => {
@@ -551,8 +553,7 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <span className="hidden max-w-[200px] truncate text-xs text-muted-foreground md:inline">{user?.email}</span>
-            <Button variant="ghost" size="sm" onClick={signOut} className="h-9 px-2 sm:px-3">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 px-2 sm:px-3">
               <LogOut className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
@@ -561,12 +562,6 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-3 py-4 sm:px-6 sm:py-8">
-        {/* E-mail visível só no mobile, abaixo do header */}
-        {user?.email && (
-          <div className="mb-4 truncate rounded-lg border border-border bg-card/60 px-3 py-2 text-xs text-muted-foreground md:hidden">
-            {user.email}
-          </div>
-        )}
         {/* Abas */}
         <div className="mb-6 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card sm:w-auto">
           <button

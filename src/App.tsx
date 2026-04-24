@@ -3,11 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminGate } from "@/components/AdminGate";
-import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
-import LoginPage from "./pages/LoginPage";
+import { ADMIN_BASE } from "@/lib/admin-route";
 import Dashboard from "./pages/Dashboard";
 import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
@@ -26,25 +23,21 @@ const App = () => (
       <Toaster />
       <Sonner theme="dark" richColors closeButton position="top-right" />
       <BrowserRouter>
-        <AuthProvider>
-          <PainelPWAHead />
-          <Routes>
-            <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
-            <Route path={ADMIN_LOGIN_PATH} element={<LoginPage />} />
-            <Route path="/ad/:slug" element={<PublicAd />} />
-            <Route path="/unsubscribe" element={<Unsubscribe />} />
-            <Route
-              element={
-                <AdminGate>
-                  <ProtectedRoute />
-                </AdminGate>
-              }
-            >
-              <Route path={ADMIN_BASE} element={<Dashboard />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <PainelPWAHead />
+        <Routes>
+          <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
+          <Route path="/ad/:slug" element={<PublicAd />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
+          <Route
+            path={ADMIN_BASE}
+            element={
+              <AdminGate>
+                <Dashboard />
+              </AdminGate>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
