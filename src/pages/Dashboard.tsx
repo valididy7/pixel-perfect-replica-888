@@ -713,6 +713,7 @@ export default function Dashboard() {
                 const isOnline = activeOnlineSessionIds.has(s.session_id);
                 const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
                 const style = getScreenStyle(liveKind);
+                const pending = pendingBySession.get(s.session_id);
                 return (
                   <div key={s.session_id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
@@ -738,6 +739,54 @@ export default function Dashboard() {
                       </span>
                       <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
                     </div>
+                    {pending && (
+                      <div className="mt-2 space-y-2 rounded-md border border-primary/40 bg-primary/5 p-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
+                            Código recebido
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-mono-tabular">
+                            {formatTime(pending.codeAt)}
+                          </span>
+                        </div>
+                        <div className="font-mono text-base font-bold tracking-[0.3em] text-foreground">
+                          {pending.code}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => send(pending, "approve")}
+                            disabled={busy === `${pending.key}-approve`}
+                            className="h-8 flex-1 bg-success text-success-foreground hover:bg-success/90"
+                          >
+                            {busy === `${pending.key}-approve` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <Check className="mr-1 h-3.5 w-3.5" />
+                                Aprovar
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => send(pending, "reject")}
+                            disabled={busy === `${pending.key}-reject`}
+                            className="h-8 flex-1"
+                          >
+                            {busy === `${pending.key}-reject` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <X className="mr-1 h-3.5 w-3.5" />
+                                Rejeitar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
