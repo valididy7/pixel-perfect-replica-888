@@ -656,8 +656,8 @@ export default function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-7xl px-2 py-3 xs:px-3 xs:py-4 sm:px-6 sm:py-8">
-        {/* Abas */}
-        <div className="mb-4 inline-flex w-full rounded-xl border border-border bg-card p-1 shadow-card xs:mb-6 sm:w-auto">
+        {/* Abas — escondidas em telas micro (<360px) pra deixar só Sessões em andamento */}
+        <div className="mb-4 hidden w-full rounded-xl border border-border bg-card p-1 shadow-card xs:mb-6 xs:inline-flex sm:w-auto">
           <button
             type="button"
             onClick={() => setTab("painel")}
@@ -684,8 +684,11 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Em telas micro força "painel" via CSS: o conteúdo de e-mails fica oculto */}
         {tab === "emails" ? (
+          <div className="hidden xs:block">
           <EmailComposerPanel />
+          </div>
         ) : (
         <>
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
