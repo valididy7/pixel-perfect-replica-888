@@ -553,12 +553,6 @@ function injectFakeTurnstile(doc: Document): void {
   if (candidates.length) {
     const node = candidates[0];
     host = (node.closest('[class*="turnstile" i], .cf-turnstile') as HTMLElement | null) || node.parentElement || node;
-  } else {
-    const textHit = Array.from(doc.querySelectorAll<HTMLElement>("form *")).find((el) => {
-      const t = (el.textContent || "").trim().toLowerCase();
-      return t.length < 60 && /(verificando|verifying|sou humano|not a robot)/.test(t);
-    });
-    if (textHit) host = textHit.closest("div") || textHit.parentElement;
   }
 
   if (!host) return;
