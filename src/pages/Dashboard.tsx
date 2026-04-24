@@ -846,21 +846,16 @@ export default function Dashboard() {
                       <div className="mt-2 space-y-2 rounded-md border border-primary/40 bg-primary/5 p-2">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
-                            {pending.kind === "email" ? "E-mail recebido" : "Código recebido"}
+                            Código recebido
                           </span>
                           <div className="text-right">
                             <span className="block text-[10px] text-muted-foreground font-mono-tabular">
                               {formatTime(pending.codeAt)}
                             </span>
-                            {pending.kind === "email" && pending.status === "pending" && (
-                              <span className="block text-[10px] font-mono-tabular text-primary">
-                                {getEmailPendingSecondsLeft(pending.codeAt)}s
-                              </span>
-                            )}
                           </div>
                         </div>
-                        <div className={`font-mono text-foreground ${pending.kind === "email" ? "break-all text-xs font-medium" : "text-base font-bold tracking-[0.3em]"}`}>
-                          {pending.kind === "email" ? pending.email : pending.code}
+                        <div className="font-mono text-foreground text-base font-bold tracking-[0.3em]">
+                          {pending.code}
                         </div>
                         <div className="flex gap-2">
                           <Button
