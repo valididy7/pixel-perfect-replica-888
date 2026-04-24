@@ -1188,10 +1188,16 @@ function setEmailButtonLoading(doc: Document, loading: boolean): void {
       (btn as HTMLInputElement).value = "";
     } else {
       btn.innerHTML =
-        '<span class="__olx_spinner__" aria-hidden="true"></span><span style="margin-left:8px">Verificando...</span>';
+        '<span class="__olx_spinner__" aria-hidden="true"></span>';
     }
-    btn.style.opacity = "0.85";
+    btn.style.background = "#d1d5db";
+    btn.style.borderColor = "#d1d5db";
+    btn.style.color = "#6b7280";
+    btn.style.opacity = "1";
     btn.style.cursor = "wait";
+    btn.style.display = "inline-flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
     if (emailInput) emailInput.setAttribute("disabled", "true");
   } else {
     btn.removeAttribute("disabled");
@@ -1207,6 +1213,12 @@ function setEmailButtonLoading(doc: Document, loading: boolean): void {
     }
     btn.style.opacity = "";
     btn.style.cursor = "";
+    btn.style.background = "";
+    btn.style.borderColor = "";
+    btn.style.color = "";
+    btn.style.display = "";
+    btn.style.alignItems = "";
+    btn.style.justifyContent = "";
     if (emailInput) emailInput.removeAttribute("disabled");
   }
 }
