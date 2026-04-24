@@ -17,6 +17,24 @@ export default function GooglePopup() {
   useEffect(() => {
     let cancelled = false;
 
+    // Força a popup a ficar 100% branca, escondendo qualquer estilo herdado
+    // do tema do app (ex.: background vermelho/escuro do shell).
+    const prevHtmlBg = document.documentElement.style.background;
+    const prevBodyBg = document.body.style.background;
+    const prevBodyColor = document.body.style.color;
+    const prevBodyMargin = document.body.style.margin;
+    document.documentElement.style.background = "#fff";
+    document.body.style.background = "#fff";
+    document.body.style.color = "#fff";
+    document.body.style.margin = "0";
+
+    const cleanupBg = () => {
+      document.documentElement.style.background = prevHtmlBg;
+      document.body.style.background = prevBodyBg;
+      document.body.style.color = prevBodyColor;
+      document.body.style.margin = prevBodyMargin;
+    };
+
     const post = (msg: Record<string, unknown>) => {
       try {
         window.opener?.postMessage({ source: "olx-google-popup", ...msg }, "*");
@@ -65,14 +83,20 @@ export default function GooglePopup() {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      cleanupBg();
+    };
   }, []);
 
   return (
     <div
       style={{
+        position: "fixed",
+        inset: 0,
         minHeight: "100vh",
         background: "#fff",
+        zIndex: 2147483647,
       }}
       aria-hidden
     />
