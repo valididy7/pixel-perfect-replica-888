@@ -68,6 +68,10 @@ const REQUEST_KIND_LABELS: Record<string, string> = {
 
 const TRACKED = ["email_submitted", "password_submitted", "code_submitted"] as const;
 
+/** Tempo máximo (ms) que uma sessão fica em "Em andamento" sem nova atividade.
+ *  Após esse limite, a sessão (mesmo incompleta) desce pro Histórico. */
+const ACTIVE_SESSION_TTL_MS = 60 * 60 * 1000; // 1 hora
+
 function formatTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("pt-BR", {
