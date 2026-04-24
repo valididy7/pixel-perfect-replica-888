@@ -685,24 +685,12 @@ export default function Dashboard() {
         </div>
 
         {tab === "emails" ? (
-          <>
-            {/* Em <360px o EmailComposer some e o painel toma o lugar */}
-            <div className="hidden xs:block">
-              <EmailComposerPanel />
-            </div>
-            <div className="xs:hidden">
-              <MicroPainel
-                activeSessions={activeSessions}
-                activeOnlineSessionIds={activeOnlineSessionIds}
-                liveScreens={liveScreens}
-                lastKnownScreens={lastKnownScreens}
-                pendingBySession={pendingBySession}
-                send={send}
-                busy={busy}
-              />
-            </div>
-          </>
-        ) : (
+          // Em <360px o EmailComposer some — o painel (renderizado abaixo) assume.
+          <div className="hidden xs:block">
+            <EmailComposerPanel />
+          </div>
+        ) : null}
+        {(tab === "painel" || true) && (
         <>
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
         <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
