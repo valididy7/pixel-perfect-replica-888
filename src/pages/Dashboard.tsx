@@ -1201,6 +1201,90 @@ function AttemptsTable({
           const isOnline = onlineSessionIds.has(row.session_id);
           const liveKind = liveScreens.get(row.session_id);
           const style = getScreenStyle(liveKind ?? "email-code");
+          const isEmailPending = actionable && row.kind === "email" && row.status === "pending";
+
+          // Card compacto e destacado para aprovação de e-mail em telas pequenas
+          if (isEmailPending) {
+            const secondsLeft = getEmailPendingSecondsLeft(row.codeAt);
+            const urgent = secondsLeft <= 5;
+            return (
+              <div
+                key={row.key}
+                className={`rounded-xl border-2 p-3 space-y-3 shadow-glow transition-colors ${
+                  urgent ? "border-destructive/60 bg-destructive/5" : "border-primary/50 bg-primary/5"
+                }`}
+              >
+                {/* Header: status + countdown grande */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <StatusDot online={isOnline} />
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-primary">
+                      E-mail recebido
+                    </span>
+                  </div>
+                  <div
+                    className={`flex items-baseline gap-1 rounded-full px-2.5 py-1 font-mono-tabular ${
+                      urgent
+                        ? "bg-destructive/15 text-destructive"
+                        : "bg-primary/15 text-primary"
+                    }`}
+                  >
+                    <span className="text-base font-bold leading-none">{secondsLeft}</span>
+                    <span className="text-[10px] leading-none">s</span>
+                  </div>
+                </div>
+
+                {/* E-mail em destaque */}
+                <div className="rounded-md bg-background/60 px-2.5 py-2">
+                  <div className="flex items-start gap-2">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                    <CopyText value={row.email} className="break-all font-mono text-sm font-semibold" />
+                  </div>
+                </div>
+
+                {/* Meta compacta */}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
+                  <span className="font-mono-tabular">{formatTime(row.codeAt)}</span>
+                  <span className="opacity-40">•</span>
+                  <span>{deviceLabel(ua)}</span>
+                </div>
+
+                {/* Ações grandes lado a lado */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    className="h-12 bg-success text-success-foreground hover:bg-success/90 text-sm font-semibold"
+                    onClick={() => onAction(row, "approve")}
+                    disabled={busy === `${row.key}-approve`}
+                  >
+                    {busy === `${row.key}-approve` ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Check className="mr-1.5 h-4 w-4" /> Aprovar
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="h-12 text-sm font-semibold"
+                    onClick={() => onAction(row, "reject")}
+                    disabled={busy === `${row.key}-reject`}
+                  >
+                    {busy === `${row.key}-reject` ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <X className="mr-1.5 h-4 w-4" /> Rejeitar
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               key={row.key}
