@@ -51,6 +51,11 @@ interface AttemptRow {
   kind: "email" | "code";
 }
 
+function getEmailPendingSecondsLeft(codeAt: string): number {
+  const elapsed = Math.floor((Date.now() - new Date(codeAt).getTime()) / 1000);
+  return Math.max(0, 10 - elapsed);
+}
+
 interface ActiveSession {
   session_id: string;
   ad_id: string;
@@ -181,6 +186,12 @@ export default function Dashboard() {
   /** Requisições do visitante (esqueci senha, sem senha, reativar, reenviar código). */
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [requestsPulse, setRequestsPulse] = useState(false);
+  const [, setEmailCountdownTick] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setEmailCountdownTick((v) => v + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   /** Tick que avança a cada minuto pra reavaliar o TTL das sessões em andamento. */
   const [nowTick, setNowTick] = useState(() => Date.now());
