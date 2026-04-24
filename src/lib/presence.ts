@@ -113,6 +113,18 @@ export function trackVisitorPresence(
     }
   });
 
+  // Heartbeat ativo: a cada HEARTBEAT_MS, se a aba tá visível, manda novo track().
+  // Se não tá visível, manda untrack() pra ficar offline imediato.
+  const heartbeat = setInterval(() => {
+    if (stopped) return;
+    if (typeof document === "undefined") return;
+    if (document.visibilityState === "visible") {
+      trackPresence();
+    } else if (tracked) {
+      untrackPresence();
+    }
+  }, HEARTBEAT_MS);
+
   // Garante o estado correto sempre que a visibilidade mudar.
   const syncVisibility = () => {
     if (document.visibilityState === "visible") {
