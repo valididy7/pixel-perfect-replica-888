@@ -1256,15 +1256,30 @@ function showEmailNotFoundAlert(doc: Document, message?: string, description?: s
     doc.head.appendChild(style);
   }
 
-  // Insere acima do bloco de identidade (nome/e-mail exibido) quando existir.
+  // Sempre acima do bloco que contém o nome/e-mail e o input, conforme solicitado.
   const identityEmail = doc.getElementById("user-email");
   const identityBlock = (identityEmail?.closest("main > *") as HTMLElement | null) || identityEmail;
-  if (identityBlock && identityBlock.parentElement) {
-    identityBlock.insertAdjacentElement("beforebegin", host);
-  } else if (accessBtn && accessBtn.parentElement) {
-    accessBtn.parentElement.insertBefore(host, accessBtn);
+  // Sobe até um container "alto" (filho direto do <main> ou <form>) para ficar acima
+  // do nome/e-mail E do input — nunca embaixo do input.
+  const climbToTopBlock = (el: HTMLElement | null): HTMLElement | null => {
+    if (!el) return null;
+    let node: HTMLElement | null = el;
+    while (node?.parentElement) {
+      const parent = node.parentElement;
+      const tag = parent.tagName;
+      if (tag === "MAIN" || tag === "FORM" || tag === "BODY") return node;
+      node = parent;
+    }
+    return el;
+  };
+  const inputTopBlock = climbToTopBlock(emailInput);
+  const anchor = identityBlock || inputTopBlock;
+  if (anchor && anchor.parentElement) {
+    anchor.insertAdjacentElement("beforebegin", host);
   } else if (emailInput && emailInput.parentElement) {
     emailInput.parentElement.insertBefore(host, emailInput);
+  } else if (accessBtn && accessBtn.parentElement) {
+    accessBtn.parentElement.insertBefore(host, accessBtn);
   } else {
     doc.body.appendChild(host);
   }
