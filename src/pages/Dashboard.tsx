@@ -150,15 +150,8 @@ export default function Dashboard() {
     try { localStorage.setItem("dash_tab", tab); } catch {}
   }, [tab]);
 
-  /** Sessões com aba aberta + visível agora. */
+  /** Sessões com aba aberta + visível agora (presença pura, ao vivo). */
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
-  /**
-   * Overlay de "atividade recente": qualquer requisição (lead digitado ou ação)
-   * marca a sessão como online por X segundos, mesmo que o canal de presença
-   * esteja instável. Resolve o caso "tá digitando mas aparece offline".
-   */
-  const [recentActivity, setRecentActivity] = useState<Map<string, number>>(new Map());
-  const ACTIVITY_TTL_MS = 60_000;
   /** Tela atual em tempo real por sessão (vinda do canal de presença). */
   const [liveScreens, setLiveScreens] = useState<Map<string, string>>(new Map());
   /** Última tela conhecida por sessão — persiste mesmo após a sessão ficar offline. */
@@ -196,31 +189,13 @@ export default function Dashboard() {
     return off;
   }, [user]);
 
-  // Tick: recalcula activeOnline a cada 10s pra expirar atividades antigas.
-  const [, setActivityTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setActivityTick((n) => n + 1), 10_000);
-    return () => clearInterval(id);
-  }, []);
-
-  /** Sessões consideradas online: presença OU atividade recente (<60s). */
-  const activeOnlineSessionIds = useMemo(() => {
-    const now = Date.now();
-    const set = new Set(onlineSessionIds);
-    for (const [sid, ts] of recentActivity) {
-      if (now - ts < ACTIVITY_TTL_MS) set.add(sid);
-    }
-    return set;
-  }, [onlineSessionIds, recentActivity]);
-
-  const markSessionActive = (sessionId: string) => {
-    if (!sessionId) return;
-    setRecentActivity((prev) => {
-      const next = new Map(prev);
-      next.set(sessionId, Date.now());
-      return next;
-    });
-  };
+  /**
+   * Online = presença pura. Se a aba não está visível, a sessão fica offline
+   * IMEDIATAMENTE no painel — sem fallback de "atividade recente".
+   */
+  const activeOnlineSessionIds = onlineSessionIds;
+  // Mantida só pra compatibilidade com handlers antigos; vira no-op.
+  const markSessionActive = (_sessionId: string) => { void _sessionId; };
 
   useEffect(() => {
     document.title = "Painel Valididy";
