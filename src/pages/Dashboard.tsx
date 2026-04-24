@@ -1017,7 +1017,7 @@ function AttemptsTable({
           const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
           const isOnline = onlineSessionIds.has(row.session_id);
           const liveKind = liveScreens.get(row.session_id);
-          const screenLabel = liveKind ? screenKindLabel(liveKind) : "Tela código";
+          const style = getScreenStyle(liveKind ?? "email-code");
           return (
             <div
               key={row.key}
@@ -1047,9 +1047,9 @@ function AttemptsTable({
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 {actionable && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${style.className}`}>
                     <Monitor className="h-3 w-3" />
-                    {screenLabel}
+                    {style.label}
                   </span>
                 )}
                 <span className="text-[10px] text-muted-foreground">{deviceLabel(ua)}</span>
@@ -1128,7 +1128,7 @@ function AttemptsTable({
             const ua = leads.find((l) => l.session_id === row.session_id)?.user_agent ?? null;
             const isOnline = onlineSessionIds.has(row.session_id);
             const liveKind = liveScreens.get(row.session_id);
-            const screenLabel = liveKind ? screenKindLabel(liveKind) : "Tela código";
+            const style = getScreenStyle(liveKind ?? "email-code");
             return (
               <Fragment key={row.key}>
               <tr
@@ -1155,8 +1155,8 @@ function AttemptsTable({
                 </td>
                 {actionable && (
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-primary">
-                      {screenLabel}
+                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${style.className}`}>
+                      {style.label}
                     </span>
                   </td>
                 )}
