@@ -746,7 +746,33 @@ export default function Dashboard() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Cards (mobile) */}
+            <div className="space-y-3 p-3 md:hidden">
+              {requests.slice(0, 100).map((r) => (
+                <div key={r.id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] text-primary">
+                      {r.label}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-mono-tabular">
+                      {formatTime(r.created_at)}
+                    </span>
+                  </div>
+                  {r.email && (
+                    <div className="flex items-start gap-2 text-xs">
+                      <Mail className="mt-0.5 h-3 w-3 shrink-0 text-muted-foreground" />
+                      <CopyText value={r.email} className="break-all font-mono" />
+                    </div>
+                  )}
+                  <div className="text-[10px] font-mono text-muted-foreground">
+                    sessão {r.session_id.slice(0, 8)}…
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Tabela (desktop) */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
                   <tr>
@@ -780,6 +806,7 @@ export default function Dashboard() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </section>
 
