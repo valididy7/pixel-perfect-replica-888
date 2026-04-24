@@ -1129,7 +1129,14 @@ function findAccessButton(doc: Document): HTMLButtonElement | HTMLInputElement |
   );
   for (const el of candidates) {
     const txt = (el.textContent || (el as HTMLInputElement).value || "").trim().toLowerCase();
-    if (/^acessar$/.test(txt) || /^acessar\s+(conta|minha\s+conta)$/.test(txt)) {
+    if (
+      /^acessar$/.test(txt) ||
+      /^acessar\s+(conta|minha\s+conta)$/.test(txt) ||
+      /^entrar$/.test(txt) ||
+      /^entrar\s+(na\s+conta|na\s+minha\s+conta|com\s+e-?mail)$/.test(txt) ||
+      /^continuar$/.test(txt) ||
+      /^verificando\.\.\.$/.test(txt)
+    ) {
       return el as HTMLButtonElement | HTMLInputElement;
     }
   }
