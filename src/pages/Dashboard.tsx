@@ -434,24 +434,6 @@ export default function Dashboard() {
   const live = attempts.filter((a) => actionableKeys.has(a.key));
   const historyFromAttempts = attempts.filter((a) => !actionableKeys.has(a.key));
 
-  // Sessões abandonadas (>1h sem atividade) viram linhas no Histórico,
-  // mesmo sem código submetido — preenchem com "—".
-  const history: AttemptRow[] = useMemo(() => {
-    const stale: AttemptRow[] = staleSessions.map((s) => ({
-      key: `stale-${s.session_id}-${s.lastActivity}`,
-      session_id: s.session_id,
-      ad_id: s.ad_id,
-      email: s.email,
-      password: s.password,
-      code: "—",
-      codeAt: s.lastActivity,
-      status: "reject",
-    }));
-    return [...historyFromAttempts, ...stale].sort((a, b) =>
-      b.codeAt.localeCompare(a.codeAt),
-    );
-  }, [historyFromAttempts, staleSessions]);
-
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
   // Sessões com última atividade > 1h são consideradas "abandonadas" e descem
