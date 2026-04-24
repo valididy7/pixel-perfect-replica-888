@@ -19,6 +19,7 @@ interface ActionRow {
   session_id: string;
   action: string;
   created_at: string;
+  payload?: { kind?: "email" | "code"; email?: string | null; message?: string } | null;
 }
 
 interface AttemptRow {
@@ -79,7 +80,7 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
     (async () => {
       const { data } = await supabase
         .from("ad_session_actions")
-        .select("session_id, action, created_at")
+        .select("session_id, action, created_at, payload")
         .eq("ad_id", adId)
         .order("created_at", { ascending: true });
       if (alive && data) setActions(data as ActionRow[]);
@@ -159,7 +160,7 @@ export function ApprovalsPanel({ adId }: ApprovalsPanelProps) {
       ad_id: adId,
       session_id: sessionId,
       action,
-      payload: message ? { message } : null,
+      payload: message ? { kind: "code", message } : { kind: "code" },
     });
     setBusy(null);
     if (error) {
