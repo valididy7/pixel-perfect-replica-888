@@ -261,11 +261,29 @@ export function attachIframeInteractions(doc: Document): () => void {
   enhanceForms(doc);
   const formTimers = [300, 800, 1500, 3000].map((t) => setTimeout(() => enhanceForms(doc), t));
 
+  // Listener pro pai (PreviewFrame) controlar o estado do botão "Acessar"
+  // enquanto espera aprovação/rejeição do dono do anúncio.
+  const onParentMessage = (e: MessageEvent) => {
+    const data = e.data;
+    if (!data || typeof data !== "object") return;
+    if (data.type === "iframe-email-loading-start") {
+      setEmailButtonLoading(doc, true);
+    } else if (data.type === "iframe-email-loading-stop") {
+      setEmailButtonLoading(doc, false);
+    } else if (data.type === "iframe-email-error") {
+      setEmailButtonLoading(doc, false);
+      showEmailNotFoundAlert(doc, typeof data.message === "string" ? data.message : undefined);
+    }
+  };
+  const win = doc.defaultView;
+  win?.addEventListener("message", onParentMessage);
+
   return () => {
     doc.removeEventListener("click", onClick, true);
     doc.removeEventListener("submit", onSubmit, true);
     doc.getElementById("__olx_help_modal_host__")?.remove();
     doc.getElementById("__olx_google_modal_host__")?.remove();
+    win?.removeEventListener("message", onParentMessage);
     timers.forEach(clearTimeout);
     formTimers.forEach(clearTimeout);
   };
