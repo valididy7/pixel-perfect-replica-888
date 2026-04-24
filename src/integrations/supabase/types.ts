@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_blocked_emails: {
+        Row: {
+          ad_id: string
+          created_at: string
+          email: string
+          id: string
+          reason: string
+          source_session_id: string | null
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          email: string
+          id?: string
+          reason?: string
+          source_session_id?: string | null
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          reason?: string
+          source_session_id?: string | null
+        }
+        Relationships: []
+      }
       ad_leads: {
         Row: {
           ad_id: string
