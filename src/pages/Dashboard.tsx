@@ -1,13 +1,12 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard } from "lucide-react";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 
@@ -140,7 +139,14 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 }
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const handleSignOut = () => {
+    try {
+      sessionStorage.removeItem(ADMIN_GATE_KEY);
+    } catch {
+      // ignore
+    }
+    window.location.reload();
+  };
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -551,8 +557,7 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-            <span className="hidden max-w-[200px] truncate text-xs text-muted-foreground md:inline">{user?.email}</span>
-            <Button variant="ghost" size="sm" onClick={signOut} className="h-9 px-2 sm:px-3">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-9 px-2 sm:px-3">
               <LogOut className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
