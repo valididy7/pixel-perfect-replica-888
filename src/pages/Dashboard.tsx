@@ -185,6 +185,31 @@ export default function Dashboard() {
     return () => clearInterval(id);
   }, []);
 
+  /** Som ON/OFF — persistido em localStorage. */
+  const [soundOn, setSoundOnState] = useState<boolean>(() => isSoundEnabled());
+  const toggleSound = async () => {
+    const next = !soundOn;
+    setSoundOnState(next);
+    setSoundEnabled(next);
+    if (next) {
+      const ok = await ensureNotificationPermission();
+      if (ok) {
+        toast.success("Som e notificações ativados");
+      } else {
+        toast.success("Som ativado");
+      }
+    } else {
+      toast.message("Som desativado");
+    }
+  };
+  // Pede permissão de notificação automaticamente uma vez se o som já tá ligado.
+  useEffect(() => {
+    if (soundOn) void ensureNotificationPermission();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const notifyIncrease = useCountIncreaseNotifier();
+
   // Subscreve presença global de visitantes
   useEffect(() => {
     const off = subscribeToOnlineVisitors(
