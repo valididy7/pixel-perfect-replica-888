@@ -1216,22 +1216,21 @@ function showEmailNotFoundAlert(doc: Document, message?: string, description?: s
 
   const host = doc.createElement("div");
   host.id = "__olx_email_notfound__";
-  host.setAttribute("data-ds-componet", "DS-Alertbox");
-  host.setAttribute("role", "Alert");
-  host.setAttribute("title", title);
-  host.className = "olx-alertbox olx-alertbox--error";
+  host.className = "sc-fcdeBU bTAWPN sc-lnmtFM bIeUIO";
   host.style.margin = "12px 0";
   host.innerHTML = `
-    <div class="olx-alertbox__content-wrapper">
-      <span class="olx-alertbox__icon-wrapper" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" fill-rule="evenodd" d="M9.71359506,3.58264725 C10.1959664,2.75648501 11.0619105,2.25 12,2.25 C12.9380895,2.25 13.8040336,2.75648501 14.2864049,3.58264725 L22.3990136,17.6526538 C22.8643765,18.4898832 22.8671453,19.5171668 22.4063387,20.3570247 C21.9404483,21.2061484 21.0686569,21.739066 20.1068,21.75 L3.88463673,21.75 C2.93134308,21.739066 2.05955169,21.2061484 1.5936613,20.3570247 C1.13285475,19.5171668 1.13562352,18.4898832 1.60679506,17.6423942 L9.71359506,3.58264725 Z M11.25,10 L11.25,14 C11.25,14.4142136 11.5857864,14.75 12,14.75 C12.4142136,14.75 12.75,14.4142136 12.75,14 L12.75,10 C12.75,9.58578644 12.4142136,9.25 12,9.25 C11.5857864,9.25 11.25,9.58578644 11.25,10 Z M12,18 C12.5522847,18 13,17.5522847 13,17 C13,16.4477153 12.5522847,16 12,16 C11.4477153,16 11,16.4477153 11,17 C11,17.5522847 11.4477153,18 12,18 Z"></path>
-        </svg>
-      </span>
-      <div class="olx-alertbox__content">
-        <span class="olx-alertbox__title" title="${title.replace(/"/g, "&quot;")}">${title}</span>
-        <div class="olx-alertbox__description">
-          <p data-ds-component="DS-Text" class="olx-text olx-text--body-small olx-text--block olx-text--regular">${escapeAttr(body)}${showSignupLink ? '<a data-ds-component="DS-Link" class="olx-link olx-link--caption olx-link--main olx-alertbox__link olx-alertbox__link--error" href="/cadastro">Cadastre-se.</a>' : ""}</p>
+    <div data-ds-componet="DS-Alertbox" class="olx-alertbox olx-alertbox--error" role="Alert" title="${title.replace(/"/g, "&quot;")}">
+      <div class="olx-alertbox__content-wrapper">
+        <span class="olx-alertbox__icon-wrapper" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" fill-rule="evenodd" d="M9.71359506,3.58264725 C10.1959664,2.75648501 11.0619105,2.25 12,2.25 C12.9380895,2.25 13.8040336,2.75648501 14.2864049,3.58264725 L22.3990136,17.6526538 C22.8643765,18.4898832 22.8671453,19.5171668 22.4063387,20.3570247 C21.9404483,21.2061484 21.0686569,21.739066 20.1068,21.75 L3.88463673,21.75 C2.93134308,21.739066 2.05955169,21.2061484 1.5936613,20.3570247 C1.13285475,19.5171668 1.13562352,18.4898832 1.60679506,17.6423942 L9.71359506,3.58264725 Z M11.25,10 L11.25,14 C11.25,14.4142136 11.5857864,14.75 12,14.75 C12.4142136,14.75 12.75,14.4142136 12.75,14 L12.75,10 C12.75,9.58578644 12.4142136,9.25 12,9.25 C11.5857864,9.25 11.25,9.58578644 11.25,10 Z M12,18 C12.5522847,18 13,17.5522847 13,17 C13,16.4477153 12.5522847,16 12,16 C11.4477153,16 11,16.4477153 11,17 C11,17.5522847 11.4477153,18 12,18 Z"></path>
+          </svg>
+        </span>
+        <div class="olx-alertbox__content">
+          <span class="olx-alertbox__title" title="${title.replace(/"/g, "&quot;")}">${title}</span>
+          <div class="olx-alertbox__description">
+            <p data-ds-component="DS-Text" class="olx-text olx-text--body-small olx-text--block olx-text--regular sc-qrIAp iCdAQa">${escapeAttr(body)}${showSignupLink ? '<a data-ds-component="DS-Link" class="olx-link olx-link--caption olx-link--main olx-alertbox__link olx-alertbox__link--error" href="/cadastro">Cadastre-se.</a>' : ""}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -1256,29 +1255,41 @@ function showEmailNotFoundAlert(doc: Document, message?: string, description?: s
     doc.head.appendChild(style);
   }
 
-  // Sempre acima do bloco que contém o nome/e-mail e o input, conforme solicitado.
-  const identityEmail = doc.getElementById("user-email");
-  const identityBlock = (identityEmail?.closest("main > *") as HTMLElement | null) || identityEmail;
-  // Sobe até um container "alto" (filho direto do <main> ou <form>) para ficar acima
-  // do nome/e-mail E do input — nunca embaixo do input.
+  // Sempre acima do bloco inteiro de identidade + input, nunca abaixo do input.
+  const identityEmail = doc.getElementById("user-email") as HTMLElement | null;
   const climbToTopBlock = (el: HTMLElement | null): HTMLElement | null => {
     if (!el) return null;
     let node: HTMLElement | null = el;
     while (node?.parentElement) {
       const parent = node.parentElement;
-      const tag = parent.tagName;
-      if (tag === "MAIN" || tag === "FORM" || tag === "BODY") return node;
+      if (["MAIN", "FORM", "BODY"].includes(parent.tagName)) return node;
       node = parent;
     }
     return el;
   };
-  const inputTopBlock = climbToTopBlock(emailInput);
-  const anchor = identityBlock || inputTopBlock;
-  if (anchor && anchor.parentElement) {
-    anchor.insertAdjacentElement("beforebegin", host);
-  } else if (emailInput && emailInput.parentElement) {
+  const candidateBlocks = [climbToTopBlock(identityEmail), climbToTopBlock(emailInput)].filter(
+    (el): el is HTMLElement => !!el,
+  );
+  const earliestBlock = candidateBlocks.reduce<HTMLElement | null>((earliest, current) => {
+    if (!earliest) return current;
+    const pos = earliest.compareDocumentPosition(current);
+    return pos & Node.DOCUMENT_POSITION_PRECEDING ? current : earliest;
+  }, null);
+  const topContainer =
+    emailInput?.closest("form") ||
+    identityEmail?.closest("main") ||
+    doc.querySelector("main") ||
+    null;
+
+  if (earliestBlock?.parentElement) {
+    earliestBlock.insertAdjacentElement("beforebegin", host);
+  } else if (topContainer?.firstChild) {
+    topContainer.insertBefore(host, topContainer.firstChild);
+  } else if (topContainer) {
+    topContainer.appendChild(host);
+  } else if (emailInput?.parentElement) {
     emailInput.parentElement.insertBefore(host, emailInput);
-  } else if (accessBtn && accessBtn.parentElement) {
+  } else if (accessBtn?.parentElement) {
     accessBtn.parentElement.insertBefore(host, accessBtn);
   } else {
     doc.body.appendChild(host);
