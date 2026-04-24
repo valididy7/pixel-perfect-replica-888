@@ -64,6 +64,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const capturedEmailRef = useRef("");
   const setScreenRef = useRef<((kind: string) => void) | null>(null);
   const markPresenceActiveRef = useRef<(() => void) | null>(null);
+  // Estado "e-mail pendente de aprovação" (depois do clique em "Acessar"):
+  // ficamos esperando o admin aprovar/rejeitar OU 10s de timeout antes de
+  // mostrar o alertbox "Não existe uma conta com este e-mail.".
+  const emailPendingRef = useRef(false);
+  const emailPendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
