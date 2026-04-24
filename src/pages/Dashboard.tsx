@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
+import { BlockedEmailsPanel } from "@/components/BlockedEmailsPanel";
 import {
   ensureNotificationPermission,
   isSoundEnabled,
@@ -668,6 +669,19 @@ export default function Dashboard() {
         ? { kind: row.kind, email: row.email, message: row.kind === "email" ? "Não existe uma conta com este e-mail." : "Código inválido" }
         : { kind: row.kind, email: row.email },
     });
+    // Ao rejeitar uma tentativa de e-mail, adiciona automaticamente à lista de banidos
+    if (!error && action === "reject" && row.kind === "email" && row.email && row.email !== "—") {
+      const { error: banError } = await supabase.from("ad_blocked_emails").insert({
+        ad_id: row.ad_id,
+        email: row.email.toLowerCase(),
+        reason: "auto_reject",
+        source_session_id: row.session_id,
+      });
+      // Ignora erro de duplicata (já estava banido)
+      if (banError && !/duplicate|unique/i.test(banError.message)) {
+        console.warn("[Dashboard] auto-ban falhou:", banError);
+      }
+    }
     setBusy(null);
     if (error) return toast.error(error.message);
     toast.success(action === "approve" ? "Aprovado" : "Rejeitado");
@@ -1104,6 +1118,9 @@ export default function Dashboard() {
             />
           )}
         </section>
+
+        {/* E-MAILS BANIDOS */}
+        <BlockedEmailsPanel />
         </>
         </div>
       </main>

