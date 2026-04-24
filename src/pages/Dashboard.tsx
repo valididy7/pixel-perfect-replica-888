@@ -9,6 +9,15 @@ import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
+import {
+  ensureNotificationPermission,
+  isSoundEnabled,
+  setSoundEnabled,
+  useCountIncreaseNotifier,
+  useTitleBadge,
+} from "@/lib/notify";
+import { getScreenStyle } from "@/lib/screen-style";
+import { Volume2, VolumeX } from "lucide-react";
 
 interface LeadRow {
   id: string;
