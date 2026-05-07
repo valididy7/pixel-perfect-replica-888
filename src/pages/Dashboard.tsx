@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package, Users } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
@@ -699,12 +699,6 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3">
               <LogOut className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
-            </Button>
-            <Button asChild variant="ghost" size="sm" className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3" title="Usuários">
-              <a href={`${ADMIN_BASE}/usuarios`}>
-                <Users className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Usuários</span>
-              </a>
             </Button>
             <AdminOrderStatusSection />
           </div>
