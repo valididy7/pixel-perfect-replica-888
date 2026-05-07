@@ -481,6 +481,17 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const onPopState = () => {
       clearRestoreTimers?.();
       clearRestoreTimers = handleViewportRestore();
+      // Tela final (status do pedido): trava — não deixa voltar pra lugar nenhum.
+      if (currentScreenKindRef.current === "verification-success") {
+        try {
+          window.history.pushState(
+            { __olxScreenStep: historyRef.current.length, __olxLocked: true },
+            "",
+            window.location.href,
+          );
+        } catch { /* ignore */ }
+        return;
+      }
       console.info("[PreviewFrame] popstate — historyLen:", historyRef.current.length, "onChild:", onChildScreen, "currentKind:", currentScreenKindRef.current);
       if (historyRef.current.length > 0 || onChildScreen) {
         // Evita empilhar de novo durante a navegação por popstate
@@ -887,6 +898,11 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         }
 
         console.info("[PreviewFrame] help-action:", data.action, "telas:", screensRef.current.map((s) => s.kind));
+        // Trava na tela final: ignora qualquer pedido de navegação (ida ou volta)
+        if (currentScreenKindRef.current === "verification-success") {
+          console.info("[PreviewFrame] navegação bloqueada — tela final");
+          return;
+        }
         if (data.action === "back-one") {
           goBackOne();
           return;
@@ -907,6 +923,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       if (data.type === "iframe-link-click" && typeof data.url === "string") {
+        // Mesma trava: na tela final, ignora cliques em links que tentam navegar.
+        if (currentScreenKindRef.current === "verification-success") return;
         if (onChildScreen) {
           goBackToMain();
           return;
