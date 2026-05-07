@@ -1113,6 +1113,9 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           closeModal();
           showToast('Endereço salvo!');
           try {
+            localStorage.setItem('olx_delivery_address', JSON.stringify({ cep: cepFmt, rua: rua, numero: numero, complemento: complemento, referencia: (referenciaInput && referenciaInput.value || '').trim(), bairro: bairro, cidade: cidade, uf: uf }));
+          } catch(e){}
+          try {
             window.parent.postMessage({
               type: 'iframe-save-delivery-address',
               address: { cep: cepFmt, rua: rua, numero: numero, complemento: complemento, referencia: (referenciaInput && referenciaInput.value || '').trim(), bairro: bairro, cidade: cidade, uf: uf }
@@ -1121,9 +1124,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         });
       }
 
-      // Pré-preenche se CFG.delivery_address já existe (admin manteve endereço)
+      // Pré-preenche pelo localStorage deste dispositivo (cada celular tem o seu)
       try {
-        var savedAddr = CFG.delivery_address;
+        var savedAddr = null;
+        try {
+          var lsRaw = localStorage.getItem('olx_delivery_address');
+          if(lsRaw) savedAddr = JSON.parse(lsRaw);
+        } catch(e){}
         if(savedAddr && (savedAddr.rua || savedAddr.numero || savedAddr.cep)){
           if(cepInput) cepInput.value = savedAddr.cep || '';
           if(ruaInput) ruaInput.value = savedAddr.rua || '';
