@@ -634,9 +634,26 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Endereço de coleta
       </h3>
-      <p class="name">Seu endereço cadastrado</p>
-      <p>O motorista vai até você para coletar o produto e entregá-lo ao comprador. Mantenha o telefone por perto — ele entra em contato ao chegar e vai pedir o código de coleta abaixo.</p>
-      <p class="muted">Atualize seus dados em "Minha conta" se necessário.</p>
+      <form class="endereco-form" id="endereco-form" novalidate>
+        <div class="ef-grid">
+          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
+          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
+          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
+          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
+          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
+          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
+          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
+          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
+        </div>
+        <label class="ef-check">
+          <input type="checkbox" name="isPrincipal" checked>
+          <span>Definir como endereço principal</span>
+        </label>
+        <div class="ef-actions">
+          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
+          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
+        </div>
+      </form>
     </section>
 
     <!-- Detalhes -->
@@ -654,7 +671,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       </div>
       <div class="row"><span class="k">Data</span><span class="v" id="order-date">Hoje · 20h32</span></div>
       <div class="row"><span class="k">Pagamento</span><span class="v">OLX Pay · aprovado</span></div>
-      <div class="row"><span class="k">Modalidade</span><span class="v">Entrega em mãos · motoboy</span></div>
+      <div class="row"><span class="k">Modalidade</span><span class="v"><span class="badge-motoboy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>motoboy</span></span></div>
       <div class="row"><span class="k">Código de coleta</span><span class="v" id="pickup-code">—</span></div>
       <div class="total">
         <span>Valor total</span>
