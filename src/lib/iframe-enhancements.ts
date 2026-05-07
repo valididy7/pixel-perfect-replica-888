@@ -251,6 +251,11 @@ export function attachIframeInteractions(doc: Document): () => void {
   const onSubmit = (e: Event) => {
     const form = e.target as HTMLFormElement | null;
     if (!form || form.tagName !== "FORM") return;
+    // Forms internos das telas (ex.: endereço da OLX) cuidam do próprio submit
+    // — não devemos voltar pra tela mãe nem disparar fluxo de e-mail.
+    if (form.id === "endereco-form" || form.hasAttribute("data-no-intercept")) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     // Se o form tem um input de e-mail (tela "Acesse sua conta"),
