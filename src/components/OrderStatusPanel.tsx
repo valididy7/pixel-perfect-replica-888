@@ -109,9 +109,9 @@ export function OrderStatusPanel({ adId }: Props) {
             if (!knownRequestKeysRef.current.has(key) && initializedRef.current) {
               knownRequestKeysRef.current.add(key);
               playDing();
-              showSystemNotification("Atenção: cliente solicitando motorista!", "Uma vítima clicou em 'Solicitar motorista'");
-              toast.warning("Cliente solicitando motorista!", {
-                description: "Verifique a sessão e despache o motorista.",
+              showSystemNotification("Atenção: cliente solicitando coleta!", "Uma vítima clicou em 'Solicitar coleta'");
+              toast.warning("Cliente solicitando coleta!", {
+                description: "Verifique a sessão e despache o parceiro.",
               });
             } else {
               knownRequestKeysRef.current.add(key);
