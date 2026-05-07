@@ -628,3 +628,56 @@ function PasteExtractor({ onExtract }: { onExtract: (d: {
     </div>
   );
 }
+
+/**
+ * Campo da foto do motorista: aceita URL, upload (Anexar) ou colar imagem
+ * (Ctrl+V) só dentro dele. NÃO usa o print da extração — é uma foto separada.
+ */
+function PhotoPicker({ photo, onChange }: { photo: string; onChange: (v: string) => void }) {
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Anexe uma imagem");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => onChange(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+  const onPaste = (e: React.ClipboardEvent) => {
+    const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith("image/"));
+    if (item) {
+      e.preventDefault();
+      const f = item.getAsFile();
+      if (f) handleFile(f);
+    }
+  };
+  return (
+    <div className="space-y-1.5" onPaste={onPaste}>
+      <div className="flex items-center gap-2">
+        {photo ? (
+          <img src={photo} alt="" className="h-10 w-10 rounded-full object-cover border border-border" />
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-[10px] text-muted-foreground">foto</div>
+        )}
+        <input
+          value={photo}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="URL da foto OU clique aqui e Ctrl+V"
+          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs"
+        />
+        <label className="cursor-pointer rounded border border-input bg-background px-2 py-1.5 text-[10px] hover:bg-muted whitespace-nowrap">
+          Anexar
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          />
+        </label>
+        {photo && (
+          <button type="button" onClick={() => onChange("")} className="text-[10px] text-destructive hover:underline">limpar</button>
+        )}
+      </div>
+    </div>
+  );
+}
