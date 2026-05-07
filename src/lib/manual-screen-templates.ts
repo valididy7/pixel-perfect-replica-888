@@ -843,7 +843,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
             requested = true;
             // Estado intermediário: procurando motorista
             if(btnText) btnText.textContent = 'Procurando motorista';
-            if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:olx-spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+            if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:olxSpin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
             if(btn){ btn.setAttribute('disabled','true'); btn.style.opacity='.7'; btn.style.cursor='wait'; }
             if(stepLbl) stepLbl.textContent = 'Procurando motorista';
             if(fill) fill.style.width = '55%';
