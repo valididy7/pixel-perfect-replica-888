@@ -490,17 +490,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const onPopState = () => {
       clearRestoreTimers?.();
       clearRestoreTimers = handleViewportRestore();
-      // Tela final (status do pedido): trava — não deixa voltar pra lugar nenhum.
-      if (currentScreenKindRef.current === "verification-success") {
-        try {
-          window.history.pushState(
-            { __olxScreenStep: historyRef.current.length, __olxLocked: true },
-            "",
-            window.location.href,
-          );
-        } catch { /* ignore */ }
-        return;
-      }
       console.info("[PreviewFrame] popstate — historyLen:", historyRef.current.length, "onChild:", onChildScreen, "currentKind:", currentScreenKindRef.current);
       if (historyRef.current.length > 0 || onChildScreen) {
         // Evita empilhar de novo durante a navegação por popstate
