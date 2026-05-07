@@ -662,9 +662,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           if (next) navigateToScreen(next);
           else navigateToManualScreen("access-account");
           return;
-            });
-          return;
-
         }
 
         // Caso "access-account" venha SEM e-mail (ou e-mail vazio): NUNCA
