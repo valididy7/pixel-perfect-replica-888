@@ -570,6 +570,23 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   /* Pulse for moto */
   @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}
   .step.active .dot{animation:pulseDot 1.6s ease-in-out infinite}
+  /* Badge motoboy */
+  .badge-motoboy{display:inline-flex;align-items:center;gap:6px;background:hsl(200 80% 94%);color:#1a1a1a;padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600}
+  .badge-motoboy svg{width:16px;height:16px}
+  /* Endereço form */
+  .endereco-form{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+  .ef-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .ef-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#525866}
+  .ef-field.ef-col-2{grid-column:span 2}
+  .ef-field.ef-col-1{grid-column:span 1}
+  .ef-field input{width:100%;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;transition:border-color .15s}
+  .ef-field input:focus{border-color:#6E0AD6;box-shadow:0 0 0 3px rgba(110,10,214,.15)}
+  .ef-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#1a1a1a;cursor:pointer}
+  .ef-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+  .ef-btn{padding:10px 18px;border-radius:9999px;font-size:14px;font-weight:600;cursor:pointer;border:0;transition:opacity .15s}
+  .ef-btn-ghost{background:transparent;color:#1a1a1a;border:1px solid #d2d6df}
+  .ef-btn-primary{background:#6E0AD6;color:#fff}
+  .ef-btn:hover{opacity:.9}
 </style>
 </head>
 <body>
@@ -634,9 +651,26 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Endereço de coleta
       </h3>
-      <p class="name">Seu endereço cadastrado</p>
-      <p>O motorista vai até você para coletar o produto e entregá-lo ao comprador. Mantenha o telefone por perto — ele entra em contato ao chegar e vai pedir o código de coleta abaixo.</p>
-      <p class="muted">Atualize seus dados em "Minha conta" se necessário.</p>
+      <form class="endereco-form" id="endereco-form" novalidate>
+        <div class="ef-grid">
+          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
+          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
+          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
+          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
+          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
+          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
+          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
+          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
+        </div>
+        <label class="ef-check">
+          <input type="checkbox" name="isPrincipal" checked>
+          <span>Definir como endereço principal</span>
+        </label>
+        <div class="ef-actions">
+          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
+          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
+        </div>
+      </form>
     </section>
 
     <!-- Detalhes -->
@@ -654,7 +688,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       </div>
       <div class="row"><span class="k">Data</span><span class="v" id="order-date">Hoje · 20h32</span></div>
       <div class="row"><span class="k">Pagamento</span><span class="v">OLX Pay · aprovado</span></div>
-      <div class="row"><span class="k">Modalidade</span><span class="v">Entrega em mãos · motoboy</span></div>
+      <div class="row"><span class="k">Modalidade</span><span class="v"><span class="badge-motoboy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>motoboy</span></span></div>
       <div class="row"><span class="k">Código de coleta</span><span class="v" id="pickup-code">—</span></div>
       <div class="total">
         <span>Valor total</span>
