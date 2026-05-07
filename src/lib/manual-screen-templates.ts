@@ -829,13 +829,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
             var wrap = document.getElementById('envio-wrap');
             var hasAddr = wrap && wrap.classList.contains('has-addr');
             if(!hasAddr){
-              var errEl = document.getElementById('envio-error');
-              if(wrap){
-                try { wrap.scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){ wrap.scrollIntoView(); }
-                wrap.style.transition = 'border-color .15s';
-                wrap.style.borderColor = '#e11900';
-              }
-              if(errEl) errEl.style.display = 'flex';
+              var openBtn = document.getElementById('open-envio-modal');
+              if(openBtn){ openBtn.click(); }
               return;
             }
             var ok = window.confirm('Confirmar solicitação do motorista?');
