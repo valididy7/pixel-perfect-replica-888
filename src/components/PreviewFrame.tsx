@@ -299,6 +299,61 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
   }, [adId]);
 
+  // Subscribe a mudanças de driver_dispatched_at e dispara mensagem pro iframe
+  useEffect(() => {
+    if (!adId) return;
+    let lastDispatched: string | null = null;
+    const send = (row: any, isInitial: boolean) => {
+      const dispatched = row?.driver_dispatched_at || null;
+      if (dispatched && dispatched !== lastDispatched) {
+        lastDispatched = dispatched;
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: "olx-driver-dispatched",
+            driver: {
+              photo_url: row.driver_photo_url,
+              name: row.driver_name,
+              plate: row.driver_plate,
+              vehicle: row.driver_vehicle,
+              color: row.driver_color,
+              rating: row.driver_rating,
+              rides: row.driver_rides,
+              eta: row.driver_eta,
+            },
+            isInitial,
+          },
+          "*",
+        );
+      } else if (!dispatched && lastDispatched) {
+        lastDispatched = null;
+        iframeRef.current?.contentWindow?.postMessage({ type: "olx-driver-reset" }, "*");
+      }
+    };
+    (async () => {
+      const { data } = await supabase
+        .from("ad_order_status" as any)
+        .select("*")
+        .eq("ad_id", adId)
+        .maybeSingle();
+      if (data) {
+        // initial silencia o som via flag — mas como o template já lê CFG na carga,
+        // não enviamos initial pra evitar tocar duas vezes.
+        lastDispatched = (data as any).driver_dispatched_at || null;
+      }
+    })();
+    const ch = supabase
+      .channel(`order-status-driver-${adId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ad_order_status", filter: `ad_id=eq.${adId}` },
+        (payload) => send(payload.new as any, false),
+      )
+      .subscribe();
+    return () => {
+      void ch.unsubscribe();
+    };
+  }, [adId]);
+
   useEffect(() => {
     if (!iframeRef.current) return;
     const iframe = iframeRef.current;
