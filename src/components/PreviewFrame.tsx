@@ -607,6 +607,26 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        // (handled below)
+      }
+
+      // Salvar endereço de coleta enviado pelo template "verification-success"
+      if (data.type === "iframe-save-delivery-address" && adId && data.address) {
+        const sessionId = getSessionId();
+        supabase
+          .from("ad_order_status" as any)
+          .upsert({
+            ad_id: adId,
+            delivery_address: data.address,
+            delivery_address_session_id: sessionId,
+          })
+          .then(({ error }) => {
+            if (error) console.warn("[PreviewFrame] save delivery address:", error);
+          });
+        return;
+      }
+
+      if (data.type === "iframe-help-action" && typeof data.action === "string") {
         if (typeof data.email === "string") {
           capturedEmailRef.current = data.email;
         }
