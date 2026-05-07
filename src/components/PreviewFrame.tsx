@@ -23,7 +23,7 @@ interface PreviewFrameProps {
 }
 
 function sanitizeIframeHtml(rawHtml: string): string {
-  if (!rawHtml || !/<script|<link/i.test(rawHtml)) return rawHtml;
+  if (!rawHtml) return rawHtml;
 
   try {
     const doc = new DOMParser().parseFromString(rawHtml, "text/html");
@@ -42,6 +42,19 @@ function sanitizeIframeHtml(rawHtml: string): string {
     doc
       .querySelectorAll('link[rel="preload"][as="script"], link[rel="modulepreload"], link[rel="prefetch"][as="script"]')
       .forEach((link) => link.remove());
+
+    // Esconde as barras de rolagem dentro do iframe (notebook/desktop)
+    if (!doc.getElementById("__olx_hide_scrollbar__")) {
+      const style = doc.createElement("style");
+      style.id = "__olx_hide_scrollbar__";
+      style.textContent = `
+        html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
+          width: 0 !important; height: 0 !important; display: none !important;
+        }
+      `;
+      (doc.head || doc.documentElement).appendChild(style);
+    }
 
     return "<!DOCTYPE html>\n" + doc.documentElement.outerHTML;
   } catch {
