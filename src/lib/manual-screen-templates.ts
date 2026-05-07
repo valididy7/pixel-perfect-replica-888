@@ -860,41 +860,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
               if(fill) fill.style.width = '75%';
               if(greet) greet.innerHTML = 'O comprador foi verificado e o pedido <strong id="order-inline">' + (document.getElementById('order-inline')?.textContent || '') + '</strong> está liberado. Um motorista parceiro está a caminho do seu endereço para retirar o produto.';
               showToast('Motorista a caminho!');
-              // Renderiza card do motorista (configurável pelo painel via CFG)
-              try {
-                if(!document.getElementById('driver-card')){
-                  var dPlate = (CFG.driver_plate || 'API-9999').toString();
-                  var dVehicle = (CFG.driver_vehicle || 'HONDA CG 160 TITAN').toString();
-                  var dColor = (CFG.driver_color || 'Cinza').toString();
-                  var dName = (CFG.driver_name || 'Allan').toString();
-                  var dRating = (CFG.driver_rating || '5.0').toString();
-                  var dRides = (CFG.driver_rides || '10+ corridas').toString();
-                  var dEta2 = (CFG.driver_eta || '~25 min').toString();
-                  var dPhoto = (CFG.driver_photo_url || '').toString();
-                  var photoHtml = dPhoto
-                    ? '<img src="'+dPhoto+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
-                    : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e5e7eb;color:#6b7280;font-weight:700;border-radius:50%;font-size:24px">'+(dName.charAt(0)||'M')+'</div>';
-                  var card = document.createElement('section');
-                  card.id = 'driver-card';
-                  card.className = 'block';
-                  card.style.cssText = 'border:1.5px solid #e0e0e0;border-radius:14px;background:#fff;padding:16px;margin:18px 16px 0;text-align:center';
-                  card.innerHTML =
-                    '<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:8px">'+
-                      '<span style="font-size:46px;line-height:1">🏍️📦</span>'+
-                      '<div style="width:84px;height:84px;border-radius:50%;border:2px solid #e5e7eb;overflow:hidden;flex-shrink:0">'+photoHtml+'</div>'+
-                    '</div>'+
-                    '<h3 style="margin:0;font-size:32px;font-weight:800;color:#1a1a1a;letter-spacing:.5px">'+dPlate+'</h3>'+
-                    '<p style="margin:6px 0 0;font-size:14px;color:#1a1a1a"><strong>Entrega Moto:</strong> '+dVehicle+' - '+dColor+' 🪖</p>'+
-                    '<p style="margin:8px 0 0;font-size:15px;color:#0e4ea8;font-weight:700">'+dName+' &nbsp; <span style="color:#1a1a1a">★ '+dRating+'</span> &nbsp; <span style="color:#6b7280;font-weight:500">'+dRides+'</span></p>'+
-                    '<div style="border-top:1px solid #ececec;margin-top:12px;padding-top:12px;font-size:13px;color:#1a1a1a;text-align:left;line-height:1.7">'+
-                      '<p style="margin:0"><strong>⏱️ Prazo de entrega:</strong> '+dEta2+'</p>'+
-                      '<p style="margin:4px 0 0;color:#6b7280">1. Pedido Confirmado ✓ &nbsp; 2. Coleta na loja ✓ &nbsp; 3. A caminho · 4. Entregue</p>'+
-                    '</div>';
-                  var hero = document.querySelector('.hero');
-                  if(hero && hero.parentNode){ hero.parentNode.insertBefore(card, hero.nextSibling); }
-                  else { document.querySelector('.wrap')?.appendChild(card); }
-                }
-              } catch(e){}
             }, 6000);
           }
         });
