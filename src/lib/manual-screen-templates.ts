@@ -784,8 +784,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           </div>
         </div>
         <div class="ef-row">
-          <label for="ef-referencia">Ponto de referência</label>
-          <input id="ef-referencia" name="referencia" type="text" placeholder="Próximo a...">
+          <label for="ef-referencia">Ponto de referência *</label>
+          <input id="ef-referencia" name="referencia" type="text" placeholder="Próximo a..." required>
         </div>
         <div class="ef-toggle-row">
           <span>Endereço principal</span>
@@ -1001,7 +1001,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       }
       function refreshSave(){
         if(!saveBtn) return;
-        var ok = !!(cepInput && cepInput.value && ruaInput && ruaInput.value.trim() && numeroInput && numeroInput.value.trim());
+        var ok = !!(cepInput && cepInput.value && ruaInput && ruaInput.value.trim() && numeroInput && numeroInput.value.trim() && referenciaInput && referenciaInput.value.trim());
         if(ok){ saveBtn.classList.add('enabled'); saveBtn.disabled = false; }
         else { saveBtn.classList.remove('enabled'); saveBtn.disabled = true; }
       }
@@ -1042,7 +1042,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           refreshSave();
         });
       }
-      [ruaInput, numeroInput].forEach(function(el){
+      [ruaInput, numeroInput, referenciaInput].forEach(function(el){
         if(el) el.addEventListener('input', refreshSave);
       });
       if(toggleBtn){
