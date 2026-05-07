@@ -862,7 +862,14 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         var ico2 = document.getElementById('driver-cta-ico');
         if(ico2) ico2.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
         if(stepLbl) stepLbl.textContent = 'Parceiro encontrado';
-        if(fill) fill.style.width = '85%';
+        // Step 3 = concluído (verde com ✓), step 4 = ativo (roxo pulsando)
+        var stepDriverEl = document.getElementById('step-driver');
+        var stepDriverDot = document.getElementById('step-driver-dot');
+        var stepPickupEl = document.getElementById('step-pickup');
+        if(stepDriverEl){ stepDriverEl.classList.remove('active'); stepDriverEl.classList.add('done'); }
+        if(stepDriverDot){ stepDriverDot.textContent = '✓'; }
+        if(stepPickupEl){ stepPickupEl.classList.remove('muted'); stepPickupEl.classList.add('active'); }
+        if(fill) fill.style.width = '92%';
         // ETA fica só dentro do card do motorista pra não duplicar
         if(eta){ eta.style.display='none'; }
         if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
