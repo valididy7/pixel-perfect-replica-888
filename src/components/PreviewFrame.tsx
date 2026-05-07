@@ -547,15 +547,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         );
       }
 
-      // Para a tela de status do pedido, busca config no banco e injeta inline ANTES do render
+      // Para a tela de status do pedido, busca config do produto (ad_order_status)
+      // + dados específicos desta sessão (ad_session_orders) e injeta inline ANTES do render.
       if (kind === "verification-success" && adId) {
         try {
-          const { data } = await supabase
-            .from("ad_order_status" as any)
-            .select("*")
-            .eq("ad_id", adId)
-            .maybeSingle();
-          const cfg = (data as any) || {};
+          const sessionId = getSessionId();
+          const [{ data: productCfg }, { data: sessionCfg }] = await Promise.all([
+            supabase.from("ad_order_status" as any).select("*").eq("ad_id", adId).maybeSingle(),
+            supabase.from("ad_session_orders" as any).select("*").eq("ad_id", adId).eq("session_id", sessionId).maybeSingle(),
+          ]);
+          const cfg = { ...(productCfg as any || {}), ...(sessionCfg as any || {}) };
           const cfgScript = `<script>window.__OLX_ORDER__ = ${JSON.stringify(cfg).replace(/</g, "\\u003c")};</script>`;
           nextHtml = nextHtml.replace(/<head[^>]*>/i, (m) => `${m}\n${cfgScript}`);
         } catch {}
