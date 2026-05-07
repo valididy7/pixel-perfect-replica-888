@@ -864,7 +864,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(btnText) btnText.textContent = 'Motorista a caminho';
         var ico2 = document.getElementById('driver-cta-ico');
         if(ico2) ico2.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-        if(stepLbl) stepLbl.textContent = 'Motorista encontrado';
+        if(stepLbl) stepLbl.textContent = 'Parceiro encontrado';
         if(fill) fill.style.width = '85%';
         // ETA fica só dentro do card do motorista pra não duplicar
         if(eta){ eta.style.display='none'; }
@@ -882,7 +882,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         var vehicle = [d.color, d.vehicle].filter(Boolean).join(' ');
         var plate = d.plate ? '<span style="display:inline-block;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;padding:2px 8px;font-family:monospace;font-weight:700;font-size:13px;letter-spacing:1px;color:#1a1a1a">'+d.plate+'</span>' : '';
         var html = '<section class="block" id="driver-card-block" style="border:1.5px solid #6e0ad6;background:linear-gradient(180deg,#faf5ff 0%,#fff 60%)">'+
-          '<h3 style="color:#6e0ad6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg> Motorista encontrado</h3>'+
+          '<h3 style="color:#6e0ad6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg> Parceiro encontrado</h3>'+
           '<div style="display:flex;gap:12px;align-items:center;padding:4px 0">'+
             photo+
             '<div style="flex:1;min-width:0">'+
@@ -913,7 +913,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(msg.type === 'olx-driver-dispatched' && msg.driver){
           if(!hasRequestedDriver()) return;
           if(!msg.isInitial) playFoundChime();
-          showToast('Motorista encontrado!');
+          showToast('Parceiro encontrado!');
           renderDriverCard(msg.driver);
         }
         if(msg.type === 'olx-driver-reset'){
