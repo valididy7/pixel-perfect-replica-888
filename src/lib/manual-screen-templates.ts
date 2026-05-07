@@ -810,6 +810,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         t.classList.add('show');
         setTimeout(function(){ t.classList.remove('show'); }, 1800);
       }
+      // Configuração injetada pelo painel (window.__OLX_ORDER__)
+      var CFG = (typeof window !== 'undefined' && window.__OLX_ORDER__) || {};
       // Driver request flow: "Solicitar motorista" -> confirma -> "Motorista a caminho"
       (function(){
         var btn = document.getElementById('driver-cta');
