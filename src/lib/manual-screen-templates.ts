@@ -647,8 +647,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <div class="line"><div class="fill" id="rail-fill" style="width:50%"></div></div>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Pagamento</div></div>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Verificação</div></div>
-        <div class="step active" id="step-driver"><div class="dot">3</div><div class="lbl" id="step-driver-lbl">Solicitar motorista</div></div>
-        <div class="step muted"><div class="dot">4</div><div class="lbl">Produto coletado</div></div>
+        <div class="step active" id="step-driver"><div class="dot" id="step-driver-dot">3</div><div class="lbl" id="step-driver-lbl">Solicitar motorista</div></div>
+        <div class="step muted" id="step-pickup"><div class="dot" id="step-pickup-dot">4</div><div class="lbl" id="step-pickup-lbl">Produto coletado</div></div>
       </div>
     </div>
 
