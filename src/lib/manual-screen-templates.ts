@@ -875,10 +875,35 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(stepDriverEl){ stepDriverEl.classList.remove('active'); stepDriverEl.classList.add('done'); }
         if(stepDriverDot){ stepDriverDot.textContent = '✓'; }
         if(stepPickupEl){ stepPickupEl.classList.remove('muted'); stepPickupEl.classList.add('active'); }
-        if(fill) fill.style.width = '92%';
+        if(fill) fill.style.width = '67%';
         // ETA fica só dentro do card do motorista pra não duplicar
         if(eta){ eta.style.display='none'; }
         if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
+
+        // Notificação ao clicar em "Motorista a caminho"
+        if(btn && !btn.dataset.toastBound){
+          btn.dataset.toastBound = '1';
+          btn.addEventListener('click', function(ev){
+            ev.preventDefault();
+            var name = (d.name || 'Motorista');
+            var eta2 = d.eta ? (' Chega em ' + d.eta + '.') : '';
+            try {
+              var t = document.getElementById('olx-toast-host');
+              if(!t){
+                t = document.createElement('div');
+                t.id = 'olx-toast-host';
+                t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:92vw';
+                document.body.appendChild(t);
+              }
+              var card = document.createElement('div');
+              card.style.cssText = 'pointer-events:auto;background:#1a1a1a;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.35;font-family:inherit;max-width:380px;animation:olxToastIn .25s ease-out';
+              card.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div><strong style="color:#c4b5fd">'+name+' está a caminho.</strong><div style="opacity:.85;margin-top:2px">Deixe o produto pronto para coleta no endereço informado.'+eta2+'</div></div>';
+              t.appendChild(card);
+              setTimeout(function(){ card.style.transition='opacity .3s,transform .3s'; card.style.opacity='0'; card.style.transform='translateY(8px)'; }, 4200);
+              setTimeout(function(){ if(card.parentNode) card.parentNode.removeChild(card); }, 4600);
+            } catch(e){}
+          });
+        }
 
         // Insere/atualiza card visual
         var existing = document.getElementById('driver-card-block');
