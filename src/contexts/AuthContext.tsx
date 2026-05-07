@@ -19,8 +19,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Listener PRIMEIRO (evita race condition)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
+      const newUser = newSession?.user ?? null;
+      // Só atualiza se o usuário REALMENTE mudou. Sem isso, eventos de
+      // TOKEN_REFRESHED disparados por outra aba (login público recarregando)
+      // forçariam re-render no painel — parecendo que ele recarrega junto.
+      setUser((prev) => (prev?.id === newUser?.id ? prev : newUser));
+      setSession((prev) => (prev?.user?.id === newUser?.id ? prev : newSession));
     });
 
     // Depois pega a sessão atual
