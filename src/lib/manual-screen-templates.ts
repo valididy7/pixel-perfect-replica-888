@@ -817,6 +817,51 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           showToast('Número copiado!');
         });
       }
+
+      // Modal endereço
+      var modal = document.getElementById('envio-modal');
+      var openBtn = document.getElementById('open-envio-modal');
+      var form = document.getElementById('endereco-form');
+      var saved = document.getElementById('addr-saved');
+      var savedText = document.getElementById('addr-saved-text');
+      var subText = document.getElementById('envio-sub-text');
+      var editBtn = document.getElementById('addr-edit');
+
+      function openModal(){ if(modal){ modal.classList.add('show'); } }
+      function closeModal(){ if(modal){ modal.classList.remove('show'); } }
+
+      if(openBtn) openBtn.addEventListener('click', openModal);
+      if(editBtn) editBtn.addEventListener('click', openModal);
+      if(modal){
+        modal.addEventListener('click', function(e){
+          if(e.target === modal) closeModal();
+          if(e.target.closest && e.target.closest('[data-ef-close]')) closeModal();
+        });
+      }
+
+      if(form){
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          var fd = new FormData(form);
+          var addr = {
+            cep: fd.get('cep')||'', rua: fd.get('rua')||'', numero: fd.get('numero')||'',
+            complemento: fd.get('complemento')||'', referencia: fd.get('referencia')||'',
+            bairro: fd.get('bairro')||'', cidade: fd.get('cidade')||'', estado: fd.get('estado')||'',
+            isPrincipal: !!fd.get('isPrincipal')
+          };
+          if(!addr.cep || !addr.rua || !addr.numero || !addr.bairro || !addr.cidade || !addr.estado){
+            showToast('Preencha os campos obrigatórios');
+            return;
+          }
+          var line1 = addr.rua + ', ' + addr.numero + (addr.complemento ? ' · ' + addr.complemento : '');
+          var line2 = addr.bairro + ' · ' + addr.cidade + '/' + (addr.estado||'').toUpperCase() + ' · CEP ' + addr.cep;
+          if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
+          if(saved) saved.classList.add('show');
+          if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
+          closeModal();
+          showToast('Endereço salvo!');
+        });
+      }
     })();
   </script>
 </body>
