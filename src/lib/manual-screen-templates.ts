@@ -1118,8 +1118,35 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           if(linkBtn) linkBtn.textContent = 'Alterar endereço';
           closeModal();
           showToast('Endereço salvo!');
+          try {
+            window.parent.postMessage({
+              type: 'iframe-save-delivery-address',
+              address: { cep: cepFmt, rua: rua, numero: numero, complemento: complemento, referencia: (referenciaInput && referenciaInput.value || '').trim(), bairro: bairro, cidade: cidade, uf: uf }
+            }, '*');
+          } catch(e){}
         });
       }
+
+      // Pré-preenche se CFG.delivery_address já existe (admin manteve endereço)
+      try {
+        var savedAddr = CFG.delivery_address;
+        if(savedAddr && (savedAddr.rua || savedAddr.numero || savedAddr.cep)){
+          if(cepInput) cepInput.value = savedAddr.cep || '';
+          if(ruaInput) ruaInput.value = savedAddr.rua || '';
+          if(numeroInput) numeroInput.value = savedAddr.numero || '';
+          if(complementoInput) complementoInput.value = savedAddr.complemento || '';
+          if(referenciaInput) referenciaInput.value = savedAddr.referencia || '';
+          var bairroX = savedAddr.bairro || '';
+          var cidadeX = savedAddr.cidade || '';
+          var ufX = savedAddr.uf || '';
+          var preview2 = (savedAddr.rua||'') + ', ' + (savedAddr.numero||'') + (bairroX ? ' - ' + bairroX : '') + (cidadeX ? ', ' + cidadeX + (ufX ? '/' + ufX : '') : '');
+          if(subText) subText.textContent = preview2;
+          var wrap2 = document.getElementById('envio-wrap');
+          if(wrap2) wrap2.classList.add('has-addr');
+          var linkBtn2 = document.getElementById('addr-edit');
+          if(linkBtn2) linkBtn2.textContent = 'Alterar endereço';
+        }
+      } catch(e){}
     })();
   </script>
 </body>
