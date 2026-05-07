@@ -527,13 +527,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:0 4px}
   .step .dot{width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #d2d6df;color:#525866;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
   .step.done .dot{background:#117a3a;border-color:#117a3a;color:#fff}
-  .step.active .dot{background:#f25c2a;border-color:#f25c2a;color:#fff;box-shadow:0 0 0 6px rgba(242,92,42,.15)}
+  .step.active .dot{background:#6E0AD6;border-color:#6E0AD6;color:#fff;box-shadow:0 0 0 6px rgba(110,10,214,.18)}
   .step .lbl{font-size:11px;color:#1a1a1a;font-weight:600;line-height:1.25;max-width:62px}
   .step.muted .lbl{color:#9097a6;font-weight:500}
   /* CTA + ETA */
   .cta-wrap{display:flex;justify-content:center;padding:18px 16px 6px}
   .cta{background:#1a1a1a;color:#fff;border:0;border-radius:9999px;padding:14px 32px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
-  .eta{margin:8px 16px 0;text-align:center;font-size:13px;color:#ee4d23;font-weight:600}
+  .eta{margin:8px 16px 0;text-align:center;font-size:13px;color:#6E0AD6;font-weight:600}
   /* Sections */
   section.block{margin:18px 16px 0;background:#fff;border:1px solid #ececec;border-radius:14px;padding:16px}
   section.block h3{margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;gap:8px}
