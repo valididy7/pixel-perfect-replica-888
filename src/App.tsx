@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import GooglePopup from "./pages/GooglePopup";
 import LoginPage from "./pages/LoginPage";
+import UsersAdmin from "./pages/UsersAdmin";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PainelPWAHead } from "@/components/PainelPWAHead";
 
@@ -37,6 +38,10 @@ const App = () => (
             <Route
               path={ADMIN_BASE}
               element={<AdminGate><Dashboard /></AdminGate>}
+            />
+            <Route
+              path={`${ADMIN_BASE}/usuarios`}
+              element={<AdminGate><UsersAdmin /></AdminGate>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
