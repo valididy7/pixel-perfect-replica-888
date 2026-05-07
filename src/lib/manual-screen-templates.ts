@@ -609,16 +609,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
   .addr-saved.show{display:block}
   .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
-  /* Bottom sheet */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:9998;opacity:0;transition:opacity .25s}
-  .modal-backdrop.show{display:block;opacity:1}
-  .modal-sheet{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#fff;max-height:85vh;display:flex;flex-direction:column;border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -8px 30px rgba(0,0,0,.2);transform:translateY(100%);transition:transform .3s ease-out}
-  .modal-backdrop.show .modal-sheet{transform:translateY(0)}
-  .modal-grab{width:40px;height:4px;border-radius:2px;background:#d4d4d4;margin:8px auto 4px}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e5e5}
-  .modal-head h4{margin:0;font-size:18px;font-weight:700;color:#1a1a2e}
+  /* Fullscreen modal (slides in from right like a new page) */
+  .modal-backdrop{position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out;visibility:hidden}
+  .modal-backdrop.show{transform:translateX(0);visibility:visible}
+  .modal-sheet{flex:1;display:flex;flex-direction:column;min-height:0;background:#fff}
+  .modal-grab{display:none}
+  .modal-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #e5e5e5;flex-shrink:0}
+  .modal-head h4{margin:0;font-size:18px;font-weight:700;color:#1a1a2e;flex:1}
+  .modal-back{background:none;border:0;cursor:pointer;color:#1a1a2e;padding:4px;display:flex;align-items:center;justify-content:center}
   .modal-close{background:none;border:0;cursor:pointer;color:#1a1a2e;padding:4px;display:flex;align-items:center;justify-content:center}
-  .modal-body{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+  .modal-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+  .modal-footer{position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e5e5;padding:12px 16px;flex-shrink:0}
+  .modal-footer .ef-save{margin-top:0}
 </style>
 </head>
 <body>
@@ -739,8 +741,10 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   <!-- Modal Endereço -->
   <div class="modal-backdrop" id="envio-modal" role="dialog" aria-modal="true">
     <div class="modal-sheet">
-      <div class="modal-grab" aria-hidden="true"></div>
       <div class="modal-head">
+        <button type="button" class="modal-back" data-ef-close aria-label="Voltar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
         <h4>Endereço</h4>
         <button type="button" class="modal-close" data-ef-close aria-label="Fechar">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -786,8 +790,10 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
             <span class="ef-knob"></span>
           </button>
         </div>
-        <button type="submit" class="ef-save" id="ef-save" disabled>Salvar endereço</button>
       </form>
+      <div class="modal-footer">
+        <button type="submit" form="endereco-form" class="ef-save" id="ef-save" disabled>Salvar endereço</button>
+      </div>
     </div>
   </div>
 
@@ -880,7 +886,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       if(editBtn) editBtn.addEventListener('click', openModal);
       if(modal){
         modal.addEventListener('click', function(e){
-          if(e.target === modal) closeModal();
           if(e.target.closest && e.target.closest('[data-ef-close]')) closeModal();
         });
       }
