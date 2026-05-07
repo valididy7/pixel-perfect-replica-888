@@ -618,7 +618,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .modal-head h4{margin:0;font-size:18px;font-weight:700;color:#1a1a2e;flex:1}
   .modal-back{background:none;border:0;cursor:pointer;color:#1a1a2e;padding:4px;display:flex;align-items:center;justify-content:center}
   .modal-close{background:none;border:0;cursor:pointer;color:#1a1a2e;padding:4px;display:flex;align-items:center;justify-content:center}
-  .modal-body{flex:1 1 0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:16px}
+  .modal-body{flex:1 1 0;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:16px;display:flex;flex-direction:column;gap:16px}
+  .modal-backdrop{overscroll-behavior:contain;touch-action:none}
   .modal-footer{position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e5e5;padding:12px 16px;flex-shrink:0}
   .modal-footer .ef-save{margin-top:0}
 </style>
