@@ -747,29 +747,46 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         </button>
       </div>
       <form class="endereco-form modal-body" id="endereco-form" novalidate>
-        <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Informe o CEP de entrega para calcular o endereço.</p>
-        <div>
-          <label for="cep-envio" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#1a1a1a">CEP</label>
-          <div style="display:flex;gap:8px">
-            <input id="cep-envio" name="cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" required style="flex:1;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none">
-            <button type="button" id="btn-buscar-cep" style="padding:10px 18px;border-radius:8px;background:#6E0AD6;color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:84px">Buscar</button>
+        <div class="ef-row">
+          <div class="ef-label-row">
+            <label for="cep-envio">CEP *</label>
+            <a class="ef-help" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu cep</a>
           </div>
-          <p id="cep-error" style="margin:8px 0 0;font-size:12px;color:#dc2626;display:none"></p>
+          <div class="ef-input-wrap">
+            <input id="cep-envio" name="cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code" required>
+            <span class="ef-spinner" id="cep-spinner" aria-hidden="true"></span>
+          </div>
+          <p id="cep-error" style="margin:0;font-size:12px;color:#e74c3c;display:none"></p>
         </div>
-        <div id="endereco-encontrado" style="display:none;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:10px;border:1px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:12px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E0AD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div style="font-size:13px">
-              <p id="end-logradouro" style="margin:0;font-weight:600;color:#1a1a1a"></p>
-              <p id="end-bairro-cidade" style="margin:2px 0 0;color:#6b7280"></p>
-            </div>
-          </div>
-          <div class="ef-grid">
-            <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
-            <label class="ef-field ef-col-1"><span>Complemento</span><input name="complemento" placeholder="Apto 12"></label>
-          </div>
-          <button type="submit" style="width:100%;padding:12px;border-radius:9999px;background:#6E0AD6;color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer">Confirmar endereço</button>
+        <div class="ef-info" id="ef-info" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="ef-info-text"></span>
         </div>
+        <div class="ef-row">
+          <label for="ef-rua">Rua *</label>
+          <input id="ef-rua" name="rua" type="text" required>
+        </div>
+        <div class="ef-grid2">
+          <div class="ef-row">
+            <label for="ef-numero">Número *</label>
+            <input id="ef-numero" name="numero" type="text" inputmode="numeric" required>
+          </div>
+          <div class="ef-row">
+            <label for="ef-complemento">Complemento</label>
+            <input id="ef-complemento" name="complemento" type="text">
+          </div>
+        </div>
+        <div class="ef-row">
+          <label for="ef-referencia">Ponto de referência</label>
+          <input id="ef-referencia" name="referencia" type="text" placeholder="Próximo a...">
+        </div>
+        <div class="ef-toggle-row">
+          <span>Endereço principal</span>
+          <button type="button" class="ef-toggle on" id="ef-toggle" aria-pressed="true">
+            <span class="ef-knob"></span>
+          </button>
+        </div>
+        <button type="submit" class="ef-save" id="ef-save" disabled>Salvar endereço</button>
       </form>
     </div>
   </div>
