@@ -402,6 +402,17 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
 
           <div className="space-y-2 border-t pt-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Motorista pra esta sessão</p>
+            <PasteExtractor
+              onExtract={(d) => {
+                if (d.name) setName(d.name);
+                if (d.plate) setPlate(d.plate);
+                if (d.vehicle) setVehicle(d.vehicle);
+                if (d.color) setColor(d.color);
+                if (d.rating) setRating(d.rating);
+                if (d.rides) setRides(d.rides);
+                if (d.eta) setEta(d.eta);
+              }}
+            />
             <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
             <div className="grid grid-cols-2 gap-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
