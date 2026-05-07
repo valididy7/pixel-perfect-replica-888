@@ -92,6 +92,42 @@ export type Database = {
           },
         ]
       }
+      ad_order_status: {
+        Row: {
+          ad_id: string
+          created_at: string
+          order_date: string | null
+          order_number: string | null
+          pickup_code: string | null
+          product_image_url: string | null
+          product_price: string | null
+          product_title: string | null
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          order_date?: string | null
+          order_number?: string | null
+          pickup_code?: string | null
+          product_image_url?: string | null
+          product_price?: string | null
+          product_title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          order_date?: string | null
+          order_number?: string | null
+          pickup_code?: string | null
+          product_image_url?: string | null
+          product_price?: string | null
+          product_title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ad_screens: {
         Row: {
           ad_id: string
