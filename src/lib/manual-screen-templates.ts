@@ -503,7 +503,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pedido a caminho - OLX</title>
+<title>Motorista a caminho - OLX</title>
 <style>
   *,*::before,*::after{box-sizing:border-box}
   html,body{margin:0;padding:0;background:#f5f5f5;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
@@ -597,7 +597,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         </svg>
         <span>OLX Pay</span>
       </div>
-      <h1>PEDIDO A CAMINHO</h1>
+      <h1>MOTORISTA A CAMINHO</h1>
       <span class="order-id" id="hero-order">#OLX-6985866921</span>
       <div class="hero-illu">
         <div class="wave"></div>
@@ -636,7 +636,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <!-- Greeting -->
     <div class="greet">
       <h2>Olá, <span id="user-name">{{lead.email}}</span>!</h2>
-      <p>Seu pedido <strong id="order-inline">#OLX-6985866921</strong> já foi verificado e está a caminho. Em breve o motoboy chega no endereço cadastrado para retirar o produto.</p>
+      <p>O comprador foi verificado e o pedido <strong id="order-inline">#OLX-6985866921</strong> está liberado. Um motorista parceiro está a caminho do seu endereço para retirar o produto e levar até o comprador.</p>
     </div>
 
     <!-- Tracker -->
@@ -646,18 +646,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Pedido recebido</div></div>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Pagamento</div></div>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Verificação</div></div>
-        <div class="step active"><div class="dot">4</div><div class="lbl">Motoboy a caminho</div></div>
-        <div class="step muted"><div class="dot">5</div><div class="lbl">Entregue</div></div>
+        <div class="step active"><div class="dot">4</div><div class="lbl">Motorista a caminho</div></div>
+        <div class="step muted"><div class="dot">5</div><div class="lbl">Produto coletado</div></div>
       </div>
     </div>
 
     <div class="cta-wrap">
       <button type="button" class="cta">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Rastrear pedido
+        Rastrear motorista
       </button>
     </div>
-    <p class="eta" id="eta-line">Estimativa de chegada: 35–50 minutos</p>
+    <p class="eta" id="eta-line">Chega no seu endereço em 35–50 minutos</p>
 
     <!-- Produto -->
     <section class="block">
@@ -679,10 +679,10 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <section class="block addr">
       <h3>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        Endereço de retirada
+        Endereço de coleta
       </h3>
-      <p class="name">Endereço cadastrado pelo vendedor</p>
-      <p>O motoboy retirará o produto no endereço informado na sua conta. Mantenha o telefone por perto — ele entra em contato ao chegar.</p>
+      <p class="name">Seu endereço cadastrado</p>
+      <p>O motorista vai até você para coletar o produto e entregá-lo ao comprador. Mantenha o telefone por perto — ele entra em contato ao chegar e vai pedir o código de coleta abaixo.</p>
       <p class="muted">Atualize seus dados em "Minha conta" se necessário.</p>
     </section>
 
@@ -702,7 +702,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       <div class="row"><span class="k">Data</span><span class="v" id="order-date">Hoje · 20h32</span></div>
       <div class="row"><span class="k">Pagamento</span><span class="v">OLX Pay · aprovado</span></div>
       <div class="row"><span class="k">Modalidade</span><span class="v">Entrega em mãos · motoboy</span></div>
-      <div class="row"><span class="k">Código de retirada</span><span class="v" id="pickup-code">—</span></div>
+      <div class="row"><span class="k">Código de coleta</span><span class="v" id="pickup-code">—</span></div>
       <div class="total">
         <span>Valor total</span>
         <span class="v">R$ 2.350,00</span>
@@ -712,7 +712,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <!-- Reminder -->
     <div class="reminder">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.8 20.5h20.4L12 3z"/><line x1="12" y1="10" x2="12" y2="14.5"/><line x1="12" y1="17.3" x2="12" y2="17.4"/></svg>
-        <p><strong>Lembrete:</strong> a OLX nunca cobra valores adicionais após a verificação. Confirme o código de retirada com o motoboy antes de entregar o produto. <strong>Não compartilhe esse código por mensagem.</strong></p>
+        <p><strong>Lembrete:</strong> a OLX nunca cobra valores adicionais após a verificação. Confirme o código de coleta com o motorista antes de entregar o produto. <strong>Não compartilhe esse código por mensagem.</strong></p>
     </div>
 
     <footer>
@@ -773,7 +773,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       if(etaEl){
         var min = 25 + Math.floor(Math.random()*15);
         var max = min + 10 + Math.floor(Math.random()*10);
-        etaEl.textContent = 'Estimativa de chegada: ' + min + '–' + max + ' minutos';
+        etaEl.textContent = 'Chega no seu endereço em ' + min + '–' + max + ' minutos';
       }
 
       // Copy número
