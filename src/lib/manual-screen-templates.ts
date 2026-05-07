@@ -207,7 +207,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
   </main>
 
   <script>
-    (function(){
+    (function(){ /* __olx_status_pedido__ */
       var entrarBtnInit = document.getElementById('btn-entrar');
       var cfSpinner = document.getElementById('cf-spinner');
       var cfCheck = document.getElementById('cf-check');
