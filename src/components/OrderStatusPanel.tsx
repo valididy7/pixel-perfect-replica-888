@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Loader2, Trash2, Save, Package, Send, Bike, AlertCircle, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { playDing, showSystemNotification, ensureNotificationPermission } from "@/lib/notify";
 import { LiveSessionsPanel } from "@/components/LiveSessionsPanel";
+import { Switch } from "@/components/ui/switch";
+import { Lock } from "lucide-react";
 
 // ===== Helpers de auto-formatação =====
 // Preço: digite só números (em centavos) — formata como "R$ 2.350,00"
@@ -206,6 +208,21 @@ export function OrderStatusPanel({ adId }: Props) {
     }
   };
 
+  // Liga/desliga "travar vítima" — salva sozinho, sem botão.
+  const toggleLockResume = async (next: boolean) => {
+    setLockResume(next);
+    const { error } = await supabase.from("ad_order_status" as any).upsert({
+      ad_id: adId,
+      lock_resume_session: next,
+    });
+    if (error) {
+      setLockResume(!next);
+      toast.error("Erro ao salvar", { description: error.message });
+    } else {
+      toast.success(next ? "Vítima travada na tela de status" : "Travamento desligado");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
@@ -230,6 +247,22 @@ export function OrderStatusPanel({ adId }: Props) {
 
   return (
     <section className="space-y-4">
+      {/* ===== Switch principal: travar vítima ===== */}
+      <div className={`flex items-center justify-between gap-3 rounded-lg border p-3 sm:p-4 transition-colors ${lockResume ? "border-orange-500/60 bg-orange-500/5" : "border-border bg-card"}`}>
+        <div className="flex items-start gap-3 min-w-0">
+          <Lock className={`h-4 w-4 shrink-0 mt-0.5 ${lockResume ? "text-orange-500" : "text-muted-foreground"}`} />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Travar vítima na tela de status</p>
+            <p className="text-xs text-muted-foreground">
+              {lockResume
+                ? "Ligado: quem teve motorista despachado fica preso na tela do pedido. Reload não volta pro login."
+                : "Desligado: comportamento normal — reload sempre volta pro login."}
+            </p>
+          </div>
+        </div>
+        <Switch checked={lockResume} onCheckedChange={toggleLockResume} />
+      </div>
+
       {/* ===== AO VIVO ===== */}
       <LiveSessionsPanel
         adId={adId}
@@ -311,19 +344,6 @@ export function OrderStatusPanel({ adId }: Props) {
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
-
-        <label className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-3 text-xs cursor-pointer">
-          <input
-            type="checkbox"
-            checked={lockResume}
-            onChange={(e) => setLockResume(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-primary"
-          />
-          <span>
-            <span className="font-semibold">Travar vítima na tela de status</span><br />
-            <span className="text-muted-foreground">Quando ligado, quem já teve o motorista despachado continua na tela do pedido mesmo se recarregar. Desligado: reload volta pro login normal.</span>
-          </span>
-        </label>
 
         <Button onClick={saveProduct} disabled={saving} className="w-full">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
