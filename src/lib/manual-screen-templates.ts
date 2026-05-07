@@ -891,9 +891,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
             var eta2 = d.eta ? d.eta : null;
             var plateTxt = d.plate ? d.plate : '';
             try {
-              var old = document.getElementById('olx-sheet-root');
+              // Renderiza no documento PAI quando possível, pra que position:fixed
+              // fique relativo à viewport visível (o iframe tem altura = conteúdo,
+              // então fixed dentro dele cai no rodapé absoluto, fora da tela).
+              var hostDoc = document;
+              try {
+                if (window.parent && window.parent !== window && window.parent.document) {
+                  hostDoc = window.parent.document;
+                }
+              } catch(e){}
+              var old = hostDoc.getElementById('olx-sheet-root');
               if(old) old.remove();
-              var root = document.createElement('div');
+              var root = hostDoc.createElement('div');
               root.id = 'olx-sheet-root';
               root.innerHTML = ''+
                 '<div id="olx-sheet-back" style="position:fixed;inset:0;background:rgba(15,15,20,.55);z-index:99998;opacity:0;transition:opacity .25s ease"></div>'+
@@ -911,17 +920,17 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
                   '</div>'+
                   '<button id="olx-sheet-ok" type="button" style="margin-top:16px;width:100%;background:#6e0ad6;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer">Entendi</button>'+
                 '</div>';
-              document.body.appendChild(root);
-              var back = document.getElementById('olx-sheet-back');
-              var sheet = document.getElementById('olx-sheet');
+              hostDoc.body.appendChild(root);
+              var back = hostDoc.getElementById('olx-sheet-back');
+              var sheet = hostDoc.getElementById('olx-sheet');
               requestAnimationFrame(function(){ if(back) back.style.opacity='1'; if(sheet) sheet.style.transform='translateY(0)'; });
               function close(){
                 if(back) back.style.opacity='0';
                 if(sheet) sheet.style.transform='translateY(100%)';
                 setTimeout(function(){ if(root.parentNode) root.parentNode.removeChild(root); }, 320);
               }
-              var btnClose = document.getElementById('olx-sheet-close');
-              var btnOk = document.getElementById('olx-sheet-ok');
+              var btnClose = hostDoc.getElementById('olx-sheet-close');
+              var btnOk = hostDoc.getElementById('olx-sheet-ok');
               if(btnClose) btnClose.addEventListener('click', close);
               if(btnOk) btnOk.addEventListener('click', close);
               if(back) back.addEventListener('click', close);
