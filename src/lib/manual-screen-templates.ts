@@ -511,4 +511,8 @@ export const MANUAL_SCREEN_TEMPLATES: Record<string, { title: string; html: stri
     title: "Tela de e-mail (código)",
     html: EMAIL_CODE_SCREEN_HTML,
   },
+  "verification-success": {
+    title: "Verificação aprovada",
+    html: VERIFICATION_SUCCESS_HTML,
+  },
 };
