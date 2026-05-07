@@ -512,17 +512,10 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   header.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #ececec;display:flex;align-items:center;gap:14px;padding:14px 16px}
   header.topbar .back{display:inline-flex;padding:4px;background:none;border:0;cursor:pointer;color:#1a1a1a}
   header.topbar h2{margin:0;font-size:16px;font-weight:600;color:#1a1a1a}
-  /* HERO */
-  .hero{position:relative;background:linear-gradient(180deg,#f25c2a 0%,#ee4d23 100%);color:#fff;padding:32px 24px 0;overflow:hidden}
-  .hero .logo{display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:700;letter-spacing:.3px}
-  .hero .logo svg{height:26px;width:26px}
-  .hero h1{margin:18px 0 6px;font-size:28px;font-weight:800;letter-spacing:.5px;text-align:center;line-height:1.1}
-  .hero .order-id{display:block;text-align:center;font-size:14px;font-weight:500;opacity:.95;letter-spacing:.5px}
-  .hero-illu{position:relative;height:140px;margin-top:18px}
-  .hero-illu .wave{position:absolute;left:-10%;right:-10%;bottom:50px;height:40px;background:#f9a48a;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.55}
-  .hero-illu .wave2{position:absolute;left:-15%;right:-15%;bottom:40px;height:30px;background:#fbb89e;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.4}
-  .moto-svg{position:absolute;right:12px;bottom:0;width:200px;height:130px}
-  .hero-bottom-fade{height:14px;background:#fff}
+  /* HERO (imagem) */
+  .hero{position:relative;display:block;background:#1a1a1a;overflow:hidden}
+  .hero img{display:block;width:100%;height:auto}
+  .hero .order-id{display:block;text-align:center;font-size:13px;font-weight:600;color:#fff;background:#6E0AD6;padding:8px 12px;letter-spacing:.5px}
   /* Greeting + tracker */
   .greet{padding:22px 20px 6px}
   .greet h2{margin:0 0 6px;font-size:18px;font-weight:700}
