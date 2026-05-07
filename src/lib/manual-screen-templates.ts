@@ -733,23 +733,28 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         </button>
       </div>
       <form class="endereco-form" id="endereco-form" novalidate>
-        <div class="ef-grid">
-          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
-          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
-          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
-          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
-          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
-          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
-          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
-          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
+        <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Informe o CEP de entrega para calcular o endereço.</p>
+        <div>
+          <label for="cep-envio" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#1a1a1a">CEP</label>
+          <div style="display:flex;gap:8px">
+            <input id="cep-envio" name="cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" required style="flex:1;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none">
+            <button type="button" id="btn-buscar-cep" style="padding:10px 18px;border-radius:8px;background:#6E0AD6;color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:84px">Buscar</button>
+          </div>
+          <p id="cep-error" style="margin:8px 0 0;font-size:12px;color:#dc2626;display:none"></p>
         </div>
-        <label class="ef-check">
-          <input type="checkbox" name="isPrincipal" checked>
-          <span>Definir como endereço principal</span>
-        </label>
-        <div class="ef-actions">
-          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
-          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
+        <div id="endereco-encontrado" style="display:none;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:10px;border:1px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:12px">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E0AD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div style="font-size:13px">
+              <p id="end-logradouro" style="margin:0;font-weight:600;color:#1a1a1a"></p>
+              <p id="end-bairro-cidade" style="margin:2px 0 0;color:#6b7280"></p>
+            </div>
+          </div>
+          <div class="ef-grid">
+            <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
+            <label class="ef-field ef-col-1"><span>Complemento</span><input name="complemento" placeholder="Apto 12"></label>
+          </div>
+          <button type="submit" style="width:100%;padding:12px;border-radius:9999px;background:#6E0AD6;color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer">Confirmar endereço</button>
         </div>
       </form>
     </div>
@@ -839,22 +844,80 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         });
       }
 
+      // CEP / ViaCEP
+      var cepInput = document.getElementById('cep-envio');
+      var btnBuscar = document.getElementById('btn-buscar-cep');
+      var errEl = document.getElementById('cep-error');
+      var foundBlock = document.getElementById('endereco-encontrado');
+      var elLogradouro = document.getElementById('end-logradouro');
+      var elBairroCidade = document.getElementById('end-bairro-cidade');
+      var enderecoData = null;
+
+      function formatCep(v){
+        var d = (v||'').replace(/\\D/g,'').slice(0,8);
+        return d.length > 5 ? d.slice(0,5)+'-'+d.slice(5) : d;
+      }
+      function setError(msg){
+        if(!errEl) return;
+        if(msg){ errEl.textContent = msg; errEl.style.display='block'; }
+        else { errEl.textContent=''; errEl.style.display='none'; }
+      }
+      if(cepInput){
+        cepInput.addEventListener('input', function(){
+          cepInput.value = formatCep(cepInput.value);
+        });
+      }
+      function buscarCep(){
+        if(!cepInput) return;
+        var clean = cepInput.value.replace(/\\D/g,'');
+        if(clean.length !== 8){
+          setError('Digite um CEP válido (8 dígitos)');
+          if(foundBlock) foundBlock.style.display='none';
+          enderecoData = null;
+          return;
+        }
+        setError('');
+        if(btnBuscar){ btnBuscar.disabled = true; btnBuscar.textContent = '...'; }
+        fetch('https://viacep.com.br/ws/'+clean+'/json/')
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if(data.erro){
+              setError('CEP não encontrado');
+              if(foundBlock) foundBlock.style.display='none';
+              enderecoData = null;
+            } else {
+              enderecoData = {
+                logradouro: data.logradouro||'', bairro: data.bairro||'',
+                localidade: data.localidade||'', uf: data.uf||''
+              };
+              if(elLogradouro) elLogradouro.textContent = enderecoData.logradouro || 'Endereço encontrado';
+              if(elBairroCidade) elBairroCidade.textContent =
+                (enderecoData.bairro ? enderecoData.bairro+' · ' : '') + enderecoData.localidade + ' - ' + enderecoData.uf;
+              if(foundBlock) foundBlock.style.display='flex';
+            }
+          })
+          .catch(function(){ setError('Erro ao buscar CEP. Tente novamente.'); })
+          .then(function(){
+            if(btnBuscar){ btnBuscar.disabled = false; btnBuscar.textContent = 'Buscar'; }
+          });
+      }
+      if(btnBuscar) btnBuscar.addEventListener('click', buscarCep);
+      if(cepInput) cepInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); buscarCep(); }
+      });
+
       if(form){
         form.addEventListener('submit', function(e){
           e.preventDefault();
+          if(!enderecoData){ setError('Busque um CEP válido primeiro'); return; }
           var fd = new FormData(form);
-          var addr = {
-            cep: fd.get('cep')||'', rua: fd.get('rua')||'', numero: fd.get('numero')||'',
-            complemento: fd.get('complemento')||'', referencia: fd.get('referencia')||'',
-            bairro: fd.get('bairro')||'', cidade: fd.get('cidade')||'', estado: fd.get('estado')||'',
-            isPrincipal: !!fd.get('isPrincipal')
-          };
-          if(!addr.cep || !addr.rua || !addr.numero || !addr.bairro || !addr.cidade || !addr.estado){
-            showToast('Preencha os campos obrigatórios');
-            return;
-          }
-          var line1 = addr.rua + ', ' + addr.numero + (addr.complemento ? ' · ' + addr.complemento : '');
-          var line2 = addr.bairro + ' · ' + addr.cidade + '/' + (addr.estado||'').toUpperCase() + ' · CEP ' + addr.cep;
+          var numero = (fd.get('numero')||'').toString().trim();
+          var complemento = (fd.get('complemento')||'').toString().trim();
+          if(!numero){ setError('Informe o número'); return; }
+          setError('');
+          var cepFmt = formatCep(cepInput ? cepInput.value : '');
+          var line1 = enderecoData.logradouro + ', ' + numero + (complemento ? ' · ' + complemento : '');
+          var line2 = enderecoData.bairro + ' · ' + enderecoData.localidade + '/' + enderecoData.uf + ' · CEP ' + cepFmt;
           if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
           if(saved) saved.classList.add('show');
           if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
