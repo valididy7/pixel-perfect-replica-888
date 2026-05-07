@@ -673,7 +673,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <div class="img">PS5</div>
         <div class="body">
           <p class="name">PlayStation 5 Slim · Edição Digital</p>
-          <p class="qty">1 unidade · Em mãos</p>
+          <p class="qty"><span class="badge-motoboy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>motoboy</span></p>
           <p class="price">R$ 2.350,00</p>
         </div>
       </div>
@@ -746,9 +746,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   <div class="modal-backdrop" id="envio-modal" role="dialog" aria-modal="true">
     <div class="modal-sheet">
       <div class="modal-head">
-        <button type="button" class="modal-back" data-ef-close aria-label="Voltar">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        </button>
         <h4>Endereço</h4>
         <button type="button" class="modal-close" data-ef-close aria-label="Fechar">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
