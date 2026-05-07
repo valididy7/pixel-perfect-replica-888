@@ -613,6 +613,34 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     navigateToScreenRef.current = navigateToScreen;
     navigateToManualScreenRef.current = navigateToManualScreen;
 
+    // RESUMO DE SESSÃO: se a vítima já enviou endereço ou pediu motorista,
+    // ao recarregar a página ela volta automaticamente pra tela final
+    // (verification-success) — não cai no "main" de novo.
+    if (adId) {
+      (async () => {
+        try {
+          const sessionId = getSessionId();
+          const { data } = await supabase
+            .from("ad_session_orders" as any)
+            .select("delivery_address, driver_requested_at, driver_dispatched_at")
+            .eq("ad_id", adId)
+            .eq("session_id", sessionId)
+            .maybeSingle();
+          const row = data as any;
+          if (!row) return;
+          if (row.delivery_address || row.driver_requested_at || row.driver_dispatched_at) {
+            // Só restaura se ainda estamos na tela inicial (não atrapalha
+            // navegação que tenha começado em paralelo)
+            if (currentScreenKindRef.current === "main") {
+              await navigateToManualScreen("verification-success");
+            }
+          }
+        } catch (e) {
+          console.warn("[PreviewFrame] resume session failed:", e);
+        }
+      })();
+    }
+
     const goBackToMain = () => {
       onChildScreen = false;
       currentScreenIdRef.current = null;

@@ -1191,7 +1191,7 @@ function AdminOrderStatusSection() {
           <span className="hidden sm:inline">Status do pedido</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] overflow-y-auto p-3 sm:max-w-2xl sm:p-6 lg:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Status do pedido</DialogTitle>
         </DialogHeader>

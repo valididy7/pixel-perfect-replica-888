@@ -183,7 +183,7 @@ export function OrderStatusPanel({ adId }: Props) {
       />
 
       {/* ===== A: Config do produto (igual pra todos) ===== */}
-      <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+      <div className="space-y-4 rounded-lg border border-border bg-card p-3 sm:p-4">
         <header className="flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">Configuração do produto (igual pra todos)</h3>
@@ -223,7 +223,7 @@ export function OrderStatusPanel({ adId }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <label className="text-xs font-medium">Nº do pedido</label>
             <input
@@ -263,7 +263,7 @@ export function OrderStatusPanel({ adId }: Props) {
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
       {pendingSessions.length > 0 && (
-        <div className="space-y-3 rounded-lg border-2 border-orange-500/60 bg-orange-500/5 p-4 shadow-[0_0_0_4px_hsl(var(--primary)/0.05)]">
+        <div className="space-y-3 rounded-lg border-2 border-orange-500/60 bg-orange-500/5 p-3 sm:p-4 shadow-[0_0_0_4px_hsl(var(--primary)/0.05)]">
           <header className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 animate-pulse text-orange-500" />
             <h3 className="text-sm font-semibold text-orange-600">
@@ -279,7 +279,7 @@ export function OrderStatusPanel({ adId }: Props) {
       )}
 
       {otherSessions.length > 0 && (
-        <div className="space-y-3 rounded-lg border border-border bg-card p-4">
+        <div className="space-y-3 rounded-lg border border-border bg-card p-3 sm:p-4">
           <header className="flex items-center gap-2">
             <Bike className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Outras sessões com endereço/motorista</h3>
@@ -440,7 +440,7 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
               }}
             />
             <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
               <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="Placa" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
               <input value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="Veículo" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
@@ -449,8 +449,8 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
               <input value={rides} onChange={(e) => setRides(e.target.value)} placeholder="Corridas" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
               <input value={eta} onChange={(e) => setEta(e.target.value)} placeholder="ETA (8 min)" className="col-span-2 rounded-md border border-input bg-background px-3 py-2 text-xs" />
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={dispatch} disabled={busy} className="flex-1">
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={dispatch} disabled={busy} className="flex-1 min-w-[140px]">
                 {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                 {dispatched ? "Atualizar despacho" : "Despachar (toca som na vítima)"}
               </Button>
