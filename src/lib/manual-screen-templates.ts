@@ -886,7 +886,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         // Fallback: abaixo do endereço se não achar produto.
         var prodSection = document.querySelector('.block .prod') ? document.querySelector('.block .prod').closest('.block') : null;
         var addrSection = document.querySelector('.block.addr');
-        var photoSrc = d.photo_url || '/default-driver.png';
+        var photoSrc = d.photo_url || ((window.location && window.location.origin) ? window.location.origin + '/default-driver.png' : '/default-driver.png');
+        // Iframe roda de blob: URL — usa o origin do pai (parent) pra resolver.
+        try {
+          if(!d.photo_url && window.parent && window.parent !== window && window.parent.location && window.parent.location.origin){
+            photoSrc = window.parent.location.origin + '/default-driver.png';
+          }
+        } catch(e){}
         var photo = '<img src="'+photoSrc+'" alt="" style="width:54px;height:54px;border-radius:50%;object-fit:cover;object-position:center;background:#ede9fe;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb">';
         var stars = d.rating ? '<span style="color:#f5a623;font-weight:700">★ '+d.rating+'</span>' : '';
         var rides = d.rides ? '<span style="color:#6b7280;font-size:12px">· '+d.rides+' corridas</span>' : '';
