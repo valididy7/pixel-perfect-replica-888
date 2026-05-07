@@ -598,20 +598,20 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .ef-toggle.on .ef-knob{left:22px}
   .ef-save{width:100%;background:#c4c4c4;color:#fff;border:0;border-radius:999px;padding:14px;font-size:16px;font-weight:700;cursor:not-allowed;margin-top:8px;transition:background .15s}
   .ef-save.enabled{background:#f47920;cursor:pointer}
-  /* Envio card */
-  .envio-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;background:#fff;width:100%;text-align:left;transition:border-color .15s, box-shadow .15s}
-  .envio-card:hover{border-color:#6E0AD6;box-shadow:0 2px 8px rgba(110,10,214,.08)}
+  /* Envio card (2 states) */
+  .envio-wrap{border:1.5px solid #e0e0e0;border-radius:12px;background:#fff;overflow:hidden;transition:border-color .15s}
+  .envio-wrap.has-addr{border-color:#6e0ad6}
+  .envio-card{display:flex;align-items:center;gap:12px;padding:14px;border:0;background:#fff;width:100%;text-align:left;cursor:pointer;font-family:inherit}
   .envio-card .envio-ico{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:hsl(200 80% 94%);display:flex;align-items:center;justify-content:center;color:#0e4ea8}
   .envio-card .envio-body{flex:1;min-width:0}
   .envio-card .envio-title{margin:0;font-size:14px;font-weight:700;color:#1a1a1a}
-  .envio-card .envio-sub{margin:2px 0 0;font-size:12.5px;color:#6b7280;line-height:1.4}
+  .envio-card .envio-sub{margin:2px 0 0;font-size:12.5px;color:#8c8c8c;line-height:1.4}
   .envio-card .envio-chev{color:#9ca3af;flex-shrink:0}
-  .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
-  .addr-saved.show{display:block}
-  .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
-  /* Fullscreen overlay (covers parent viewport, slides in from right) */
-  .modal-backdrop{position:absolute;left:0;right:0;width:100%;z-index:9999;background:#fff;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out;overflow:hidden;pointer-events:none}
-  .modal-backdrop.show{transform:translateX(0);pointer-events:auto}
+  .envio-divider{height:1px;background:#e5e7eb;margin:0}
+  .envio-link-btn{display:block;width:100%;background:none;border:0;padding:12px 14px;text-align:left;font:600 14px inherit;color:#6e0ad6;cursor:pointer}
+  /* Fullscreen overlay (covers parent viewport, instant show/hide) */
+  .modal-backdrop{position:absolute;left:0;right:0;width:100%;z-index:9999;background:#fff;display:none;flex-direction:column;overflow:hidden}
+  .modal-backdrop.show{display:flex}
   .modal-sheet{flex:1;display:flex;flex-direction:column;min-height:0;background:#fff}
   .modal-grab{display:none}
   .modal-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #e5e5e5;flex-shrink:0}
@@ -685,19 +685,19 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Endereço de coleta
       </h3>
-      <button type="button" class="envio-card" id="open-envio-modal">
-        <span class="envio-ico">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-        </span>
-        <span class="envio-body">
-          <p class="envio-title">Envio pela OLX</p>
-          <p class="envio-sub" id="envio-sub-text">Toque para informar o endereço de coleta</p>
-        </span>
-        <svg class="envio-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-      <div class="addr-saved" id="addr-saved">
-        <div id="addr-saved-text"></div>
-        <span class="as-edit" id="addr-edit">Editar endereço</span>
+      <div class="envio-wrap" id="envio-wrap">
+        <button type="button" class="envio-card" id="open-envio-modal">
+          <span class="envio-ico">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </span>
+          <span class="envio-body">
+            <p class="envio-title">Entrega pela OLX</p>
+            <p class="envio-sub" id="envio-sub-text">Adicione seu endereço para calcular o frete</p>
+          </span>
+          <svg class="envio-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="envio-divider"></div>
+        <button type="button" class="envio-link-btn" id="addr-edit">Adicionar endereço</button>
       </div>
     </section>
 
@@ -1024,9 +1024,12 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           var uf = enderecoData ? enderecoData.uf : '';
           var line1 = rua + ', ' + numero + (complemento ? ' · ' + complemento : '');
           var line2 = (bairro ? bairro + ' · ' : '') + (cidade ? cidade + '/' + uf + ' · ' : '') + 'CEP ' + cepFmt;
-          if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
-          if(saved) saved.classList.add('show');
-          if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
+          var preview = rua + ', ' + numero + (bairro ? ' - ' + bairro : '') + (cidade ? ', ' + cidade + (uf ? '/' + uf : '') : '');
+          if(subText) subText.textContent = preview;
+          var wrap = document.getElementById('envio-wrap');
+          if(wrap) wrap.classList.add('has-addr');
+          var linkBtn = document.getElementById('addr-edit');
+          if(linkBtn) linkBtn.textContent = 'Alterar endereço';
           closeModal();
           showToast('Endereço salvo!');
         });
