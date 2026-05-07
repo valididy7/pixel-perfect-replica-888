@@ -98,7 +98,6 @@ export function OrderStatusPanel({ adId }: Props) {
   const [orderDate, setOrderDate] = useState("");
   const [pickupCode, setPickupCode] = useState("");
   const [lockResume, setLockResume] = useState(false);
-  const [savingLock, setSavingLock] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
