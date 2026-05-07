@@ -627,9 +627,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 <body>
   <div class="wrap">
     <header class="topbar">
-      <button type="button" class="back" aria-label="Voltar">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      </button>
       <h2>Status do pedido</h2>
     </header>
 
