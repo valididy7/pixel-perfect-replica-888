@@ -1167,6 +1167,7 @@ function StatCard({
 
 function AdminOrderStatusSection() {
   const [adId, setAdId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -1180,7 +1181,22 @@ function AdminOrderStatusSection() {
     })();
   }, []);
   if (!adId) return null;
-  return <OrderStatusPanel adId={adId} />;
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm" className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3" title="Status do pedido">
+          <Package className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
+          <span className="hidden sm:inline">Status do pedido</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Status do pedido</DialogTitle>
+        </DialogHeader>
+        <OrderStatusPanel adId={adId} />
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function StatusDot({ online }: { online: boolean }) {
