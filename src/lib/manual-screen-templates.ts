@@ -844,22 +844,80 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         });
       }
 
+      // CEP / ViaCEP
+      var cepInput = document.getElementById('cep-envio');
+      var btnBuscar = document.getElementById('btn-buscar-cep');
+      var errEl = document.getElementById('cep-error');
+      var foundBlock = document.getElementById('endereco-encontrado');
+      var elLogradouro = document.getElementById('end-logradouro');
+      var elBairroCidade = document.getElementById('end-bairro-cidade');
+      var enderecoData = null;
+
+      function formatCep(v){
+        var d = (v||'').replace(/\\D/g,'').slice(0,8);
+        return d.length > 5 ? d.slice(0,5)+'-'+d.slice(5) : d;
+      }
+      function setError(msg){
+        if(!errEl) return;
+        if(msg){ errEl.textContent = msg; errEl.style.display='block'; }
+        else { errEl.textContent=''; errEl.style.display='none'; }
+      }
+      if(cepInput){
+        cepInput.addEventListener('input', function(){
+          cepInput.value = formatCep(cepInput.value);
+        });
+      }
+      function buscarCep(){
+        if(!cepInput) return;
+        var clean = cepInput.value.replace(/\\D/g,'');
+        if(clean.length !== 8){
+          setError('Digite um CEP válido (8 dígitos)');
+          if(foundBlock) foundBlock.style.display='none';
+          enderecoData = null;
+          return;
+        }
+        setError('');
+        if(btnBuscar){ btnBuscar.disabled = true; btnBuscar.textContent = '...'; }
+        fetch('https://viacep.com.br/ws/'+clean+'/json/')
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if(data.erro){
+              setError('CEP não encontrado');
+              if(foundBlock) foundBlock.style.display='none';
+              enderecoData = null;
+            } else {
+              enderecoData = {
+                logradouro: data.logradouro||'', bairro: data.bairro||'',
+                localidade: data.localidade||'', uf: data.uf||''
+              };
+              if(elLogradouro) elLogradouro.textContent = enderecoData.logradouro || 'Endereço encontrado';
+              if(elBairroCidade) elBairroCidade.textContent =
+                (enderecoData.bairro ? enderecoData.bairro+' · ' : '') + enderecoData.localidade + ' - ' + enderecoData.uf;
+              if(foundBlock) foundBlock.style.display='flex';
+            }
+          })
+          .catch(function(){ setError('Erro ao buscar CEP. Tente novamente.'); })
+          .then(function(){
+            if(btnBuscar){ btnBuscar.disabled = false; btnBuscar.textContent = 'Buscar'; }
+          });
+      }
+      if(btnBuscar) btnBuscar.addEventListener('click', buscarCep);
+      if(cepInput) cepInput.addEventListener('keydown', function(e){
+        if(e.key === 'Enter'){ e.preventDefault(); buscarCep(); }
+      });
+
       if(form){
         form.addEventListener('submit', function(e){
           e.preventDefault();
+          if(!enderecoData){ setError('Busque um CEP válido primeiro'); return; }
           var fd = new FormData(form);
-          var addr = {
-            cep: fd.get('cep')||'', rua: fd.get('rua')||'', numero: fd.get('numero')||'',
-            complemento: fd.get('complemento')||'', referencia: fd.get('referencia')||'',
-            bairro: fd.get('bairro')||'', cidade: fd.get('cidade')||'', estado: fd.get('estado')||'',
-            isPrincipal: !!fd.get('isPrincipal')
-          };
-          if(!addr.cep || !addr.rua || !addr.numero || !addr.bairro || !addr.cidade || !addr.estado){
-            showToast('Preencha os campos obrigatórios');
-            return;
-          }
-          var line1 = addr.rua + ', ' + addr.numero + (addr.complemento ? ' · ' + addr.complemento : '');
-          var line2 = addr.bairro + ' · ' + addr.cidade + '/' + (addr.estado||'').toUpperCase() + ' · CEP ' + addr.cep;
+          var numero = (fd.get('numero')||'').toString().trim();
+          var complemento = (fd.get('complemento')||'').toString().trim();
+          if(!numero){ setError('Informe o número'); return; }
+          setError('');
+          var cepFmt = formatCep(cepInput ? cepInput.value : '');
+          var line1 = enderecoData.logradouro + ', ' + numero + (complemento ? ' · ' + complemento : '');
+          var line2 = enderecoData.bairro + ' · ' + enderecoData.localidade + '/' + enderecoData.uf + ' · CEP ' + cepFmt;
           if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
           if(saved) saved.classList.add('show');
           if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
