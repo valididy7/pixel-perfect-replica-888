@@ -313,6 +313,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const dispatched = row?.driver_dispatched_at || null;
       if (dispatched && dispatched !== lastDispatched) {
         lastDispatched = dispatched;
+        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         iframeRef.current?.contentWindow?.postMessage(
           {
             type: "olx-driver-dispatched",
@@ -332,6 +333,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         );
       } else if (!dispatched && lastDispatched) {
         lastDispatched = null;
+        try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
         iframeRef.current?.contentWindow?.postMessage({ type: "olx-driver-reset" }, "*");
       }
     };
