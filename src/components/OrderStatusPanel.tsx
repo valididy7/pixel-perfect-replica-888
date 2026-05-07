@@ -363,9 +363,10 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
   const [plate, setPlate] = useState(session.driver_plate || "");
   const [vehicle, setVehicle] = useState(session.driver_vehicle || "");
   const [color, setColor] = useState(session.driver_color || "");
-  const [rating, setRating] = useState(session.driver_rating || "");
-  const [rides, setRides] = useState(session.driver_rides || "");
-  const [eta, setEta] = useState(session.driver_eta || "");
+  // Defaults fixos de visualização — só pra não ficar redigitando o óbvio.
+  const [rating, setRating] = useState(session.driver_rating || "★ 4.9");
+  const [rides, setRides] = useState(session.driver_rides || "1.247 corridas");
+  const [eta, setEta] = useState(session.driver_eta || "8 min");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -374,9 +375,9 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
     setPlate(session.driver_plate || "");
     setVehicle(session.driver_vehicle || "");
     setColor(session.driver_color || "");
-    setRating(session.driver_rating || "");
-    setRides(session.driver_rides || "");
-    setEta(session.driver_eta || "");
+    setRating(session.driver_rating || "★ 4.9");
+    setRides(session.driver_rides || "1.247 corridas");
+    setEta(session.driver_eta || "8 min");
   }, [session.session_id]);
 
   const dispatched = !!session.driver_dispatched_at;
