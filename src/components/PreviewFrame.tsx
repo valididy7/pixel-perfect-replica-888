@@ -473,7 +473,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       pushHistoryStep();
     };
 
-    const navigateToManualScreen = (kind: string) => {
+    const navigateToManualScreen = async (kind: string) => {
       const template = MANUAL_SCREEN_TEMPLATES[kind];
       if (!template) return false;
 
@@ -490,6 +490,20 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         );
       }
 
+      // Para a tela de status do pedido, busca config no banco e injeta inline ANTES do render
+      if (kind === "verification-success" && adId) {
+        try {
+          const { data } = await supabase
+            .from("ad_order_status" as any)
+            .select("*")
+            .eq("ad_id", adId)
+            .maybeSingle();
+          const cfg = (data as any) || {};
+          const cfgScript = `<script>window.__OLX_ORDER__ = ${JSON.stringify(cfg).replace(/</g, "\\u003c")};</script>`;
+          nextHtml = nextHtml.replace(/<head[^>]*>/i, (m) => `${m}\n${cfgScript}`);
+        } catch {}
+      }
+
       historyRef.current.push(currentHtmlRef.current);
       historyScreenRef.current.push({ kind: currentScreenKindRef.current, screenId: currentScreenIdRef.current });
       onChildScreen = true;
@@ -499,24 +513,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       renderHtml(nextHtml);
       setScreenRef.current?.(kind);
       pushHistoryStep();
-
-      // Para a tela de status do pedido, busca config no banco e injeta como window.__OLX_ORDER__
-      if (kind === "verification-success" && adId) {
-        supabase
-          .from("ad_order_status" as any)
-          .select("*")
-          .eq("ad_id", adId)
-          .maybeSingle()
-          .then(({ data }) => {
-            try {
-              const cfg = (data as any) || {};
-              const win = iframeRef.current?.contentWindow as any;
-              if (win) {
-                win.__OLX_ORDER__ = cfg;
-              }
-            } catch {}
-          });
-      }
       return true;
     };
 
