@@ -109,8 +109,8 @@
   .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
   .addr-saved.show{display:block}
   .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
-  /* Fullscreen modal (slides in from right like a new page) */
-  .modal-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:9999;background:#fff;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out;overflow:hidden;pointer-events:none}
+  /* Fullscreen overlay (covers parent viewport, slides in from right) */
+  .modal-backdrop{position:absolute;left:0;right:0;width:100%;z-index:9999;background:#fff;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out;overflow:hidden;pointer-events:none}
   .modal-backdrop.show{transform:translateX(0);pointer-events:auto}
   .modal-sheet{flex:1;display:flex;flex-direction:column;min-height:0;background:#fff}
   .modal-grab{display:none}
@@ -370,16 +370,56 @@
       var editBtn = document.getElementById('addr-edit');
 
       var prevOverflow = '';
+      var prevParentOverflow = '';
+      function positionModal(){
+        if(!modal) return;
+        try {
+          var pw = window.parent;
+          var fe = window.frameElement;
+          if(pw && fe && pw.innerHeight){
+            var rect = fe.getBoundingClientRect();
+            // Cobre apenas a porção visível do iframe na janela do pai
+            var visTop = Math.max(0, -rect.top);
+            var visBottom = Math.min(rect.height, pw.innerHeight - rect.top);
+            var visH = Math.max(0, visBottom - visTop);
+            modal.style.top = visTop + 'px';
+            modal.style.height = visH + 'px';
+            return;
+          }
+        } catch(e) { /* cross-origin: fallback */ }
+        modal.style.top = (window.scrollY || 0) + 'px';
+        modal.style.height = window.innerHeight + 'px';
+      }
       function openModal(){
         if(!modal) return;
         prevOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
+        try {
+          if(window.parent && window.parent.document && window.parent.document.body){
+            prevParentOverflow = window.parent.document.body.style.overflow;
+            window.parent.document.body.style.overflow = 'hidden';
+          }
+        } catch(e) {}
+        positionModal();
         modal.classList.add('show');
+        window.addEventListener('scroll', positionModal, true);
+        window.addEventListener('resize', positionModal);
+        try { window.parent.addEventListener('scroll', positionModal, true); } catch(e) {}
+        try { window.parent.addEventListener('resize', positionModal); } catch(e) {}
       }
       function closeModal(){
         if(!modal) return;
         modal.classList.remove('show');
         document.body.style.overflow = prevOverflow;
+        try {
+          if(window.parent && window.parent.document && window.parent.document.body){
+            window.parent.document.body.style.overflow = prevParentOverflow;
+          }
+        } catch(e) {}
+        window.removeEventListener('scroll', positionModal, true);
+        window.removeEventListener('resize', positionModal);
+        try { window.parent.removeEventListener('scroll', positionModal, true); } catch(e) {}
+        try { window.parent.removeEventListener('resize', positionModal); } catch(e) {}
       }
 
       if(openBtn) openBtn.addEventListener('click', openModal);
