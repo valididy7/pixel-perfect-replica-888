@@ -728,13 +728,14 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   <!-- Modal Endereço -->
   <div class="modal-backdrop" id="envio-modal" role="dialog" aria-modal="true">
     <div class="modal-sheet">
+      <div class="modal-grab" aria-hidden="true"></div>
       <div class="modal-head">
-        <h4>Endereço de coleta</h4>
+        <h4>Endereço</h4>
         <button type="button" class="modal-close" data-ef-close aria-label="Fechar">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <form class="endereco-form" id="endereco-form" novalidate>
+      <form class="endereco-form modal-body" id="endereco-form" novalidate>
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Informe o CEP de entrega para calcular o endereço.</p>
         <div>
           <label for="cep-envio" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#1a1a1a">CEP</label>
