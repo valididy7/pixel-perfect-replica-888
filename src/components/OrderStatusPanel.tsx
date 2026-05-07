@@ -411,6 +411,7 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
                 if (d.rating) setRating(d.rating);
                 if (d.rides) setRides(d.rides);
                 if (d.eta) setEta(d.eta);
+                if (d.photo) setPhoto(d.photo);
               }}
             />
             <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
@@ -448,11 +449,56 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
  * formulário do motorista; o que não bater fica em branco.
  */
 function PasteExtractor({ onExtract }: { onExtract: (d: {
-  name?: string; plate?: string; vehicle?: string; color?: string;
+  name?: string; plate?: string; vehicle?: string; color?: string; photo?: string;
   rating?: string; rides?: string; eta?: string;
 }) => void }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const extractFromImage = async (dataUrl: string) => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-driver", {
+        body: { imageDataUrl: dataUrl },
+      });
+      if (error) throw error;
+      const d = (data?.data || {}) as Record<string, string>;
+      const fields = { ...d, photo: dataUrl };
+      onExtract(fields);
+      const found = Object.keys(d).length;
+      if (found === 0) toast.error("Não consegui ler dados no print.");
+      else toast.success(`${found} campo${found > 1 ? "s" : ""} preenchido${found > 1 ? "s" : ""} pela IA + foto`);
+      setOpen(false);
+      setText("");
+    } catch (e: any) {
+      toast.error("Erro na IA", { description: e?.message || "Tente de novo" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Arquivo precisa ser uma imagem");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result as string;
+      extractFromImage(url);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onPaste = (e: React.ClipboardEvent) => {
+    const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith("image/"));
+    if (item) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) handleFile(file);
+    }
+  };
 
   const extract = () => {
     const t = text.replace(/\u00A0/g, " ").trim();
@@ -518,24 +564,40 @@ function PasteExtractor({ onExtract }: { onExtract: (d: {
   if (!open) {
     return (
       <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setOpen(true)}>
-        📋 Colar dados da 99/Uber
+        📋 Colar print/dados da 99/Uber
       </Button>
     );
   }
 
   return (
-    <div className="space-y-1.5 rounded-md border border-dashed border-primary/40 bg-primary/5 p-2">
+    <div className="space-y-1.5 rounded-md border border-dashed border-primary/40 bg-primary/5 p-2" onPaste={onPaste}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] text-muted-foreground">
+          📸 Cole o print (Ctrl+V) ou texto. A IA preenche tudo.
+        </p>
+        <label className="cursor-pointer rounded border border-input bg-background px-2 py-0.5 text-[10px] hover:bg-muted">
+          Anexar
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          />
+        </label>
+      </div>
       <textarea
         autoFocus
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={`Cole aqui o texto da 99/Uber\n\nExemplo:\nJoão Silva\nHonda Civic · Prata · ABC1D23\n★ 4.9 (1.2k corridas)\nChega em 8 min`}
+        placeholder={`Cole texto OU print (Ctrl+V) do app da 99/Uber.\n\nSe colar imagem, a IA lê e preenche tudo automaticamente — incluindo a foto do motorista.`}
         rows={5}
         className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs font-mono"
       />
       <div className="flex gap-1.5">
-        <Button size="sm" className="flex-1 text-xs" onClick={extract}>Extrair</Button>
-        <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setOpen(false); setText(""); }}>Cancelar</Button>
+        <Button size="sm" className="flex-1 text-xs" onClick={extract} disabled={busy}>
+          {busy ? "Lendo print..." : "Extrair texto"}
+        </Button>
+        <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setOpen(false); setText(""); }} disabled={busy}>Cancelar</Button>
       </div>
     </div>
   );
