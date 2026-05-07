@@ -660,9 +660,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
             });
           iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-          const next = screensRef.current.find((s) => s.kind === "password");
+          const next = screensRef.current.find((s) => s.kind === "access-account");
           if (next) navigateToScreen(next);
-          else navigateToManualScreen("password");
+          else navigateToManualScreen("access-account");
           return;
         }
 
