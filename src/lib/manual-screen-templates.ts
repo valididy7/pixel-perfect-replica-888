@@ -819,6 +819,22 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(!btn) return;
         btn.addEventListener('click', function(){
           if(!requested){
+            var wrap = document.getElementById('envio-wrap');
+            var hasAddr = wrap && wrap.classList.contains('has-addr');
+            if(!hasAddr){
+              if(wrap){
+                try { wrap.scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){ wrap.scrollIntoView(); }
+                wrap.style.transition = 'box-shadow .2s, border-color .2s';
+                wrap.style.borderColor = '#e11900';
+                wrap.style.boxShadow = '0 0 0 4px rgba(225,25,0,.15)';
+                setTimeout(function(){
+                  wrap.style.boxShadow = '';
+                  if(!wrap.classList.contains('has-addr')) wrap.style.borderColor = '#e11900';
+                }, 1600);
+              }
+              showToast('Preencha seu endereço de coleta');
+              return;
+            }
             var ok = window.confirm('Confirmar solicitação do motorista?');
             if(!ok) return;
             requested = true;
