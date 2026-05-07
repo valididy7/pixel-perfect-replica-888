@@ -1070,6 +1070,9 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           if(subText) subText.textContent = preview;
           var wrap = document.getElementById('envio-wrap');
           if(wrap) wrap.classList.add('has-addr');
+          if(wrap) wrap.style.borderColor = '';
+          var errClear = document.getElementById('envio-error');
+          if(errClear) errClear.style.display = 'none';
           var linkBtn = document.getElementById('addr-edit');
           if(linkBtn) linkBtn.textContent = 'Alterar endereço';
           closeModal();
