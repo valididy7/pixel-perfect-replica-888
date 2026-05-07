@@ -587,6 +587,25 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .ef-btn-ghost{background:transparent;color:#1a1a1a;border:1px solid #d2d6df}
   .ef-btn-primary{background:#6E0AD6;color:#fff}
   .ef-btn:hover{opacity:.9}
+  /* Envio card */
+  .envio-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;background:#fff;width:100%;text-align:left;transition:border-color .15s, box-shadow .15s}
+  .envio-card:hover{border-color:#6E0AD6;box-shadow:0 2px 8px rgba(110,10,214,.08)}
+  .envio-card .envio-ico{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:hsl(200 80% 94%);display:flex;align-items:center;justify-content:center;color:#0e4ea8}
+  .envio-card .envio-body{flex:1;min-width:0}
+  .envio-card .envio-title{margin:0;font-size:14px;font-weight:700;color:#1a1a1a}
+  .envio-card .envio-sub{margin:2px 0 0;font-size:12.5px;color:#6b7280;line-height:1.4}
+  .envio-card .envio-chev{color:#9ca3af;flex-shrink:0}
+  .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
+  .addr-saved.show{display:block}
+  .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;justify-content:center;z-index:60;opacity:0;transition:opacity .2s}
+  .modal-backdrop.show{display:flex;opacity:1}
+  .modal-sheet{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 16px 24px;transform:translateY(20px);transition:transform .25s}
+  .modal-backdrop.show .modal-sheet{transform:translateY(0)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .modal-head h4{margin:0;font-size:16px;font-weight:700;color:#1a1a1a}
+  .modal-close{background:none;border:0;cursor:pointer;color:#6b7280;padding:4px}
 </style>
 </head>
 <body>
