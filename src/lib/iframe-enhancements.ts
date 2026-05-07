@@ -537,6 +537,7 @@ function enhanceForms(doc: Document): void {
   });
 
   injectFakeTurnstile(doc);
+  setupAccessButtonGating(doc);
 }
 
 function injectFakeTurnstile(doc: Document): void {
@@ -801,6 +802,64 @@ function findEmailInput(doc: Document, form: HTMLFormElement | null): HTMLInputE
       return /e-?mail/.test(hay);
     }) || null
   );
+}
+
+/**
+ * Deixa o botão "Acessar" da tela de e-mail desabilitado (cinza estilo OLX)
+ * enquanto o input de e-mail estiver vazio. Habilita assim que o usuário
+ * digita qualquer caractere. A validação real do e-mail continua acontecendo
+ * no clique — aqui é só visual/UX, igual o comportamento padrão da OLX.
+ */
+function setupAccessButtonGating(doc: Document): void {
+  const emailInput = findEmailInput(doc, null);
+  if (!emailInput) return;
+  const btn = findAccessButton(doc);
+  if (!btn) return;
+  if ((btn as HTMLElement).dataset.olxAccessGating === "1") return;
+  (btn as HTMLElement).dataset.olxAccessGating = "1";
+  btn.setAttribute("data-olx-access-button", "1");
+
+  ensureAccessGatingCss(doc);
+
+  const apply = () => {
+    // Não mexe no estado se o botão estiver em loading (controlado por outro lugar)
+    if ((btn as HTMLElement).dataset.olxOriginalText) return;
+    const hasValue = (emailInput.value || "").trim().length > 0;
+    if (hasValue) {
+      btn.removeAttribute("disabled");
+      (btn as HTMLButtonElement).disabled = false;
+      btn.classList.remove("__olx_access_disabled__");
+    } else {
+      btn.setAttribute("disabled", "true");
+      (btn as HTMLButtonElement).disabled = true;
+      btn.classList.add("__olx_access_disabled__");
+    }
+  };
+
+  apply();
+  emailInput.addEventListener("input", apply);
+  emailInput.addEventListener("change", apply);
+}
+
+function ensureAccessGatingCss(doc: Document): void {
+  if (doc.getElementById("__olx_access_gating_css__")) return;
+  const style = doc.createElement("style");
+  style.id = "__olx_access_gating_css__";
+  // Cinza padrão da OLX para CTAs desabilitados (#cfcfcf bg, #fff texto)
+  style.textContent = `
+    .__olx_access_disabled__,
+    .__olx_access_disabled__:hover,
+    .__olx_access_disabled__:focus {
+      background-color: #cfcfcf !important;
+      background-image: none !important;
+      border-color: #cfcfcf !important;
+      color: #ffffff !important;
+      cursor: not-allowed !important;
+      opacity: 1 !important;
+      box-shadow: none !important;
+    }
+  `;
+  doc.head.appendChild(style);
 }
 
 function validateEmailField(doc: Document, input: HTMLInputElement | null): boolean {
