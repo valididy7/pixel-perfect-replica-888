@@ -449,6 +449,12 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
         if(d.type === 'iframe-code-error'){
           showError(d.message);
         }
+        if(d.type === 'iframe-code-loading-stop'){
+          if(overlay) overlay.classList.remove('show');
+          document.body.classList.remove('olx-loading');
+          document.body.style.minHeight = '';
+          inputs.forEach(function(i){ i.disabled = false; });
+        }
       });
 
       inputs.forEach(function(inp, idx){
