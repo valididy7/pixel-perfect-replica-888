@@ -875,7 +875,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(stepDriverEl){ stepDriverEl.classList.remove('active'); stepDriverEl.classList.add('done'); }
         if(stepDriverDot){ stepDriverDot.textContent = '✓'; }
         if(stepPickupEl){ stepPickupEl.classList.remove('muted'); stepPickupEl.classList.add('active'); }
-        if(fill) fill.style.width = '67%';
+        if(fill) fill.style.width = '75%';
         // ETA fica só dentro do card do motorista pra não duplicar
         if(eta){ eta.style.display='none'; }
         if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
