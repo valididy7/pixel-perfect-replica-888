@@ -920,8 +920,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         }
       });
 
-      // Se já veio despachado no carregamento, renderiza direto (sem chime)
-      if(CFG.driver_dispatched_at){
+      // Só renderiza o card do motorista se o cliente JÁ clicou em "Solicitar motorista"
+      // nesse dispositivo (flag local) E o admin já despachou.
+      var DRIVER_REQ_KEY = 'olx_driver_requested';
+      function hasRequestedDriver(){
+        try { return localStorage.getItem(DRIVER_REQ_KEY) === '1'; } catch(e){ return false; }
+      }
+      if(CFG.driver_dispatched_at && hasRequestedDriver()){
         try {
           renderDriverCard({
             photo_url: CFG.driver_photo_url, name: CFG.driver_name, plate: CFG.driver_plate,
