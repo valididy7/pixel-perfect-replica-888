@@ -843,6 +843,9 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           if(e.target.closest && e.target.closest('[data-ef-close]')) closeModal();
         });
       }
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape' && modal && modal.classList.contains('show')) closeModal();
+      });
 
       // CEP / ViaCEP
       var cepInput = document.getElementById('cep-envio');
