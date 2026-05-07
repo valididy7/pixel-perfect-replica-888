@@ -97,6 +97,7 @@ export function OrderStatusPanel({ adId }: Props) {
   const [orderNumber, setOrderNumber] = useState("");
   const [orderDate, setOrderDate] = useState("");
   const [pickupCode, setPickupCode] = useState("");
+  const [lockResume, setLockResume] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
@@ -119,6 +120,7 @@ export function OrderStatusPanel({ adId }: Props) {
         setOrderNumber(row.order_number || "");
         setOrderDate(row.order_date || nowDateTimeBR());
         setPickupCode(row.pickup_code || "");
+        setLockResume(!!(row as any).lock_resume_session);
       } else {
         // Sem registro ainda: já preenche a data com agora pra evitar digitação.
         setOrderDate(nowDateTimeBR());
@@ -194,6 +196,7 @@ export function OrderStatusPanel({ adId }: Props) {
       order_number: orderNumber || null,
       order_date: orderDate || null,
       pickup_code: pickupCode || null,
+      lock_resume_session: lockResume,
     });
     setSaving(false);
     if (error) {
@@ -308,6 +311,19 @@ export function OrderStatusPanel({ adId }: Props) {
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
+
+        <label className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-3 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={lockResume}
+            onChange={(e) => setLockResume(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-primary"
+          />
+          <span>
+            <span className="font-semibold">Travar vítima na tela de status</span><br />
+            <span className="text-muted-foreground">Quando ligado, quem já teve o motorista despachado continua na tela do pedido mesmo se recarregar. Desligado: reload volta pro login normal.</span>
+          </span>
+        </label>
 
         <Button onClick={saveProduct} disabled={saving} className="w-full">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

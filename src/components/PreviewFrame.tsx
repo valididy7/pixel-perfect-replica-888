@@ -313,12 +313,15 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     if (!adId) return;
     const sessionId = getSessionId();
     let lastDispatched: string | null = null;
+    let lockResume = false;
     const send = (row: any, isInitial: boolean) => {
       if (!row || row.session_id !== sessionId) return;
       const dispatched = row?.driver_dispatched_at || null;
       if (dispatched && dispatched !== lastDispatched) {
         lastDispatched = dispatched;
-        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
+        if (lockResume) {
+          try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
+        }
         iframeRef.current?.contentWindow?.postMessage(
           {
             type: "olx-driver-dispatched",
@@ -343,6 +346,17 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
     };
     (async () => {
+      try {
+        const { data: cfg } = await supabase
+          .from("ad_order_status" as any)
+          .select("lock_resume_session")
+          .eq("ad_id", adId)
+          .maybeSingle();
+        lockResume = !!(cfg as any)?.lock_resume_session;
+        if (!lockResume) {
+          try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
+        }
+      } catch { /* ignore */ }
       const { data } = await supabase
         .from("ad_session_orders" as any)
         .select("*")
@@ -628,6 +642,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         (async () => {
           try {
             const sessionId = getSessionId();
+            const { data: cfg } = await supabase
+              .from("ad_order_status" as any)
+              .select("lock_resume_session")
+              .eq("ad_id", adId)
+              .maybeSingle();
+            const lockResume = !!(cfg as any)?.lock_resume_session;
+            if (!lockResume) {
+              try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
+              return;
+            }
             const { data } = await supabase
               .from("ad_session_orders" as any)
               .select("delivery_address, driver_requested_at, driver_dispatched_at")
