@@ -105,6 +105,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   const { data: screens } = useQuery({
     queryKey: ["ad_screens", adId],
     enabled: !!adId,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchOnMount: false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ad_screens")
