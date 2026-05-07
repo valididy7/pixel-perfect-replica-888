@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       if (error) return json({ error: error.message }, 400);
       const ids = users.users.map((u) => u.id);
       const [{ data: profiles }, { data: roles }] = await Promise.all([
-        admin.from("profiles").select("user_id, username, display_name").in("user_id", ids),
+        admin.from("profiles").select("user_id, username, display_name, last_seen_at").in("user_id", ids),
         admin.from("user_roles").select("user_id, role").in("user_id", ids),
       ]);
       const pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
         created_at: u.created_at,
         username: pmap.get(u.id)?.username ?? null,
         display_name: pmap.get(u.id)?.display_name ?? null,
+        last_seen_at: pmap.get(u.id)?.last_seen_at ?? null,
         roles: rmap.get(u.id) || [],
       }));
       return json({ users: list });
@@ -70,16 +71,13 @@ Deno.serve(async (req) => {
     if (action === "create") {
       const username = (body.username || "").toString().trim();
       const password = (body.password || "").toString();
-      const role = body.role === "admin" ? "admin" : "user";
-      const isAdmin = role === "admin";
+      // Todo usuário criado pelo painel é "user". Admin só é criado por mim
+      // (manualmente no banco / fora desse fluxo).
+      const role = "user";
       if (!username || !password) return json({ error: "username e senha obrigatórios" }, 400);
       if (password.length < 6) return json({ error: "senha precisa ter 6+ chars" }, 400);
 
-      // Admin usa email real, user comum usa email sintético internal
-      const email = isAdmin
-        ? (body.email || "").toString().trim().toLowerCase()
-        : `${username.toLowerCase().replace(/[^a-z0-9]/g, "_")}@user.local`;
-      if (isAdmin && !email) return json({ error: "email obrigatório pra admin" }, 400);
+      const email = `${username.toLowerCase().replace(/[^a-z0-9]/g, "_")}@user.local`;
 
       const { data: created, error } = await admin.auth.admin.createUser({
         email,
