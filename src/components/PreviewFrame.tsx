@@ -48,7 +48,13 @@ function sanitizeIframeHtml(rawHtml: string): string {
       const style = doc.createElement("style");
       style.id = "__olx_hide_scrollbar__";
       style.textContent = `
-        html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
+        html, body {
+          scrollbar-width: none !important;
+          -ms-overflow-style: none !important;
+          overflow: hidden !important;
+          height: 100% !important;
+          margin: 0 !important;
+        }
         html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
           width: 0 !important; height: 0 !important; display: none !important;
         }
