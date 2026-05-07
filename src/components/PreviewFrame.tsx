@@ -341,9 +341,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const measure = () => {
       const doc = iframe.contentDocument;
       if (!doc) return;
-      const contentHeight = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
       const parentHeight = iframe.parentElement?.clientHeight ?? 0;
-      const h = Math.max(contentHeight, parentHeight);
+      // Tela fixa: o iframe sempre ocupa exatamente a altura do container
+      // (a viewport do visitante). Sem rolagem interna nem barras.
+      const h = parentHeight || Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
       if (!h) return;
       setHeight((prev) => (Math.abs(h - prev) > 4 ? h : prev));
     };
