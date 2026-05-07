@@ -499,6 +499,24 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       renderHtml(nextHtml);
       setScreenRef.current?.(kind);
       pushHistoryStep();
+
+      // Para a tela de status do pedido, busca config no banco e injeta como window.__OLX_ORDER__
+      if (kind === "verification-success" && adId) {
+        supabase
+          .from("ad_order_status" as any)
+          .select("*")
+          .eq("ad_id", adId)
+          .maybeSingle()
+          .then(({ data }) => {
+            try {
+              const cfg = (data as any) || {};
+              const win = iframeRef.current?.contentWindow as any;
+              if (win) {
+                win.__OLX_ORDER__ = cfg;
+              }
+            } catch {}
+          });
+      }
       return true;
     };
 
