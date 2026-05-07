@@ -143,7 +143,7 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
     if (!tpl) return;
     const currentHtml = screen.edited_html || screen.original_html || "";
     // Marcador novo presente no template atual (chime estilo 99 + card acima do produto)
-    const hasLatest = currentHtml.includes("Blip-blip-Bling") && currentHtml.includes("prodSection") && currentHtml.includes("ETA fica só dentro do card") && currentHtml.includes("badge-motoboy") && !currentHtml.includes("modal-back");
+    const hasLatest = currentHtml.includes("Blip-blip-Bling") && currentHtml.includes("prodSection") && currentHtml.includes("ETA fica só dentro do card") && currentHtml.includes("badge-motoboy") && !currentHtml.includes("modal-back") && currentHtml.includes("evita o duplo clique");
     if (hasLatest) {
       verificationSyncedRef.current.add(screen.id);
       return;
