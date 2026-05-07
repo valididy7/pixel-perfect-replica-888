@@ -299,11 +299,14 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
   }, [adId]);
 
-  // Subscribe a mudanças de driver_dispatched_at e dispara mensagem pro iframe
+  // Subscribe a mudanças de driver_dispatched_at na sessão DESTE visitante
+  // (tabela ad_session_orders, chave ad_id+session_id) e dispara mensagem pro iframe.
   useEffect(() => {
     if (!adId) return;
+    const sessionId = getSessionId();
     let lastDispatched: string | null = null;
     const send = (row: any, isInitial: boolean) => {
+      if (!row || row.session_id !== sessionId) return;
       const dispatched = row?.driver_dispatched_at || null;
       if (dispatched && dispatched !== lastDispatched) {
         lastDispatched = dispatched;
@@ -331,21 +334,20 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
     (async () => {
       const { data } = await supabase
-        .from("ad_order_status" as any)
+        .from("ad_session_orders" as any)
         .select("*")
         .eq("ad_id", adId)
+        .eq("session_id", sessionId)
         .maybeSingle();
       if (data) {
-        // initial silencia o som via flag — mas como o template já lê CFG na carga,
-        // não enviamos initial pra evitar tocar duas vezes.
         lastDispatched = (data as any).driver_dispatched_at || null;
       }
     })();
     const ch = supabase
-      .channel(`order-status-driver-${adId}`)
+      .channel(`session-order-${adId}-${sessionId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "ad_order_status", filter: `ad_id=eq.${adId}` },
+        { event: "*", schema: "public", table: "ad_session_orders", filter: `ad_id=eq.${adId}` },
         (payload) => send(payload.new as any, false),
       )
       .subscribe();
