@@ -235,6 +235,60 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_session_orders: {
+        Row: {
+          ad_id: string
+          created_at: string
+          delivery_address: Json | null
+          driver_color: string | null
+          driver_dispatched_at: string | null
+          driver_eta: string | null
+          driver_name: string | null
+          driver_photo_url: string | null
+          driver_plate: string | null
+          driver_rating: string | null
+          driver_requested_at: string | null
+          driver_rides: string | null
+          driver_vehicle: string | null
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          ad_id: string
+          created_at?: string
+          delivery_address?: Json | null
+          driver_color?: string | null
+          driver_dispatched_at?: string | null
+          driver_eta?: string | null
+          driver_name?: string | null
+          driver_photo_url?: string | null
+          driver_plate?: string | null
+          driver_rating?: string | null
+          driver_requested_at?: string | null
+          driver_rides?: string | null
+          driver_vehicle?: string | null
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          ad_id?: string
+          created_at?: string
+          delivery_address?: Json | null
+          driver_color?: string | null
+          driver_dispatched_at?: string | null
+          driver_eta?: string | null
+          driver_name?: string | null
+          driver_photo_url?: string | null
+          driver_plate?: string | null
+          driver_rating?: string | null
+          driver_requested_at?: string | null
+          driver_rides?: string | null
+          driver_vehicle?: string | null
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           created_at: string

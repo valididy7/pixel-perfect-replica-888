@@ -906,13 +906,16 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         }
       }
 
-      // Escuta despacho enviado pelo painel via postMessage
+      // Escuta despacho enviado pelo painel via postMessage.
+      // O painel SÓ manda 'olx-driver-dispatched' pra iframe da sessão correta
+      // (filtrado por session_id na tabela ad_session_orders), então aqui basta
+      // checar a flag local pra garantir que o cliente realmente clicou em "Solicitar motorista".
       window.addEventListener('message', function(ev){
         var msg = ev && ev.data;
         if(!msg || typeof msg !== 'object') return;
         if(msg.type === 'olx-driver-dispatched' && msg.driver){
           if(!hasRequestedDriver()) return;
-          playFoundChime();
+          if(!msg.isInitial) playFoundChime();
           showToast('Motorista encontrado!');
           renderDriverCard(msg.driver);
         }
@@ -970,6 +973,10 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
             }
             requested = true;
             try { localStorage.setItem('olx_driver_requested', '1'); } catch(e){}
+            // Avisa o painel que ESTA sessão clicou em solicitar motorista
+            try {
+              window.parent.postMessage({ type: 'iframe-request-driver' }, '*');
+            } catch(e){}
             // Estado intermediário: procurando motorista
             if(btnText) btnText.textContent = 'Procurando motorista';
             if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:olxSpin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';

