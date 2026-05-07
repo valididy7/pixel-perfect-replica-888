@@ -488,12 +488,12 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
             <PhotoPicker photo={photo} onChange={setPhoto} />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="Placa" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="Veículo" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Cor" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={rating} onChange={(e) => setRating(e.target.value)} placeholder="★ 4.9" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={rides} onChange={(e) => setRides(e.target.value)} placeholder="Corridas" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={eta} onChange={(e) => setEta(e.target.value)} placeholder="ETA (8 min)" className="col-span-2 rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={plate} onChange={(e) => setPlate(formatPlate(e.target.value))} placeholder="Placa: ABC1D23" className="rounded-md border border-input bg-background px-3 py-2 text-xs uppercase" />
+              <input value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="Veículo (Honda CG 160)" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Cor (Vermelha)" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={rating} onChange={(e) => setRating(formatRating(e.target.value))} inputMode="numeric" placeholder="Nota: 49 → ★ 4.9" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={rides} onChange={(e) => setRides(formatRides(e.target.value))} inputMode="numeric" placeholder="Corridas: 1234 → 1.234 corridas" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={eta} onChange={(e) => setEta(formatEta(e.target.value))} inputMode="numeric" placeholder="ETA: 8 → 8 min" className="col-span-2 rounded-md border border-input bg-background px-3 py-2 text-xs" />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={dispatch} disabled={busy} className="flex-1 min-w-[140px]">
