@@ -10,6 +10,7 @@ import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { BlockedEmailsPanel } from "@/components/BlockedEmailsPanel";
+import { OrderStatusPanel } from "@/components/OrderStatusPanel";
 import {
   ensureNotificationPermission,
   isSoundEnabled,
@@ -1127,6 +1128,9 @@ export default function Dashboard() {
 
         {/* E-MAILS BANIDOS */}
         <BlockedEmailsPanel />
+
+        {/* STATUS DO PEDIDO (produto, pedido, endereço de coleta) */}
+        <AdminOrderStatusSection />
         </>
         </div>
       </main>
@@ -1160,6 +1164,24 @@ function StatCard({
       <div className="mt-1.5 text-xl font-bold tracking-tight xs:mt-2 xs:text-2xl">{value}</div>
     </div>
   );
+}
+
+function AdminOrderStatusSection() {
+  const [adId, setAdId] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("ads")
+        .select("id")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.id) setAdId(data.id);
+    })();
+  }, []);
+  if (!adId) return null;
+  return <OrderStatusPanel adId={adId} />;
 }
 
 function StatusDot({ online }: { online: boolean }) {
