@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Plus, Trash2, ShieldCheck, User as UserIcon, ArrowLeft, KeyRound } from "lucide-react";
+import { Loader2, Plus, Trash2, ShieldCheck, User as UserIcon, ArrowLeft, KeyRound, Circle } from "lucide-react";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -15,6 +15,7 @@ type Row = {
   username: string | null;
   display_name: string | null;
   roles: string[];
+  last_seen_at: string | null;
 };
 
 export default function UsersAdmin() {
@@ -23,10 +24,15 @@ export default function UsersAdmin() {
   const [loading, setLoading] = useState(true);
 
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"user" | "admin">("user");
   const [creating, setCreating] = useState(false);
+  const [, setTick] = useState(0);
+
+  // Tick a cada 30s pra recalcular "online" sem refetch
+  useEffect(() => {
+    const id = setInterval(() => setTick((v) => v + 1), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -41,20 +47,23 @@ export default function UsersAdmin() {
     setRows(data.users || []);
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+    const id = setInterval(() => void load(), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) return;
-    if (role === "admin" && !email.trim()) return toast.error("Admin precisa de e-mail");
     setCreating(true);
     const { data, error } = await supabase.functions.invoke("admin-users", {
-      body: { action: "create", username, password, role, email },
+      body: { action: "create", username, password },
     });
     setCreating(false);
     if (error || data?.error) return toast.error(data?.error || error?.message || "Erro");
     toast.success("Usuário criado");
-    setUsername(""); setEmail(""); setPassword("");
+    setUsername(""); setPassword("");
     void load();
   };
 
@@ -70,16 +79,6 @@ export default function UsersAdmin() {
       return;
     }
     toast.success("Removido");
-  };
-
-  const toggleRole = async (id: string, current: string[]) => {
-    const next = current.includes("admin") ? "user" : "admin";
-    const { data, error } = await supabase.functions.invoke("admin-users", {
-      body: { action: "set_role", id, role: next },
-    });
-    if (error || data?.error) return toast.error(data?.error || error?.message || "Erro");
-    toast.success(`Agora é ${next}`);
-    void load();
   };
 
   const resetPw = async (id: string) => {
@@ -115,24 +114,6 @@ export default function UsersAdmin() {
               <Label htmlFor="p">Senha</Label>
               <Input id="p" type="text" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="r">Cargo</Label>
-              <select
-                id="r"
-                value={role}
-                onChange={(e) => setRole(e.target.value as any)}
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="user">Usuário comum</option>
-                <option value="admin">Admin (cargo supremo)</option>
-              </select>
-            </div>
-            {role === "admin" && (
-              <div className="space-y-1">
-                <Label htmlFor="e">E-mail (só admin)</Label>
-                <Input id="e" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-            )}
             <div className="sm:col-span-2">
               <Button type="submit" disabled={creating} className="w-full">
                 {creating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -153,6 +134,13 @@ export default function UsersAdmin() {
               {rows.map((r) => {
                 const isAdmin = r.roles.includes("admin");
                 const self = r.id === user?.id;
+                const lastSeenMs = r.last_seen_at ? Date.now() - new Date(r.last_seen_at).getTime() : null;
+                const online = lastSeenMs !== null && lastSeenMs < 90_000; // 1m30 de tolerância
+                const lastSeenLabel = !r.last_seen_at
+                  ? "nunca conectou"
+                  : online
+                    ? "online agora"
+                    : formatLastSeen(lastSeenMs!);
                 return (
                   <li key={r.id} className="flex items-center justify-between gap-3 py-3">
                     <div className="min-w-0">
@@ -161,7 +149,11 @@ export default function UsersAdmin() {
                         {r.username || r.email}
                         {self && <span className="text-xs text-muted-foreground">(você)</span>}
                       </p>
-                      <p className="truncate text-xs text-muted-foreground">{r.email} · {isAdmin ? "admin" : "usuário"}</p>
+                      <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+                        <Circle className={`h-2 w-2 ${online ? "fill-green-500 text-green-500" : "fill-muted-foreground/40 text-muted-foreground/40"}`} />
+                        <span className={online ? "text-green-600 font-medium" : ""}>{lastSeenLabel}</span>
+                        <span>· {isAdmin ? "admin" : "usuário"}</span>
+                      </p>
                     </div>
                     <div className="flex items-center gap-1">
                       {self && (
@@ -170,14 +162,9 @@ export default function UsersAdmin() {
                         </Button>
                       )}
                       {!self && !isAdmin && (
-                        <>
-                          <Button size="sm" variant="ghost" onClick={() => toggleRole(r.id, r.roles)}>
-                            Tornar admin
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => remove(r.id, r.username || r.email)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </>
+                        <Button size="sm" variant="ghost" onClick={() => remove(r.id, r.username || r.email)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       )}
                       {!self && isAdmin && (
                         <span className="text-xs text-muted-foreground italic">protegido</span>
@@ -192,4 +179,14 @@ export default function UsersAdmin() {
       </div>
     </div>
   );
+}
+
+function formatLastSeen(ms: number): string {
+  const min = Math.floor(ms / 60_000);
+  if (min < 1) return "há menos de 1 min";
+  if (min < 60) return `visto há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `visto há ${h} h`;
+  const d = Math.floor(h / 24);
+  return `visto há ${d} d`;
 }

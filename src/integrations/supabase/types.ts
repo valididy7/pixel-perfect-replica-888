@@ -587,6 +587,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          last_seen_at: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -595,6 +596,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_seen_at?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -603,6 +605,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          last_seen_at?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -693,6 +696,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
