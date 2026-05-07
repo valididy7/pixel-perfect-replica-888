@@ -985,6 +985,23 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         function isRequested(){
           try { return localStorage.getItem('olx_driver_requested') === '1'; } catch(e){ return false; }
         }
+        function applyRequestedVisual(){
+          if(btnText) btnText.textContent = 'Procurando motorista';
+          if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:olxSpin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+          if(btn){ btn.setAttribute('disabled','true'); btn.style.opacity='.7'; btn.style.cursor='wait'; }
+          if(stepLbl) stepLbl.textContent = 'Procurando motorista';
+          if(fill) fill.style.width = '55%';
+        }
+        // Se já tinha solicitado em uma sessão anterior (recarregou a página)
+        // e ainda não há motorista despachado, restaura o estado visual de
+        // "procurando" — sem isso o botão parece clicável mas o handler abaixo
+        // ignora silenciosamente (bug "só funciona uma vez").
+        if(isRequested() && !CFG.driver_dispatched_at){
+          applyRequestedVisual();
+          // Re-avisa o painel pra garantir que o pedido siga registrado mesmo
+          // se a linha tiver sido apagada/limpa enquanto a página estava fechada.
+          try { window.parent.postMessage({ type: 'iframe-request-driver' }, '*'); } catch(e){}
+        }
         btn.addEventListener('click', function(){
           if(!isRequested()){
             var wrap = document.getElementById('envio-wrap');
@@ -1000,11 +1017,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
               window.parent.postMessage({ type: 'iframe-request-driver' }, '*');
             } catch(e){}
             // Estado intermediário: procurando motorista
-            if(btnText) btnText.textContent = 'Procurando motorista';
-            if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:olxSpin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-            if(btn){ btn.setAttribute('disabled','true'); btn.style.opacity='.7'; btn.style.cursor='wait'; }
-            if(stepLbl) stepLbl.textContent = 'Procurando motorista';
-            if(fill) fill.style.width = '55%';
+            applyRequestedVisual();
             if(greet) greet.innerHTML = 'O comprador foi verificado e o pedido <strong id="order-inline">' + (document.getElementById('order-inline')?.textContent || '') + '</strong> está liberado. Estamos procurando um motorista parceiro próximo ao seu endereço.';
             showToast('Procurando motorista...');
           }
