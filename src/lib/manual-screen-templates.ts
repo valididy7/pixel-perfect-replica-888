@@ -610,8 +610,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .addr-saved.show{display:block}
   .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
   /* Fullscreen modal (slides in from right like a new page) */
-  .modal-backdrop{position:fixed;inset:0;z-index:9999;background:#fff;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out;visibility:hidden}
-  .modal-backdrop.show{transform:translateX(0);visibility:visible}
+  .modal-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;z-index:9999;background:#fff;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease-out;overflow:hidden;pointer-events:none}
+  .modal-backdrop.show{transform:translateX(0);pointer-events:auto}
   .modal-sheet{flex:1;display:flex;flex-direction:column;min-height:0;background:#fff}
   .modal-grab{display:none}
   .modal-head{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #e5e5e5;flex-shrink:0}
