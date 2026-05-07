@@ -838,10 +838,13 @@ function setupAccessButtonGating(doc: Document): void {
       btn.removeAttribute("disabled");
       (btn as HTMLButtonElement).disabled = false;
       btn.classList.remove("__olx_access_disabled__");
+      // Remove também a classe nativa da OLX que força o cinza
+      btn.classList.remove("olx-button--disabled");
     } else {
       btn.setAttribute("disabled", "true");
       (btn as HTMLButtonElement).disabled = true;
       btn.classList.add("__olx_access_disabled__");
+      btn.classList.add("olx-button--disabled");
     }
   };
 
