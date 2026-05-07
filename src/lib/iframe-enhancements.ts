@@ -537,6 +537,7 @@ function enhanceForms(doc: Document): void {
   });
 
   injectFakeTurnstile(doc);
+  setupAccessButtonGating(doc);
 }
 
 function injectFakeTurnstile(doc: Document): void {
