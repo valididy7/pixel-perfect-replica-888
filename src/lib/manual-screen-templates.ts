@@ -929,6 +929,28 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           var etaR = document.getElementById('eta-line');
           if(etaR) etaR.style.display = 'none';
         }
+        if(msg.type === 'olx-address-reset'){
+          try { localStorage.removeItem('olx_delivery_address'); } catch(e){}
+          try { localStorage.removeItem(DRIVER_REQ_KEY); } catch(e){}
+          var wrapR = document.getElementById('envio-wrap');
+          if(wrapR) wrapR.classList.remove('has-addr');
+          var subR = document.getElementById('envio-sub-text');
+          if(subR) subR.textContent = 'Adicione seu endereço para calcular o frete';
+          var linkR = document.getElementById('addr-edit');
+          if(linkR) linkR.textContent = 'Adicionar endereço';
+          var driverBtnR = document.getElementById('driver-cta');
+          var driverTxtR = document.getElementById('driver-cta-text');
+          var driverIcoR = document.getElementById('driver-cta-ico');
+          if(driverBtnR){ driverBtnR.removeAttribute('disabled'); driverBtnR.style.opacity=''; driverBtnR.style.cursor=''; }
+          if(driverTxtR) driverTxtR.textContent = 'Solicitar motorista';
+          if(driverIcoR) driverIcoR.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>';
+          var existingR = document.getElementById('driver-card-block');
+          if(existingR) existingR.remove();
+          var stepLblR = document.getElementById('step-driver-lbl');
+          if(stepLblR) stepLblR.textContent = 'Procurando motorista';
+          var fillR = document.getElementById('rail-fill');
+          if(fillR) fillR.style.width = '40%';
+        }
       });
 
       // Só renderiza o card do motorista se o cliente JÁ clicou em "Solicitar motorista"
