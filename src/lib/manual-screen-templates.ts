@@ -812,6 +812,105 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       }
       // Configuração injetada pelo painel (window.__OLX_ORDER__)
       var CFG = (typeof window !== 'undefined' && window.__OLX_ORDER__) || {};
+
+      // ===== Tocar "chime" estilo 99/Uber quando achar motorista =====
+      function playFoundChime(){
+        try {
+          var Ctx = window.AudioContext || window.webkitAudioContext;
+          if(!Ctx) return;
+          var ctx = new Ctx();
+          var notes = [ {f:880, t:0.00}, {f:1175, t:0.18}, {f:1568, t:0.36} ];
+          notes.forEach(function(n){
+            var o = ctx.createOscillator();
+            var g = ctx.createGain();
+            o.type = 'sine';
+            o.frequency.value = n.f;
+            g.gain.setValueAtTime(0, ctx.currentTime + n.t);
+            g.gain.linearRampToValueAtTime(0.25, ctx.currentTime + n.t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n.t + 0.45);
+            o.connect(g); g.connect(ctx.destination);
+            o.start(ctx.currentTime + n.t);
+            o.stop(ctx.currentTime + n.t + 0.5);
+          });
+        } catch(e){}
+      }
+
+      // ===== Renderizar card do motorista =====
+      function renderDriverCard(d){
+        var btn = document.getElementById('driver-cta');
+        var btnText = document.getElementById('driver-cta-text');
+        var stepLbl = document.getElementById('step-driver-lbl');
+        var fill = document.getElementById('rail-fill');
+        var greet = document.getElementById('greet-text');
+        var eta = document.getElementById('eta-line');
+        if(btn){ btn.removeAttribute('disabled'); btn.style.opacity=''; btn.style.cursor=''; }
+        if(btnText) btnText.textContent = 'Motorista a caminho';
+        var ico2 = document.getElementById('driver-cta-ico');
+        if(ico2) ico2.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+        if(stepLbl) stepLbl.textContent = 'Motorista encontrado';
+        if(fill) fill.style.width = '85%';
+        if(eta && d.eta){ eta.textContent = 'Chega em aproximadamente ' + d.eta; eta.style.display=''; }
+        if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
+
+        // Insere/atualiza card visual
+        var existing = document.getElementById('driver-card-block');
+        var addrSection = document.querySelector('.block.addr');
+        var photo = d.photo_url ? '<img src="'+d.photo_url+'" alt="" style="width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb">' : '<div style="width:54px;height:54px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:700;flex-shrink:0">'+((d.name||'M').charAt(0).toUpperCase())+'</div>';
+        var stars = d.rating ? '<span style="color:#f5a623;font-weight:700">★ '+d.rating+'</span>' : '';
+        var rides = d.rides ? '<span style="color:#6b7280;font-size:12px">· '+d.rides+' corridas</span>' : '';
+        var vehicle = [d.color, d.vehicle].filter(Boolean).join(' ');
+        var plate = d.plate ? '<span style="display:inline-block;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;padding:2px 8px;font-family:monospace;font-weight:700;font-size:13px;letter-spacing:1px;color:#1a1a1a">'+d.plate+'</span>' : '';
+        var html = '<section class="block" id="driver-card-block" style="border:1.5px solid #6e0ad6;background:linear-gradient(180deg,#faf5ff 0%,#fff 60%)">'+
+          '<h3 style="color:#6e0ad6"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg> Motorista encontrado</h3>'+
+          '<div style="display:flex;gap:12px;align-items:center;padding:4px 0">'+
+            photo+
+            '<div style="flex:1;min-width:0">'+
+              '<p style="margin:0;font-size:15px;font-weight:700;color:#1a1a1a">'+(d.name||'Motorista')+'</p>'+
+              '<p style="margin:2px 0 0;font-size:12.5px">'+stars+' '+rides+'</p>'+
+              (vehicle ? '<p style="margin:4px 0 0;font-size:12.5px;color:#4b5563">'+vehicle+'</p>' : '')+
+            '</div>'+
+            plate+
+          '</div>'+
+          (d.eta ? '<div style="margin-top:10px;padding:8px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;color:#1a1a1a;display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6e0ad6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><strong>Chega em '+d.eta+'</strong></div>' : '')+
+        '</section>';
+        if(existing){ existing.outerHTML = html; }
+        else if(addrSection && addrSection.parentNode){
+          addrSection.insertAdjacentHTML('afterend', html);
+        }
+      }
+
+      // Escuta despacho enviado pelo painel via postMessage
+      window.addEventListener('message', function(ev){
+        var msg = ev && ev.data;
+        if(!msg || typeof msg !== 'object') return;
+        if(msg.type === 'olx-driver-dispatched' && msg.driver){
+          playFoundChime();
+          showToast('Motorista encontrado!');
+          renderDriverCard(msg.driver);
+        }
+        if(msg.type === 'olx-driver-reset'){
+          var existing = document.getElementById('driver-card-block');
+          if(existing) existing.remove();
+          var stepLbl = document.getElementById('step-driver-lbl');
+          if(stepLbl) stepLbl.textContent = 'Procurando motorista';
+          var btnText = document.getElementById('driver-cta-text');
+          if(btnText) btnText.textContent = 'Procurando motorista';
+          var fill = document.getElementById('rail-fill');
+          if(fill) fill.style.width = '55%';
+        }
+      });
+
+      // Se já veio despachado no carregamento, renderiza direto (sem chime)
+      if(CFG.driver_dispatched_at){
+        try {
+          renderDriverCard({
+            photo_url: CFG.driver_photo_url, name: CFG.driver_name, plate: CFG.driver_plate,
+            vehicle: CFG.driver_vehicle, color: CFG.driver_color, rating: CFG.driver_rating,
+            rides: CFG.driver_rides, eta: CFG.driver_eta
+          });
+        } catch(e){}
+      }
+
       // Driver request flow: "Solicitar motorista" -> confirma -> "Motorista a caminho"
       (function(){
         var btn = document.getElementById('driver-cta');

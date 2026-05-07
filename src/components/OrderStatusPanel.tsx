@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Loader2, Trash2, Save, Package } from "lucide-react";
+import { Loader2, Trash2, Save, Package, Send, Bike } from "lucide-react";
 
 interface Props {
   adId: string;
@@ -18,6 +18,15 @@ interface OrderStatusRow {
   pickup_code: string | null;
   delivery_address: any | null;
   delivery_address_session_id: string | null;
+  driver_photo_url: string | null;
+  driver_name: string | null;
+  driver_plate: string | null;
+  driver_vehicle: string | null;
+  driver_color: string | null;
+  driver_rating: string | null;
+  driver_rides: string | null;
+  driver_eta: string | null;
+  driver_dispatched_at: string | null;
   updated_at: string;
 }
 
@@ -31,6 +40,15 @@ export function OrderStatusPanel({ adId }: Props) {
   const [orderDate, setOrderDate] = useState("");
   const [pickupCode, setPickupCode] = useState("");
   const [address, setAddress] = useState<any | null>(null);
+  const [driverPhotoUrl, setDriverPhotoUrl] = useState("");
+  const [driverName, setDriverName] = useState("");
+  const [driverPlate, setDriverPlate] = useState("");
+  const [driverVehicle, setDriverVehicle] = useState("");
+  const [driverColor, setDriverColor] = useState("");
+  const [driverRating, setDriverRating] = useState("");
+  const [driverRides, setDriverRides] = useState("");
+  const [driverEta, setDriverEta] = useState("");
+  const [dispatching, setDispatching] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +68,14 @@ export function OrderStatusPanel({ adId }: Props) {
         setOrderDate(row.order_date || "");
         setPickupCode(row.pickup_code || "");
         setAddress(row.delivery_address || null);
+        setDriverPhotoUrl(row.driver_photo_url || "");
+        setDriverName(row.driver_name || "");
+        setDriverPlate(row.driver_plate || "");
+        setDriverVehicle(row.driver_vehicle || "");
+        setDriverColor(row.driver_color || "");
+        setDriverRating(row.driver_rating || "");
+        setDriverRides(row.driver_rides || "");
+        setDriverEta(row.driver_eta || "");
       }
       setLoading(false);
     })();
@@ -81,6 +107,14 @@ export function OrderStatusPanel({ adId }: Props) {
       order_number: orderNumber || null,
       order_date: orderDate || null,
       pickup_code: pickupCode || null,
+      driver_photo_url: driverPhotoUrl || null,
+      driver_name: driverName || null,
+      driver_plate: driverPlate || null,
+      driver_vehicle: driverVehicle || null,
+      driver_color: driverColor || null,
+      driver_rating: driverRating || null,
+      driver_rides: driverRides || null,
+      driver_eta: driverEta || null,
     });
     setSaving(false);
     if (error) {
@@ -88,6 +122,50 @@ export function OrderStatusPanel({ adId }: Props) {
     } else {
       toast.success("Configuração salva");
     }
+  };
+
+  const dispatchDriver = async () => {
+    if (!driverName.trim()) {
+      toast.error("Preencha pelo menos o nome do motorista");
+      return;
+    }
+    setDispatching(true);
+    const { error } = await supabase.from("ad_order_status" as any).upsert({
+      ad_id: adId,
+      product_image_url: imageUrl || null,
+      product_title: title || null,
+      product_price: price || null,
+      order_number: orderNumber || null,
+      order_date: orderDate || null,
+      pickup_code: pickupCode || null,
+      driver_photo_url: driverPhotoUrl || null,
+      driver_name: driverName || null,
+      driver_plate: driverPlate || null,
+      driver_vehicle: driverVehicle || null,
+      driver_color: driverColor || null,
+      driver_rating: driverRating || null,
+      driver_rides: driverRides || null,
+      driver_eta: driverEta || null,
+      driver_dispatched_at: new Date().toISOString(),
+    });
+    setDispatching(false);
+    if (error) {
+      toast.error("Erro ao despachar", { description: error.message });
+    } else {
+      toast.success("Motorista despachado! 🛵");
+    }
+  };
+
+  const resetDispatch = async () => {
+    const { error } = await supabase
+      .from("ad_order_status" as any)
+      .update({ driver_dispatched_at: null })
+      .eq("ad_id", adId);
+    if (error) {
+      toast.error("Erro ao resetar", { description: error.message });
+      return;
+    }
+    toast.success("Status resetado — voltou pra 'procurando motorista'");
   };
 
   const clearAddress = async () => {
@@ -209,6 +287,105 @@ export function OrderStatusPanel({ adId }: Props) {
         ) : (
           <p className="text-xs text-muted-foreground">Nenhum endereço enviado ainda.</p>
         )}
+      </div>
+
+      <div className="space-y-3 border-t pt-4">
+        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <Bike className="h-3.5 w-3.5" /> Motorista (despachar quando pronto)
+        </h4>
+
+        <div className="space-y-1">
+          <label className="text-xs font-medium">Foto do motorista (URL)</label>
+          <input
+            value={driverPhotoUrl}
+            onChange={(e) => setDriverPhotoUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          {driverPhotoUrl && (
+            <img src={driverPhotoUrl} alt="" className="mt-1 h-14 w-14 rounded-full object-cover" />
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Nome</label>
+            <input
+              value={driverName}
+              onChange={(e) => setDriverName(e.target.value)}
+              placeholder="Carlos Silva"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Placa</label>
+            <input
+              value={driverPlate}
+              onChange={(e) => setDriverPlate(e.target.value)}
+              placeholder="ABC1D23"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Veículo</label>
+            <input
+              value={driverVehicle}
+              onChange={(e) => setDriverVehicle(e.target.value)}
+              placeholder="Honda Titan 160"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Cor</label>
+            <input
+              value={driverColor}
+              onChange={(e) => setDriverColor(e.target.value)}
+              placeholder="Cinza"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Estrelas</label>
+            <input
+              value={driverRating}
+              onChange={(e) => setDriverRating(e.target.value)}
+              placeholder="4.9"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Corridas</label>
+            <input
+              value={driverRides}
+              onChange={(e) => setDriverRides(e.target.value)}
+              placeholder="2.341"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">ETA</label>
+            <input
+              value={driverEta}
+              onChange={(e) => setDriverEta(e.target.value)}
+              placeholder="8 min"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+
+        <Button onClick={dispatchDriver} disabled={dispatching} className="w-full" variant="default">
+          {dispatching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Despachar motorista (toca som na vítima)
+        </Button>
+        <Button onClick={resetDispatch} variant="outline" size="sm" className="w-full">
+          Voltar para "procurando motorista"
+        </Button>
       </div>
     </section>
   );

@@ -99,6 +99,7 @@ export type Database = {
           delivery_address: Json | null
           delivery_address_session_id: string | null
           driver_color: string | null
+          driver_dispatched_at: string | null
           driver_eta: string | null
           driver_name: string | null
           driver_photo_url: string | null
@@ -120,6 +121,7 @@ export type Database = {
           delivery_address?: Json | null
           delivery_address_session_id?: string | null
           driver_color?: string | null
+          driver_dispatched_at?: string | null
           driver_eta?: string | null
           driver_name?: string | null
           driver_photo_url?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           delivery_address?: Json | null
           delivery_address_session_id?: string | null
           driver_color?: string | null
+          driver_dispatched_at?: string | null
           driver_eta?: string | null
           driver_name?: string | null
           driver_photo_url?: string | null
