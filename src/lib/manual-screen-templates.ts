@@ -873,7 +873,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         // Fallback: abaixo do endereço se não achar produto.
         var prodSection = document.querySelector('.block .prod') ? document.querySelector('.block .prod').closest('.block') : null;
         var addrSection = document.querySelector('.block.addr');
-        var photo = d.photo_url ? '<img src="'+d.photo_url+'" alt="" style="width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb">' : '<div style="width:54px;height:54px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:700;flex-shrink:0">'+((d.name||'M').charAt(0).toUpperCase())+'</div>';
+        var photoSrc = d.photo_url || '/default-driver.png';
+        var photo = '<img src="'+photoSrc+'" alt="" style="width:54px;height:54px;border-radius:50%;object-fit:cover;object-position:center;background:#ede9fe;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb">';
         var stars = d.rating ? '<span style="color:#f5a623;font-weight:700">★ '+d.rating+'</span>' : '';
         var rides = d.rides ? '<span style="color:#6b7280;font-size:12px">· '+d.rides+' corridas</span>' : '';
         var vehicle = [d.color, d.vehicle].filter(Boolean).join(' ');
