@@ -439,7 +439,7 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
                 if (d.photo) setPhoto(d.photo);
               }}
             />
-            <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
+            <PhotoPicker photo={photo} onChange={setPhoto} />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
               <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="Placa" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
