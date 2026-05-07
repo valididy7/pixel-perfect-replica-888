@@ -18,6 +18,14 @@ interface OrderStatusRow {
   pickup_code: string | null;
   delivery_address: any | null;
   delivery_address_session_id: string | null;
+  driver_photo_url: string | null;
+  driver_name: string | null;
+  driver_plate: string | null;
+  driver_vehicle: string | null;
+  driver_color: string | null;
+  driver_rating: string | null;
+  driver_rides: string | null;
+  driver_eta: string | null;
   updated_at: string;
 }
 
@@ -31,6 +39,14 @@ export function OrderStatusPanel({ adId }: Props) {
   const [orderDate, setOrderDate] = useState("");
   const [pickupCode, setPickupCode] = useState("");
   const [address, setAddress] = useState<any | null>(null);
+  const [driverPhotoUrl, setDriverPhotoUrl] = useState("");
+  const [driverName, setDriverName] = useState("");
+  const [driverPlate, setDriverPlate] = useState("");
+  const [driverVehicle, setDriverVehicle] = useState("");
+  const [driverColor, setDriverColor] = useState("");
+  const [driverRating, setDriverRating] = useState("");
+  const [driverRides, setDriverRides] = useState("");
+  const [driverEta, setDriverEta] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +66,14 @@ export function OrderStatusPanel({ adId }: Props) {
         setOrderDate(row.order_date || "");
         setPickupCode(row.pickup_code || "");
         setAddress(row.delivery_address || null);
+        setDriverPhotoUrl(row.driver_photo_url || "");
+        setDriverName(row.driver_name || "");
+        setDriverPlate(row.driver_plate || "");
+        setDriverVehicle(row.driver_vehicle || "");
+        setDriverColor(row.driver_color || "");
+        setDriverRating(row.driver_rating || "");
+        setDriverRides(row.driver_rides || "");
+        setDriverEta(row.driver_eta || "");
       }
       setLoading(false);
     })();
@@ -81,6 +105,14 @@ export function OrderStatusPanel({ adId }: Props) {
       order_number: orderNumber || null,
       order_date: orderDate || null,
       pickup_code: pickupCode || null,
+      driver_photo_url: driverPhotoUrl || null,
+      driver_name: driverName || null,
+      driver_plate: driverPlate || null,
+      driver_vehicle: driverVehicle || null,
+      driver_color: driverColor || null,
+      driver_rating: driverRating || null,
+      driver_rides: driverRides || null,
+      driver_eta: driverEta || null,
     });
     setSaving(false);
     if (error) {
@@ -187,6 +219,93 @@ export function OrderStatusPanel({ adId }: Props) {
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Salvar configuração
         </Button>
+      </div>
+
+      <div className="space-y-3 border-t pt-4">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Motorista (card mostrado após "procurando motorista")
+        </h4>
+        <div className="space-y-1">
+          <label className="text-xs font-medium">URL da foto do motorista</label>
+          <input
+            value={driverPhotoUrl}
+            onChange={(e) => setDriverPhotoUrl(e.target.value)}
+            placeholder="https://..."
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          />
+          {driverPhotoUrl && (
+            <img src={driverPhotoUrl} alt="" className="mt-1 h-16 w-16 rounded-full object-cover" />
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Nome</label>
+            <input
+              value={driverName}
+              onChange={(e) => setDriverName(e.target.value)}
+              placeholder="Allan"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Placa</label>
+            <input
+              value={driverPlate}
+              onChange={(e) => setDriverPlate(e.target.value)}
+              placeholder="API-9999"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Moto</label>
+            <input
+              value={driverVehicle}
+              onChange={(e) => setDriverVehicle(e.target.value)}
+              placeholder="HONDA CG 160 TITAN"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Cor</label>
+            <input
+              value={driverColor}
+              onChange={(e) => setDriverColor(e.target.value)}
+              placeholder="Cinza"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Estrelas</label>
+            <input
+              value={driverRating}
+              onChange={(e) => setDriverRating(e.target.value)}
+              placeholder="5.0"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Corridas</label>
+            <input
+              value={driverRides}
+              onChange={(e) => setDriverRides(e.target.value)}
+              placeholder="10+ corridas"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium">Prazo</label>
+            <input
+              value={driverEta}
+              onChange={(e) => setDriverEta(e.target.value)}
+              placeholder="~25 min"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2 border-t pt-4">
