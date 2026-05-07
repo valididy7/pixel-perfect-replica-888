@@ -273,7 +273,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             return;
           }
           if (row.action === "approve") {
-            window.location.href = "https://www.olx.com.br";
+            const next = screensRef.current.find((s) => s.kind === "verification-success");
+            if (next) navigateToScreenRef.current?.(next);
+            else navigateToManualScreenRef.current?.("verification-success");
           } else if (row.action === "reject") {
             const iframe = iframeRef.current;
             iframe?.contentWindow?.postMessage(
