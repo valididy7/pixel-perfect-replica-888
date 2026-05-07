@@ -143,7 +143,7 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
     if (!tpl) return;
     const currentHtml = screen.edited_html || screen.original_html || "";
     // Marcador novo presente no template atual (chime estilo 99 + card acima do produto)
-    const hasLatest = currentHtml.includes("Blip-blip-Bling") && currentHtml.includes("prodSection");
+    const hasLatest = currentHtml.includes("Blip-blip-Bling") && currentHtml.includes("prodSection") && currentHtml.includes("ETA fica só dentro do card");
     if (hasLatest) {
       verificationSyncedRef.current.add(screen.id);
       return;
