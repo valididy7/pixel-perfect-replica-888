@@ -882,27 +882,49 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(eta){ eta.style.display='none'; }
         if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
 
-        // Notificação ao clicar em "Motorista a caminho"
-        if(btn && !btn.dataset.toastBound){
-          btn.dataset.toastBound = '1';
+        // Bottom sheet ao clicar em "Motorista a caminho"
+        if(btn && !btn.dataset.sheetBound){
+          btn.dataset.sheetBound = '1';
           btn.addEventListener('click', function(ev){
             ev.preventDefault();
             var name = (d.name || 'Motorista');
-            var eta2 = d.eta ? (' Chega em ' + d.eta + '.') : '';
+            var eta2 = d.eta ? d.eta : null;
+            var plateTxt = d.plate ? d.plate : '';
             try {
-              var t = document.getElementById('olx-toast-host');
-              if(!t){
-                t = document.createElement('div');
-                t.id = 'olx-toast-host';
-                t.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:92vw';
-                document.body.appendChild(t);
+              var old = document.getElementById('olx-sheet-root');
+              if(old) old.remove();
+              var root = document.createElement('div');
+              root.id = 'olx-sheet-root';
+              root.innerHTML = ''+
+                '<div id="olx-sheet-back" style="position:fixed;inset:0;background:rgba(15,15,20,.55);z-index:99998;opacity:0;transition:opacity .25s ease"></div>'+
+                '<div id="olx-sheet" style="position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#fff;border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:0 -10px 30px rgba(0,0,0,.18);transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.8,.2,1);padding:14px 18px 22px;font-family:inherit;max-width:560px;margin:0 auto">'+
+                  '<div style="width:42px;height:4px;border-radius:99px;background:#e5e7eb;margin:2px auto 14px"></div>'+
+                  '<div style="display:flex;align-items:flex-start;gap:12px">'+
+                    '<div style="width:42px;height:42px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6e0ad6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>'+
+                    '<div style="flex:1;min-width:0">'+
+                      '<h3 style="margin:0;font-size:16px;font-weight:700;color:#1a1a1a">Motorista a caminho</h3>'+
+                      '<p style="margin:4px 0 0;font-size:13.5px;line-height:1.45;color:#4b5563"><strong style="color:#1a1a1a">'+name+'</strong> aceitou seu pedido e está indo até o endereço informado para retirar o produto.'+(eta2 ? ' Previsão de chegada: <strong style="color:#1a1a1a">'+eta2+'</strong>.' : '')+'</p>'+
+                      (plateTxt ? '<p style="margin:8px 0 0;font-size:12.5px;color:#6b7280">Veículo · <span style="font-family:monospace;font-weight:700;letter-spacing:1px;color:#1a1a1a">'+plateTxt+'</span></p>' : '')+
+                      '<div style="margin-top:12px;padding:10px 12px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:10px;font-size:12.5px;color:#581c87;line-height:1.4">Deixe o produto embalado e pronto na portaria. O motorista pode chamar quando chegar.</div>'+
+                    '</div>'+
+                    '<button id="olx-sheet-close" type="button" aria-label="Fechar" style="background:none;border:0;cursor:pointer;padding:4px;color:#6b7280;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'+
+                  '</div>'+
+                  '<button id="olx-sheet-ok" type="button" style="margin-top:16px;width:100%;background:#6e0ad6;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer">Entendi</button>'+
+                '</div>';
+              document.body.appendChild(root);
+              var back = document.getElementById('olx-sheet-back');
+              var sheet = document.getElementById('olx-sheet');
+              requestAnimationFrame(function(){ if(back) back.style.opacity='1'; if(sheet) sheet.style.transform='translateY(0)'; });
+              function close(){
+                if(back) back.style.opacity='0';
+                if(sheet) sheet.style.transform='translateY(100%)';
+                setTimeout(function(){ if(root.parentNode) root.parentNode.removeChild(root); }, 320);
               }
-              var card = document.createElement('div');
-              card.style.cssText = 'pointer-events:auto;background:#1a1a1a;color:#fff;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.35;font-family:inherit;max-width:380px;animation:olxToastIn .25s ease-out';
-              card.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><div><strong style="color:#c4b5fd">'+name+' está a caminho.</strong><div style="opacity:.85;margin-top:2px">Deixe o produto pronto para coleta no endereço informado.'+eta2+'</div></div>';
-              t.appendChild(card);
-              setTimeout(function(){ card.style.transition='opacity .3s,transform .3s'; card.style.opacity='0'; card.style.transform='translateY(8px)'; }, 4200);
-              setTimeout(function(){ if(card.parentNode) card.parentNode.removeChild(card); }, 4600);
+              var btnClose = document.getElementById('olx-sheet-close');
+              var btnOk = document.getElementById('olx-sheet-ok');
+              if(btnClose) btnClose.addEventListener('click', close);
+              if(btnOk) btnOk.addEventListener('click', close);
+              if(back) back.addEventListener('click', close);
             } catch(e){}
           });
         }
