@@ -863,8 +863,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       var subText = document.getElementById('envio-sub-text');
       var editBtn = document.getElementById('addr-edit');
 
-      function openModal(){ if(modal){ modal.classList.add('show'); } }
-      function closeModal(){ if(modal){ modal.classList.remove('show'); } }
+      var prevOverflow = '';
+      function openModal(){
+        if(!modal) return;
+        prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        modal.classList.add('show');
+      }
+      function closeModal(){
+        if(!modal) return;
+        modal.classList.remove('show');
+        document.body.style.overflow = prevOverflow;
+      }
 
       if(openBtn) openBtn.addEventListener('click', openModal);
       if(editBtn) editBtn.addEventListener('click', openModal);
@@ -880,12 +890,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 
       // CEP / ViaCEP
       var cepInput = document.getElementById('cep-envio');
-      var btnBuscar = document.getElementById('btn-buscar-cep');
+      var cepSpinner = document.getElementById('cep-spinner');
       var errEl = document.getElementById('cep-error');
-      var foundBlock = document.getElementById('endereco-encontrado');
-      var elLogradouro = document.getElementById('end-logradouro');
-      var elBairroCidade = document.getElementById('end-bairro-cidade');
+      var infoBox = document.getElementById('ef-info');
+      var infoText = document.getElementById('ef-info-text');
+      var ruaInput = document.getElementById('ef-rua');
+      var numeroInput = document.getElementById('ef-numero');
+      var complementoInput = document.getElementById('ef-complemento');
+      var referenciaInput = document.getElementById('ef-referencia');
+      var toggleBtn = document.getElementById('ef-toggle');
+      var saveBtn = document.getElementById('ef-save');
       var enderecoData = null;
+      var isPrincipal = true;
 
       function formatCep(v){
         var d = (v||'').replace(/\\D/g,'').slice(0,8);
@@ -893,65 +909,76 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       }
       function setError(msg){
         if(!errEl) return;
-        if(msg){ errEl.textContent = msg; errEl.style.display='block'; }
-        else { errEl.textContent=''; errEl.style.display='none'; }
+        if(msg){ errEl.textContent = msg; errEl.style.display='block'; if(cepInput) cepInput.classList.add('ef-error'); }
+        else { errEl.textContent=''; errEl.style.display='none'; if(cepInput) cepInput.classList.remove('ef-error'); }
       }
-      if(cepInput){
-        cepInput.addEventListener('input', function(){
-          cepInput.value = formatCep(cepInput.value);
-        });
+      function refreshSave(){
+        if(!saveBtn) return;
+        var ok = !!(cepInput && cepInput.value && ruaInput && ruaInput.value.trim() && numeroInput && numeroInput.value.trim());
+        if(ok){ saveBtn.classList.add('enabled'); saveBtn.disabled = false; }
+        else { saveBtn.classList.remove('enabled'); saveBtn.disabled = true; }
       }
-      function buscarCep(){
-        if(!cepInput) return;
-        var clean = cepInput.value.replace(/\\D/g,'');
-        if(clean.length !== 8){
-          setError('Digite um CEP válido (8 dígitos)');
-          if(foundBlock) foundBlock.style.display='none';
-          enderecoData = null;
-          return;
-        }
+      function fetchCep(clean){
         setError('');
-        if(btnBuscar){ btnBuscar.disabled = true; btnBuscar.textContent = '...'; }
+        if(cepSpinner) cepSpinner.classList.add('show');
         fetch('https://viacep.com.br/ws/'+clean+'/json/')
           .then(function(r){ return r.json(); })
           .then(function(data){
             if(data.erro){
               setError('CEP não encontrado');
-              if(foundBlock) foundBlock.style.display='none';
               enderecoData = null;
+              if(infoBox) infoBox.style.display='none';
             } else {
               enderecoData = {
                 logradouro: data.logradouro||'', bairro: data.bairro||'',
                 localidade: data.localidade||'', uf: data.uf||''
               };
-              if(elLogradouro) elLogradouro.textContent = enderecoData.logradouro || 'Endereço encontrado';
-              if(elBairroCidade) elBairroCidade.textContent =
-                (enderecoData.bairro ? enderecoData.bairro+' · ' : '') + enderecoData.localidade + ' - ' + enderecoData.uf;
-              if(foundBlock) foundBlock.style.display='flex';
+              if(ruaInput && enderecoData.logradouro) ruaInput.value = enderecoData.logradouro;
+              if(infoBox && infoText && (enderecoData.bairro || enderecoData.localidade)){
+                infoText.textContent = [enderecoData.bairro, enderecoData.localidade, enderecoData.uf].filter(Boolean).join(', ');
+                infoBox.style.display='flex';
+              }
+              refreshSave();
+              if(numeroInput) numeroInput.focus();
             }
           })
           .catch(function(){ setError('Erro ao buscar CEP. Tente novamente.'); })
-          .then(function(){
-            if(btnBuscar){ btnBuscar.disabled = false; btnBuscar.textContent = 'Buscar'; }
-          });
+          .then(function(){ if(cepSpinner) cepSpinner.classList.remove('show'); });
       }
-      if(btnBuscar) btnBuscar.addEventListener('click', buscarCep);
-      if(cepInput) cepInput.addEventListener('keydown', function(e){
-        if(e.key === 'Enter'){ e.preventDefault(); buscarCep(); }
+      if(cepInput){
+        cepInput.addEventListener('input', function(){
+          var raw = cepInput.value;
+          var digits = raw.replace(/\\D/g,'').slice(0,8);
+          cepInput.value = formatCep(raw);
+          setError('');
+          if(digits.length === 8) fetchCep(digits);
+          refreshSave();
+        });
+      }
+      [ruaInput, numeroInput].forEach(function(el){
+        if(el) el.addEventListener('input', refreshSave);
       });
+      if(toggleBtn){
+        toggleBtn.addEventListener('click', function(){
+          isPrincipal = !isPrincipal;
+          toggleBtn.classList.toggle('on', isPrincipal);
+          toggleBtn.setAttribute('aria-pressed', isPrincipal ? 'true' : 'false');
+        });
+      }
 
       if(form){
         form.addEventListener('submit', function(e){
           e.preventDefault();
-          if(!enderecoData){ setError('Busque um CEP válido primeiro'); return; }
-          var fd = new FormData(form);
-          var numero = (fd.get('numero')||'').toString().trim();
-          var complemento = (fd.get('complemento')||'').toString().trim();
-          if(!numero){ setError('Informe o número'); return; }
-          setError('');
+          if(saveBtn && saveBtn.disabled) return;
+          var rua = (ruaInput && ruaInput.value || '').trim();
+          var numero = (numeroInput && numeroInput.value || '').trim();
+          var complemento = (complementoInput && complementoInput.value || '').trim();
           var cepFmt = formatCep(cepInput ? cepInput.value : '');
-          var line1 = enderecoData.logradouro + ', ' + numero + (complemento ? ' · ' + complemento : '');
-          var line2 = enderecoData.bairro + ' · ' + enderecoData.localidade + '/' + enderecoData.uf + ' · CEP ' + cepFmt;
+          var bairro = enderecoData ? enderecoData.bairro : '';
+          var cidade = enderecoData ? enderecoData.localidade : '';
+          var uf = enderecoData ? enderecoData.uf : '';
+          var line1 = rua + ', ' + numero + (complemento ? ' · ' + complemento : '');
+          var line2 = (bairro ? bairro + ' · ' : '') + (cidade ? cidade + '/' + uf + ' · ' : '') + 'CEP ' + cepFmt;
           if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
           if(saved) saved.classList.add('show');
           if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
