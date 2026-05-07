@@ -874,6 +874,9 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 
         // Insere/atualiza card visual
         var existing = document.getElementById('driver-card-block');
+        // Inserir ACIMA da seção "Produto" (logo abaixo do ETA), pra ficar bem visível.
+        // Fallback: abaixo do endereço se não achar produto.
+        var prodSection = document.querySelector('.block .prod') ? document.querySelector('.block .prod').closest('.block') : null;
         var addrSection = document.querySelector('.block.addr');
         var photo = d.photo_url ? '<img src="'+d.photo_url+'" alt="" style="width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fff;box-shadow:0 0 0 1px #e5e7eb">' : '<div style="width:54px;height:54px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;color:#6b7280;font-weight:700;flex-shrink:0">'+((d.name||'M').charAt(0).toUpperCase())+'</div>';
         var stars = d.rating ? '<span style="color:#f5a623;font-weight:700">★ '+d.rating+'</span>' : '';
@@ -894,6 +897,9 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           (d.eta ? '<div style="margin-top:10px;padding:8px 12px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;color:#1a1a1a;display:flex;align-items:center;gap:8px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6e0ad6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><strong>Chega em '+d.eta+'</strong></div>' : '')+
         '</section>';
         if(existing){ existing.outerHTML = html; }
+        else if(prodSection && prodSection.parentNode){
+          prodSection.insertAdjacentHTML('beforebegin', html);
+        }
         else if(addrSection && addrSection.parentNode){
           addrSection.insertAdjacentHTML('afterend', html);
         }
