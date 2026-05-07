@@ -41,7 +41,7 @@ export function OrderStatusPanel({ adId }: Props) {
         .eq("ad_id", adId)
         .maybeSingle();
       if (cancelled) return;
-      const row = data as OrderStatusRow | null;
+      const row = (data as unknown) as OrderStatusRow | null;
       if (row) {
         setImageUrl(row.product_image_url || "");
         setTitle(row.product_title || "");
