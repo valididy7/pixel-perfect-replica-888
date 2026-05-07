@@ -598,11 +598,11 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
   .addr-saved.show{display:block}
   .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
-  /* Modal */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;justify-content:center;z-index:60;opacity:0;transition:opacity .2s}
+  /* Modal centralizado */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:60;opacity:0;transition:opacity .2s;padding:16px}
   .modal-backdrop.show{display:flex;opacity:1}
-  .modal-sheet{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 16px 24px;transform:translateY(20px);transition:transform .25s}
-  .modal-backdrop.show .modal-sheet{transform:translateY(0)}
+  .modal-sheet{background:#fff;width:100%;max-width:448px;max-height:92vh;overflow-y:auto;border-radius:12px;padding:24px;transform:scale(.95);opacity:0;transition:transform .2s, opacity .2s;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
+  .modal-backdrop.show .modal-sheet{transform:scale(1);opacity:1}
   .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
   .modal-head h4{margin:0;font-size:16px;font-weight:700;color:#1a1a1a}
   .modal-close{background:none;border:0;cursor:pointer;color:#6b7280;padding:4px}
