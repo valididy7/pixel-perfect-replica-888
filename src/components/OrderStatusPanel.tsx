@@ -261,8 +261,9 @@ export function OrderStatusPanel({ adId }: Props) {
           <label className="text-xs font-medium">Valor (total)</label>
           <input
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="R$ 2.350,00"
+            onChange={(e) => setPrice(formatPriceBR(e.target.value))}
+            inputMode="numeric"
+            placeholder="Digite só números: 235000 → R$ 2.350,00"
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -281,8 +282,9 @@ export function OrderStatusPanel({ adId }: Props) {
             <label className="text-xs font-medium">Data do pedido</label>
             <input
               value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              placeholder="Hoje · 20h32"
+              onChange={(e) => setOrderDate(formatDateTimeBR(e.target.value))}
+              inputMode="numeric"
+              placeholder="07112026 2032 → 07/11 20:32"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </div>
