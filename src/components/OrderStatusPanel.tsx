@@ -250,7 +250,7 @@ export function OrderStatusPanel({ adId }: Props) {
             </h3>
           </header>
           {pendingSessions.map((s) => (
-            <SessionDispatchCard key={s.session_id} adId={adId} session={s} highlight />
+            <SessionDispatchCard key={s.session_id} adId={adId} session={s} highlight onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
           ))}
         </div>
       )}
@@ -262,7 +262,7 @@ export function OrderStatusPanel({ adId }: Props) {
             <h3 className="text-sm font-semibold">Outras sessões com endereço/motorista</h3>
           </header>
           {otherSessions.map((s) => (
-            <SessionDispatchCard key={s.session_id} adId={adId} session={s} />
+            <SessionDispatchCard key={s.session_id} adId={adId} session={s} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
           ))}
         </div>
       )}
@@ -276,7 +276,7 @@ export function OrderStatusPanel({ adId }: Props) {
   );
 }
 
-function SessionDispatchCard({ adId, session, highlight }: { adId: string; session: SessionOrderRow; highlight?: boolean }) {
+function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: string; session: SessionOrderRow; highlight?: boolean; onRemoved?: (sessionId: string) => void }) {
   const [open, setOpen] = useState(!!highlight);
   const [photo, setPhoto] = useState(session.driver_photo_url || "");
   const [name, setName] = useState(session.driver_name || "");
@@ -341,13 +341,24 @@ function SessionDispatchCard({ adId, session, highlight }: { adId: string; sessi
 
   const clearAddress = async () => {
     if (!confirm("Apagar endereço dessa sessão?")) return;
-    const { error } = await supabase
+    // Otimista: some na hora da UI
+    onRemoved?.(session.session_id);
+    const { data, error } = await supabase
       .from("ad_session_orders" as any)
       .delete()
       .eq("ad_id", adId)
-      .eq("session_id", session.session_id);
-    if (error) toast.error("Erro ao limpar", { description: error.message });
-    else toast.success("Sessão removida");
+      .eq("session_id", session.session_id)
+      .select();
+    if (error) {
+      toast.error("Erro ao limpar", { description: error.message });
+      return;
+    }
+    const rows = (data as any[]) || [];
+    if (rows.length === 0) {
+      toast.error("Não foi possível apagar (RLS bloqueou). Faça login como dono do anúncio.");
+      return;
+    }
+    toast.success("Sessão removida");
   };
 
   const shortSid = session.session_id.slice(-8);
