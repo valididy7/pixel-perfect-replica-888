@@ -1047,13 +1047,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         }
       }
 
-      // ETA aleatório
-      var etaEl = document.getElementById('eta-line');
-      if(etaEl){
-        var min = 25 + Math.floor(Math.random()*15);
-        var max = min + 10 + Math.floor(Math.random()*10);
-        etaEl.textContent = 'Chega no seu endereço em ' + min + '–' + max + ' minutos';
-      }
+      // ETA fica oculto por padrão. Só aparece quando o motorista é despachado
+      // pelo painel (com o valor real do ETA injetado pelo admin).
 
       // Copy número
       var copyRow = document.getElementById('copy-row');
