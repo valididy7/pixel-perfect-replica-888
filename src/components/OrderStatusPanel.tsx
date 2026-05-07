@@ -6,6 +6,50 @@ import { Loader2, Trash2, Save, Package, Send, Bike, AlertCircle, MapPin, Chevro
 import { playDing, showSystemNotification, ensureNotificationPermission } from "@/lib/notify";
 import { LiveSessionsPanel } from "@/components/LiveSessionsPanel";
 
+// ===== Helpers de auto-formatação =====
+// Preço: digite só números (em centavos) — formata como "R$ 2.350,00"
+function formatPriceBR(raw: string): string {
+  const digits = (raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  const num = Number(digits) / 100;
+  return "R$ " + num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+// Data/hora do pedido: digite só números — formata como "DD/MM HH:MM"
+function formatDateTimeBR(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 8);
+  let out = "";
+  if (d.length > 0) out += d.slice(0, 2);
+  if (d.length >= 3) out += "/" + d.slice(2, 4);
+  if (d.length >= 5) out += " " + d.slice(4, 6);
+  if (d.length >= 7) out += ":" + d.slice(6, 8);
+  return out;
+}
+// ETA: digite só o número de minutos — vira "8 min"
+function formatEta(raw: string): string {
+  const n = (raw || "").replace(/\D/g, "").slice(0, 3);
+  if (!n) return "";
+  return n + " min";
+}
+// Nota: digite só números — vira "★ 4.9" (1 casa decimal)
+function formatRating(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 2);
+  if (!d) return "";
+  if (d.length === 1) return "★ " + d + ".0";
+  return "★ " + d[0] + "." + d[1];
+}
+// Corridas: digite só números — vira "1.234 corridas"
+function formatRides(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (!d) return "";
+  return Number(d).toLocaleString("pt-BR") + " corridas";
+}
+// Placa: AAA0A00 ou AAA-0000 — uppercase + traço
+function formatPlate(raw: string): string {
+  const v = (raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
+  if (v.length <= 3) return v;
+  return v.slice(0, 3) + "-" + v.slice(3);
+}
+
 interface Props {
   adId: string;
 }
@@ -217,8 +261,9 @@ export function OrderStatusPanel({ adId }: Props) {
           <label className="text-xs font-medium">Valor (total)</label>
           <input
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="R$ 2.350,00"
+            onChange={(e) => setPrice(formatPriceBR(e.target.value))}
+            inputMode="numeric"
+            placeholder="Digite só números: 235000 → R$ 2.350,00"
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -237,8 +282,9 @@ export function OrderStatusPanel({ adId }: Props) {
             <label className="text-xs font-medium">Data do pedido</label>
             <input
               value={orderDate}
-              onChange={(e) => setOrderDate(e.target.value)}
-              placeholder="Hoje · 20h32"
+              onChange={(e) => setOrderDate(formatDateTimeBR(e.target.value))}
+              inputMode="numeric"
+              placeholder="07112026 2032 → 07/11 20:32"
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
           </div>
@@ -442,12 +488,12 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
             <PhotoPicker photo={photo} onChange={setPhoto} />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="Placa" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="Veículo" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Cor" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={rating} onChange={(e) => setRating(e.target.value)} placeholder="★ 4.9" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={rides} onChange={(e) => setRides(e.target.value)} placeholder="Corridas" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
-              <input value={eta} onChange={(e) => setEta(e.target.value)} placeholder="ETA (8 min)" className="col-span-2 rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={plate} onChange={(e) => setPlate(formatPlate(e.target.value))} placeholder="Placa: ABC1D23" className="rounded-md border border-input bg-background px-3 py-2 text-xs uppercase" />
+              <input value={vehicle} onChange={(e) => setVehicle(e.target.value)} placeholder="Veículo (Honda CG 160)" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={color} onChange={(e) => setColor(e.target.value)} placeholder="Cor (Vermelha)" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={rating} onChange={(e) => setRating(formatRating(e.target.value))} inputMode="numeric" placeholder="Nota: 49 → ★ 4.9" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={rides} onChange={(e) => setRides(formatRides(e.target.value))} inputMode="numeric" placeholder="Corridas: 1234 → 1.234 corridas" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
+              <input value={eta} onChange={(e) => setEta(formatEta(e.target.value))} inputMode="numeric" placeholder="ETA: 8 → 8 min" className="col-span-2 rounded-md border border-input bg-background px-3 py-2 text-xs" />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" onClick={dispatch} disabled={busy} className="flex-1 min-w-[140px]">
