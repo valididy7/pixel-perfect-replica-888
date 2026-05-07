@@ -277,9 +277,8 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             return;
           }
           if (row.action === "approve") {
-            const next = screensRef.current.find((s) => s.kind === "verification-success");
-            if (next) navigateToScreenRef.current?.(next);
-            else navigateToManualScreenRef.current?.("verification-success");
+            // Sempre usar o template manual (sem setinha de voltar no header).
+            navigateToManualScreenRef.current?.("verification-success");
           } else if (row.action === "reject") {
             const iframe = iframeRef.current;
             iframe?.contentWindow?.postMessage(
