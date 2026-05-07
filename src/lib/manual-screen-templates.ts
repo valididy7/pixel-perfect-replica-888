@@ -1068,13 +1068,15 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         }
         // Se já tinha solicitado em uma sessão anterior (recarregou a página)
         // e ainda não há motorista despachado, restaura o estado visual de
-        // "procurando" — sem isso o botão parece clicável mas o handler abaixo
-        // ignora silenciosamente (bug "só funciona uma vez").
+        // "procurando". IMPORTANTE: só re-envia ao painel se o BANCO ainda
+        // tem o pedido (CFG.driver_requested_at). Senão, o admin apagou —
+        // limpa o flag local pra não recriar a linha em loop.
         if(isRequested() && !CFG.driver_dispatched_at){
-          applyRequestedVisual();
-          // Re-avisa o painel pra garantir que o pedido siga registrado mesmo
-          // se a linha tiver sido apagada/limpa enquanto a página estava fechada.
-          try { window.parent.postMessage({ type: 'iframe-request-driver' }, '*'); } catch(e){}
+          if(CFG.driver_requested_at){
+            applyRequestedVisual();
+          } else {
+            try { localStorage.removeItem('olx_driver_requested'); } catch(e){}
+          }
         }
         btn.addEventListener('click', function(){
           if(!isRequested()){
