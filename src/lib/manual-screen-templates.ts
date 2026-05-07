@@ -581,49 +581,10 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       <h2>Status do pedido</h2>
     </header>
 
-    <!-- HERO -->
+    <!-- HERO (imagem MOTORISTA A CAMINHO) -->
     <div class="hero">
-      <div class="logo">
-        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <rect width="40" height="40" rx="9" fill="#fff"/>
-          <text x="20" y="26" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="800" fill="#6E0AD6">OLX</text>
-        </svg>
-        <span>OLX Pay</span>
-      </div>
-      <h1>MOTORISTA A CAMINHO</h1>
+      <img src="/motorista-a-caminho.jpeg" alt="Motorista a caminho">
       <span class="order-id" id="hero-order">#OLX-6985866921</span>
-      <div class="hero-illu">
-        <div class="wave"></div>
-        <div class="wave2"></div>
-        <!-- Motoboy SVG ilustrativo -->
-        <svg class="moto-svg" viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <!-- caixa atrás -->
-          <rect x="22" y="58" width="42" height="36" rx="4" fill="#b6371a"/>
-          <rect x="32" y="68" width="22" height="2" fill="#fff" opacity=".8"/>
-          <rect x="40" y="74" width="6" height="6" fill="#fff" opacity=".8"/>
-          <!-- corpo moto -->
-          <path d="M40 110 Q60 80 100 90 L150 90 Q170 90 178 105" stroke="#1a1a1a" stroke-width="6" fill="none" stroke-linecap="round"/>
-          <!-- assento -->
-          <rect x="95" y="78" width="40" height="14" rx="6" fill="#1a1a1a"/>
-          <!-- guidão -->
-          <path d="M150 90 L165 70 L182 72" stroke="#1a1a1a" stroke-width="5" fill="none" stroke-linecap="round"/>
-          <!-- frente -->
-          <path d="M155 78 L185 78 L190 95 L170 100 Z" fill="#ee4d23"/>
-          <!-- piloto corpo -->
-          <path d="M110 78 Q116 56 138 56 L148 56 L156 80 Z" fill="#ee4d23"/>
-          <!-- braço -->
-          <path d="M148 60 L168 70" stroke="#ee4d23" stroke-width="9" stroke-linecap="round" fill="none"/>
-          <!-- cabeça/capacete -->
-          <circle cx="138" cy="44" r="14" fill="#1a1a1a"/>
-          <path d="M126 44 Q126 32 138 32 Q150 32 150 44" fill="#ee4d23"/>
-          <rect x="128" y="40" width="20" height="6" rx="2" fill="#9ad8ff"/>
-          <!-- rodas -->
-          <circle cx="60" cy="115" r="18" fill="#1a1a1a"/>
-          <circle cx="60" cy="115" r="7" fill="#fff"/>
-          <circle cx="170" cy="115" r="18" fill="#1a1a1a"/>
-          <circle cx="170" cy="115" r="7" fill="#fff"/>
-        </svg>
-      </div>
     </div>
 
     <!-- Greeting -->
