@@ -833,8 +833,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
               if(openBtn){ openBtn.click(); }
               return;
             }
-            var ok = window.confirm('Confirmar solicitação do motorista?');
-            if(!ok) return;
             requested = true;
             // Estado intermediário: procurando motorista
             if(btnText) btnText.textContent = 'Procurando motorista';
@@ -844,18 +842,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
             if(fill) fill.style.width = '55%';
             if(greet) greet.innerHTML = 'O comprador foi verificado e o pedido <strong id="order-inline">' + (document.getElementById('order-inline')?.textContent || '') + '</strong> está liberado. Estamos procurando um motorista parceiro próximo ao seu endereço.';
             showToast('Procurando motorista...');
-            // Após alguns segundos, motorista a caminho
-            setTimeout(function(){
-              if(btn){ btn.removeAttribute('disabled'); btn.style.opacity=''; btn.style.cursor=''; }
-              if(btnText) btnText.textContent = 'Rastrear motorista';
-              var ico2 = document.getElementById('driver-cta-ico');
-              if(ico2) ico2.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
-              if(stepLbl) stepLbl.textContent = 'Motorista a caminho';
-              if(eta) eta.style.display = '';
-              if(fill) fill.style.width = '75%';
-              if(greet) greet.innerHTML = 'O comprador foi verificado e o pedido <strong id="order-inline">' + (document.getElementById('order-inline')?.textContent || '') + '</strong> está liberado. Um motorista parceiro está a caminho do seu endereço para retirar o produto.';
-              showToast('Motorista a caminho!');
-            }, 6000);
           }
         });
       })();
