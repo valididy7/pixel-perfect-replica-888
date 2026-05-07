@@ -134,6 +134,35 @@ export function ScreensPanel({ adId }: ScreensPanelProps) {
       });
   }, [screens, adId, qc]);
 
+  // Auto-sync da tela "verification-success" (status do pedido) pra sempre refletir o template mais recente.
+  const verificationSyncedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const screen = screens.find((item) => item.kind === "verification-success" && !item.source_url);
+    if (!screen || verificationSyncedRef.current.has(screen.id)) return;
+    const tpl = MANUAL_SCREEN_TEMPLATES["verification-success"];
+    if (!tpl) return;
+    const currentHtml = screen.edited_html || screen.original_html || "";
+    // Marcador novo presente no template atual (chime estilo 99 + card acima do produto)
+    const hasLatest = currentHtml.includes("Blip-blip-Bling") && currentHtml.includes("prodSection");
+    if (hasLatest) {
+      verificationSyncedRef.current.add(screen.id);
+      return;
+    }
+    verificationSyncedRef.current.add(screen.id);
+    supabase
+      .from("ad_screens")
+      .update({ title: tpl.title, original_html: tpl.html, edited_html: tpl.html })
+      .eq("id", screen.id)
+      .then(({ error }) => {
+        if (error) {
+          verificationSyncedRef.current.delete(screen.id);
+          toast.error(error.message);
+          return;
+        }
+        qc.invalidateQueries({ queryKey: ["ad_screens", adId] });
+      });
+  }, [screens, adId, qc]);
+
   const usedKinds = new Set(screens.map((s) => s.kind));
   const accessExists = usedKinds.has("access-account");
   const passwordExists = usedKinds.has("password");
