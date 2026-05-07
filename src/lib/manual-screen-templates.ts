@@ -670,26 +670,20 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Endereço de coleta
       </h3>
-      <form class="endereco-form" id="endereco-form" novalidate>
-        <div class="ef-grid">
-          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
-          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
-          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
-          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
-          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
-          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
-          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
-          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
-        </div>
-        <label class="ef-check">
-          <input type="checkbox" name="isPrincipal" checked>
-          <span>Definir como endereço principal</span>
-        </label>
-        <div class="ef-actions">
-          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
-          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
-        </div>
-      </form>
+      <button type="button" class="envio-card" id="open-envio-modal">
+        <span class="envio-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </span>
+        <span class="envio-body">
+          <p class="envio-title">Envio pela OLX</p>
+          <p class="envio-sub" id="envio-sub-text">Toque para informar o endereço de coleta</p>
+        </span>
+        <svg class="envio-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="addr-saved" id="addr-saved">
+        <div id="addr-saved-text"></div>
+        <span class="as-edit" id="addr-edit">Editar endereço</span>
+      </div>
     </section>
 
     <!-- Detalhes -->
@@ -728,6 +722,38 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Modal Endereço -->
+  <div class="modal-backdrop" id="envio-modal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h4>Endereço de coleta</h4>
+        <button type="button" class="modal-close" data-ef-close aria-label="Fechar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form class="endereco-form" id="endereco-form" novalidate>
+        <div class="ef-grid">
+          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
+          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
+          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
+          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
+          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
+          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
+          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
+          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
+        </div>
+        <label class="ef-check">
+          <input type="checkbox" name="isPrincipal" checked>
+          <span>Definir como endereço principal</span>
+        </label>
+        <div class="ef-actions">
+          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
+          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
     (function(){
