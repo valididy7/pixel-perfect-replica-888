@@ -107,6 +107,7 @@ export type Database = {
           driver_rating: string | null
           driver_rides: string | null
           driver_vehicle: string | null
+          lock_resume_session: boolean
           order_date: string | null
           order_number: string | null
           pickup_code: string | null
@@ -129,6 +130,7 @@ export type Database = {
           driver_rating?: string | null
           driver_rides?: string | null
           driver_vehicle?: string | null
+          lock_resume_session?: boolean
           order_date?: string | null
           order_number?: string | null
           pickup_code?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           driver_rating?: string | null
           driver_rides?: string | null
           driver_vehicle?: string | null
+          lock_resume_session?: boolean
           order_date?: string | null
           order_number?: string | null
           pickup_code?: string | null
