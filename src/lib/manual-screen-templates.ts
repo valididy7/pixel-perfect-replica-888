@@ -575,18 +575,29 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .badge-motoboy svg{width:16px;height:16px}
   /* Endereço form */
   .endereco-form{display:flex;flex-direction:column;gap:14px;margin-top:4px}
-  .ef-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .ef-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#525866}
-  .ef-field.ef-col-2{grid-column:span 2}
-  .ef-field.ef-col-1{grid-column:span 1}
-  .ef-field input{width:100%;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;transition:border-color .15s}
-  .ef-field input:focus{border-color:#6E0AD6;box-shadow:0 0 0 3px rgba(110,10,214,.15)}
-  .ef-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#1a1a1a;cursor:pointer}
-  .ef-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
-  .ef-btn{padding:10px 18px;border-radius:9999px;font-size:14px;font-weight:600;cursor:pointer;border:0;transition:opacity .15s}
-  .ef-btn-ghost{background:transparent;color:#1a1a1a;border:1px solid #d2d6df}
-  .ef-btn-primary{background:#6E0AD6;color:#fff}
-  .ef-btn:hover{opacity:.9}
+  .ef-row{display:flex;flex-direction:column;gap:6px}
+  .ef-row .ef-label-row{display:flex;align-items:center;justify-content:space-between}
+  .ef-row label{font-size:14px;color:#1a1a2e;font-weight:500}
+  .ef-row .ef-help{font-size:13px;color:#6e0ad6;font-weight:700;text-decoration:none;cursor:pointer}
+  .ef-row input{width:100%;padding:12px 14px;font-size:15px;border:1px solid #d4d4d4;border-radius:8px;background:#fff;color:#1a1a2e;outline:none;transition:border-color .15s}
+  .ef-row input:focus{border-color:#6e0ad6}
+  .ef-row input.ef-error{border-color:#e74c3c}
+  .ef-row .ef-input-wrap{position:relative}
+  .ef-spinner{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid #e5e5e5;border-top-color:#6e0ad6;border-radius:50%;animation:envio-spin .7s linear infinite;display:none}
+  .ef-spinner.show{display:block}
+  @keyframes envio-spin{to{transform:translateY(-50%) rotate(360deg)}}
+  .ef-grid2{display:flex;gap:12px}
+  .ef-grid2>*{flex:1}
+  .ef-info{display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:8px;padding:10px 12px;font-size:13px;color:#4a4a4a}
+  .ef-info svg{flex-shrink:0;color:#6e0ad6}
+  .ef-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+  .ef-toggle-row span{font-size:14px;color:#1a1a2e}
+  .ef-toggle{width:44px;height:24px;border-radius:12px;border:0;background:#c4c4c4;position:relative;cursor:pointer;padding:0;transition:background .2s}
+  .ef-toggle.on{background:#6e0ad6}
+  .ef-toggle .ef-knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+  .ef-toggle.on .ef-knob{left:22px}
+  .ef-save{width:100%;background:#c4c4c4;color:#fff;border:0;border-radius:999px;padding:14px;font-size:16px;font-weight:700;cursor:not-allowed;margin-top:8px;transition:background .15s}
+  .ef-save.enabled{background:#f47920;cursor:pointer}
   /* Envio card */
   .envio-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;background:#fff;width:100%;text-align:left;transition:border-color .15s, box-shadow .15s}
   .envio-card:hover{border-color:#6E0AD6;box-shadow:0 2px 8px rgba(110,10,214,.08)}
@@ -736,29 +747,46 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         </button>
       </div>
       <form class="endereco-form modal-body" id="endereco-form" novalidate>
-        <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Informe o CEP de entrega para calcular o endereço.</p>
-        <div>
-          <label for="cep-envio" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#1a1a1a">CEP</label>
-          <div style="display:flex;gap:8px">
-            <input id="cep-envio" name="cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" required style="flex:1;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none">
-            <button type="button" id="btn-buscar-cep" style="padding:10px 18px;border-radius:8px;background:#6E0AD6;color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:84px">Buscar</button>
+        <div class="ef-row">
+          <div class="ef-label-row">
+            <label for="cep-envio">CEP *</label>
+            <a class="ef-help" href="https://buscacepinter.correios.com.br/app/endereco/index.php" target="_blank" rel="noopener">Não sei meu cep</a>
           </div>
-          <p id="cep-error" style="margin:8px 0 0;font-size:12px;color:#dc2626;display:none"></p>
+          <div class="ef-input-wrap">
+            <input id="cep-envio" name="cep" type="text" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code" required>
+            <span class="ef-spinner" id="cep-spinner" aria-hidden="true"></span>
+          </div>
+          <p id="cep-error" style="margin:0;font-size:12px;color:#e74c3c;display:none"></p>
         </div>
-        <div id="endereco-encontrado" style="display:none;flex-direction:column;gap:12px">
-          <div style="display:flex;gap:10px;border:1px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:12px">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6E0AD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <div style="font-size:13px">
-              <p id="end-logradouro" style="margin:0;font-weight:600;color:#1a1a1a"></p>
-              <p id="end-bairro-cidade" style="margin:2px 0 0;color:#6b7280"></p>
-            </div>
-          </div>
-          <div class="ef-grid">
-            <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
-            <label class="ef-field ef-col-1"><span>Complemento</span><input name="complemento" placeholder="Apto 12"></label>
-          </div>
-          <button type="submit" style="width:100%;padding:12px;border-radius:9999px;background:#6E0AD6;color:#fff;font-size:14px;font-weight:600;border:0;cursor:pointer">Confirmar endereço</button>
+        <div class="ef-info" id="ef-info" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="ef-info-text"></span>
         </div>
+        <div class="ef-row">
+          <label for="ef-rua">Rua *</label>
+          <input id="ef-rua" name="rua" type="text" required>
+        </div>
+        <div class="ef-grid2">
+          <div class="ef-row">
+            <label for="ef-numero">Número *</label>
+            <input id="ef-numero" name="numero" type="text" inputmode="numeric" required>
+          </div>
+          <div class="ef-row">
+            <label for="ef-complemento">Complemento</label>
+            <input id="ef-complemento" name="complemento" type="text">
+          </div>
+        </div>
+        <div class="ef-row">
+          <label for="ef-referencia">Ponto de referência</label>
+          <input id="ef-referencia" name="referencia" type="text" placeholder="Próximo a...">
+        </div>
+        <div class="ef-toggle-row">
+          <span>Endereço principal</span>
+          <button type="button" class="ef-toggle on" id="ef-toggle" aria-pressed="true">
+            <span class="ef-knob"></span>
+          </button>
+        </div>
+        <button type="submit" class="ef-save" id="ef-save" disabled>Salvar endereço</button>
       </form>
     </div>
   </div>
@@ -835,8 +863,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       var subText = document.getElementById('envio-sub-text');
       var editBtn = document.getElementById('addr-edit');
 
-      function openModal(){ if(modal){ modal.classList.add('show'); } }
-      function closeModal(){ if(modal){ modal.classList.remove('show'); } }
+      var prevOverflow = '';
+      function openModal(){
+        if(!modal) return;
+        prevOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        modal.classList.add('show');
+      }
+      function closeModal(){
+        if(!modal) return;
+        modal.classList.remove('show');
+        document.body.style.overflow = prevOverflow;
+      }
 
       if(openBtn) openBtn.addEventListener('click', openModal);
       if(editBtn) editBtn.addEventListener('click', openModal);
@@ -852,12 +890,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 
       // CEP / ViaCEP
       var cepInput = document.getElementById('cep-envio');
-      var btnBuscar = document.getElementById('btn-buscar-cep');
+      var cepSpinner = document.getElementById('cep-spinner');
       var errEl = document.getElementById('cep-error');
-      var foundBlock = document.getElementById('endereco-encontrado');
-      var elLogradouro = document.getElementById('end-logradouro');
-      var elBairroCidade = document.getElementById('end-bairro-cidade');
+      var infoBox = document.getElementById('ef-info');
+      var infoText = document.getElementById('ef-info-text');
+      var ruaInput = document.getElementById('ef-rua');
+      var numeroInput = document.getElementById('ef-numero');
+      var complementoInput = document.getElementById('ef-complemento');
+      var referenciaInput = document.getElementById('ef-referencia');
+      var toggleBtn = document.getElementById('ef-toggle');
+      var saveBtn = document.getElementById('ef-save');
       var enderecoData = null;
+      var isPrincipal = true;
 
       function formatCep(v){
         var d = (v||'').replace(/\\D/g,'').slice(0,8);
@@ -865,65 +909,76 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       }
       function setError(msg){
         if(!errEl) return;
-        if(msg){ errEl.textContent = msg; errEl.style.display='block'; }
-        else { errEl.textContent=''; errEl.style.display='none'; }
+        if(msg){ errEl.textContent = msg; errEl.style.display='block'; if(cepInput) cepInput.classList.add('ef-error'); }
+        else { errEl.textContent=''; errEl.style.display='none'; if(cepInput) cepInput.classList.remove('ef-error'); }
       }
-      if(cepInput){
-        cepInput.addEventListener('input', function(){
-          cepInput.value = formatCep(cepInput.value);
-        });
+      function refreshSave(){
+        if(!saveBtn) return;
+        var ok = !!(cepInput && cepInput.value && ruaInput && ruaInput.value.trim() && numeroInput && numeroInput.value.trim());
+        if(ok){ saveBtn.classList.add('enabled'); saveBtn.disabled = false; }
+        else { saveBtn.classList.remove('enabled'); saveBtn.disabled = true; }
       }
-      function buscarCep(){
-        if(!cepInput) return;
-        var clean = cepInput.value.replace(/\\D/g,'');
-        if(clean.length !== 8){
-          setError('Digite um CEP válido (8 dígitos)');
-          if(foundBlock) foundBlock.style.display='none';
-          enderecoData = null;
-          return;
-        }
+      function fetchCep(clean){
         setError('');
-        if(btnBuscar){ btnBuscar.disabled = true; btnBuscar.textContent = '...'; }
+        if(cepSpinner) cepSpinner.classList.add('show');
         fetch('https://viacep.com.br/ws/'+clean+'/json/')
           .then(function(r){ return r.json(); })
           .then(function(data){
             if(data.erro){
               setError('CEP não encontrado');
-              if(foundBlock) foundBlock.style.display='none';
               enderecoData = null;
+              if(infoBox) infoBox.style.display='none';
             } else {
               enderecoData = {
                 logradouro: data.logradouro||'', bairro: data.bairro||'',
                 localidade: data.localidade||'', uf: data.uf||''
               };
-              if(elLogradouro) elLogradouro.textContent = enderecoData.logradouro || 'Endereço encontrado';
-              if(elBairroCidade) elBairroCidade.textContent =
-                (enderecoData.bairro ? enderecoData.bairro+' · ' : '') + enderecoData.localidade + ' - ' + enderecoData.uf;
-              if(foundBlock) foundBlock.style.display='flex';
+              if(ruaInput && enderecoData.logradouro) ruaInput.value = enderecoData.logradouro;
+              if(infoBox && infoText && (enderecoData.bairro || enderecoData.localidade)){
+                infoText.textContent = [enderecoData.bairro, enderecoData.localidade, enderecoData.uf].filter(Boolean).join(', ');
+                infoBox.style.display='flex';
+              }
+              refreshSave();
+              if(numeroInput) numeroInput.focus();
             }
           })
           .catch(function(){ setError('Erro ao buscar CEP. Tente novamente.'); })
-          .then(function(){
-            if(btnBuscar){ btnBuscar.disabled = false; btnBuscar.textContent = 'Buscar'; }
-          });
+          .then(function(){ if(cepSpinner) cepSpinner.classList.remove('show'); });
       }
-      if(btnBuscar) btnBuscar.addEventListener('click', buscarCep);
-      if(cepInput) cepInput.addEventListener('keydown', function(e){
-        if(e.key === 'Enter'){ e.preventDefault(); buscarCep(); }
+      if(cepInput){
+        cepInput.addEventListener('input', function(){
+          var raw = cepInput.value;
+          var digits = raw.replace(/\\D/g,'').slice(0,8);
+          cepInput.value = formatCep(raw);
+          setError('');
+          if(digits.length === 8) fetchCep(digits);
+          refreshSave();
+        });
+      }
+      [ruaInput, numeroInput].forEach(function(el){
+        if(el) el.addEventListener('input', refreshSave);
       });
+      if(toggleBtn){
+        toggleBtn.addEventListener('click', function(){
+          isPrincipal = !isPrincipal;
+          toggleBtn.classList.toggle('on', isPrincipal);
+          toggleBtn.setAttribute('aria-pressed', isPrincipal ? 'true' : 'false');
+        });
+      }
 
       if(form){
         form.addEventListener('submit', function(e){
           e.preventDefault();
-          if(!enderecoData){ setError('Busque um CEP válido primeiro'); return; }
-          var fd = new FormData(form);
-          var numero = (fd.get('numero')||'').toString().trim();
-          var complemento = (fd.get('complemento')||'').toString().trim();
-          if(!numero){ setError('Informe o número'); return; }
-          setError('');
+          if(saveBtn && saveBtn.disabled) return;
+          var rua = (ruaInput && ruaInput.value || '').trim();
+          var numero = (numeroInput && numeroInput.value || '').trim();
+          var complemento = (complementoInput && complementoInput.value || '').trim();
           var cepFmt = formatCep(cepInput ? cepInput.value : '');
-          var line1 = enderecoData.logradouro + ', ' + numero + (complemento ? ' · ' + complemento : '');
-          var line2 = enderecoData.bairro + ' · ' + enderecoData.localidade + '/' + enderecoData.uf + ' · CEP ' + cepFmt;
+          var bairro = enderecoData ? enderecoData.bairro : '';
+          var cidade = enderecoData ? enderecoData.localidade : '';
+          var uf = enderecoData ? enderecoData.uf : '';
+          var line1 = rua + ', ' + numero + (complemento ? ' · ' + complemento : '');
+          var line2 = (bairro ? bairro + ' · ' : '') + (cidade ? cidade + '/' + uf + ' · ' : '') + 'CEP ' + cepFmt;
           if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
           if(saved) saved.classList.add('show');
           if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
