@@ -24,6 +24,12 @@ function formatDateTimeBR(raw: string): string {
   if (d.length >= 7) out += ":" + d.slice(6, 8);
   return out;
 }
+// Data/hora atual no formato "DD/MM HH:MM" (fuso local)
+function nowDateTimeBR(): string {
+  const n = new Date();
+  const pad = (x: number) => String(x).padStart(2, "0");
+  return `${pad(n.getDate())}/${pad(n.getMonth() + 1)} ${pad(n.getHours())}:${pad(n.getMinutes())}`;
+}
 // ETA: digite só o número de minutos — vira "8 min"
 function formatEta(raw: string): string {
   const n = (raw || "").replace(/\D/g, "").slice(0, 3);
@@ -111,8 +117,11 @@ export function OrderStatusPanel({ adId }: Props) {
         setTitle(row.product_title || "");
         setPrice(row.product_price || "");
         setOrderNumber(row.order_number || "");
-        setOrderDate(row.order_date || "");
+        setOrderDate(row.order_date || nowDateTimeBR());
         setPickupCode(row.pickup_code || "");
+      } else {
+        // Sem registro ainda: já preenche a data com agora pra evitar digitação.
+        setOrderDate(nowDateTimeBR());
       }
 
       const { data: sess } = await supabase

@@ -164,18 +164,23 @@ export default function UsersAdmin() {
                       <p className="truncate text-xs text-muted-foreground">{r.email} · {isAdmin ? "admin" : "usuário"}</p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => resetPw(r.id)} title="Resetar senha">
-                        <KeyRound className="h-4 w-4" />
-                      </Button>
-                      {!self && (
+                      {self && (
+                        <Button size="sm" variant="ghost" onClick={() => resetPw(r.id)} title="Trocar minha senha">
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {!self && !isAdmin && (
                         <>
                           <Button size="sm" variant="ghost" onClick={() => toggleRole(r.id, r.roles)}>
-                            {isAdmin ? "Tornar usuário" : "Tornar admin"}
+                            Tornar admin
                           </Button>
                           <Button size="sm" variant="ghost" onClick={() => remove(r.id, r.username || r.email)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </>
+                      )}
+                      {!self && isAdmin && (
+                        <span className="text-xs text-muted-foreground italic">protegido</span>
                       )}
                     </div>
                   </li>
