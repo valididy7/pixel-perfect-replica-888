@@ -97,6 +97,8 @@ export function OrderStatusPanel({ adId }: Props) {
   const [orderNumber, setOrderNumber] = useState("");
   const [orderDate, setOrderDate] = useState("");
   const [pickupCode, setPickupCode] = useState("");
+  const [lockResume, setLockResume] = useState(false);
+  const [savingLock, setSavingLock] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
@@ -119,6 +121,7 @@ export function OrderStatusPanel({ adId }: Props) {
         setOrderNumber(row.order_number || "");
         setOrderDate(row.order_date || nowDateTimeBR());
         setPickupCode(row.pickup_code || "");
+        setLockResume(!!(row as any).lock_resume_session);
       } else {
         // Sem registro ainda: já preenche a data com agora pra evitar digitação.
         setOrderDate(nowDateTimeBR());
@@ -194,6 +197,7 @@ export function OrderStatusPanel({ adId }: Props) {
       order_number: orderNumber || null,
       order_date: orderDate || null,
       pickup_code: pickupCode || null,
+      lock_resume_session: lockResume,
     });
     setSaving(false);
     if (error) {
