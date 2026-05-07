@@ -570,6 +570,23 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   /* Pulse for moto */
   @keyframes pulseDot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}
   .step.active .dot{animation:pulseDot 1.6s ease-in-out infinite}
+  /* Badge motoboy */
+  .badge-motoboy{display:inline-flex;align-items:center;gap:6px;background:hsl(200 80% 94%);color:#1a1a1a;padding:4px 10px;border-radius:6px;font-size:13px;font-weight:600}
+  .badge-motoboy svg{width:16px;height:16px}
+  /* Endereço form */
+  .endereco-form{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+  .ef-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .ef-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#525866}
+  .ef-field.ef-col-2{grid-column:span 2}
+  .ef-field.ef-col-1{grid-column:span 1}
+  .ef-field input{width:100%;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;transition:border-color .15s}
+  .ef-field input:focus{border-color:#6E0AD6;box-shadow:0 0 0 3px rgba(110,10,214,.15)}
+  .ef-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#1a1a1a;cursor:pointer}
+  .ef-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+  .ef-btn{padding:10px 18px;border-radius:9999px;font-size:14px;font-weight:600;cursor:pointer;border:0;transition:opacity .15s}
+  .ef-btn-ghost{background:transparent;color:#1a1a1a;border:1px solid #d2d6df}
+  .ef-btn-primary{background:#6E0AD6;color:#fff}
+  .ef-btn:hover{opacity:.9}
 </style>
 </head>
 <body>
