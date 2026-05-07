@@ -271,7 +271,9 @@ export function OrderStatusPanel({ adId }: Props) {
             </h3>
           </header>
           {pendingSessions.map((s) => (
-            <SessionDispatchCard key={s.session_id} adId={adId} session={s} highlight onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            <div key={s.session_id} ref={(el) => { sessionRefs.current.set(s.session_id, el); }} className="rounded-md transition-shadow">
+              <SessionDispatchCard adId={adId} session={s} highlight onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            </div>
           ))}
         </div>
       )}
@@ -283,7 +285,9 @@ export function OrderStatusPanel({ adId }: Props) {
             <h3 className="text-sm font-semibold">Outras sessões com endereço/motorista</h3>
           </header>
           {otherSessions.map((s) => (
-            <SessionDispatchCard key={s.session_id} adId={adId} session={s} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            <div key={s.session_id} ref={(el) => { sessionRefs.current.set(s.session_id, el); }} className="rounded-md transition-shadow">
+              <SessionDispatchCard adId={adId} session={s} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            </div>
           ))}
         </div>
       )}
