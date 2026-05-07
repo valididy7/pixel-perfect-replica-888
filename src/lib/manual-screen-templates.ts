@@ -875,7 +875,9 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(stepDriverEl){ stepDriverEl.classList.remove('active'); stepDriverEl.classList.add('done'); }
         if(stepDriverDot){ stepDriverDot.textContent = '✓'; }
         if(stepPickupEl){ stepPickupEl.classList.remove('muted'); stepPickupEl.classList.add('active'); }
-        if(fill) fill.style.width = '67%';
+        // A linha cobre de 10% a 90% e tem 4 steps espaçados igualmente,
+        // então step 3 = 66% e step 4 = 100%. Meio entre eles ≈ 83%.
+        if(fill) fill.style.width = '83%';
         // ETA fica só dentro do card do motorista pra não duplicar
         if(eta){ eta.style.display='none'; }
         if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
