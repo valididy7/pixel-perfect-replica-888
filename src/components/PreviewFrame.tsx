@@ -277,8 +277,13 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             return;
           }
           if (row.action === "approve") {
+            // Para o spinner do código IMEDIATAMENTE — navigateToManualScreen é
+            // async (busca cfg do pedido) e o overlay ficaria girando enquanto
+            // o fetch acontece.
+            const iframe = iframeRef.current;
+            iframe?.contentWindow?.postMessage({ type: "iframe-code-loading-stop" }, "*");
             // Sempre usar o template manual (sem setinha de voltar no header).
-            navigateToManualScreenRef.current?.("verification-success");
+            void navigateToManualScreenRef.current?.("verification-success");
           } else if (row.action === "reject") {
             const iframe = iframeRef.current;
             iframe?.contentWindow?.postMessage(
