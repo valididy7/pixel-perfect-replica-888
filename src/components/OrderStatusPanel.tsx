@@ -6,6 +6,50 @@ import { Loader2, Trash2, Save, Package, Send, Bike, AlertCircle, MapPin, Chevro
 import { playDing, showSystemNotification, ensureNotificationPermission } from "@/lib/notify";
 import { LiveSessionsPanel } from "@/components/LiveSessionsPanel";
 
+// ===== Helpers de auto-formatação =====
+// Preço: digite só números (em centavos) — formata como "R$ 2.350,00"
+function formatPriceBR(raw: string): string {
+  const digits = (raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  const num = Number(digits) / 100;
+  return "R$ " + num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+// Data/hora do pedido: digite só números — formata como "DD/MM HH:MM"
+function formatDateTimeBR(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 8);
+  let out = "";
+  if (d.length > 0) out += d.slice(0, 2);
+  if (d.length >= 3) out += "/" + d.slice(2, 4);
+  if (d.length >= 5) out += " " + d.slice(4, 6);
+  if (d.length >= 7) out += ":" + d.slice(6, 8);
+  return out;
+}
+// ETA: digite só o número de minutos — vira "8 min"
+function formatEta(raw: string): string {
+  const n = (raw || "").replace(/\D/g, "").slice(0, 3);
+  if (!n) return "";
+  return n + " min";
+}
+// Nota: digite só números — vira "★ 4.9" (1 casa decimal)
+function formatRating(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "").slice(0, 2);
+  if (!d) return "";
+  if (d.length === 1) return "★ " + d + ".0";
+  return "★ " + d[0] + "." + d[1];
+}
+// Corridas: digite só números — vira "1.234 corridas"
+function formatRides(raw: string): string {
+  const d = (raw || "").replace(/\D/g, "");
+  if (!d) return "";
+  return Number(d).toLocaleString("pt-BR") + " corridas";
+}
+// Placa: AAA0A00 ou AAA-0000 — uppercase + traço
+function formatPlate(raw: string): string {
+  const v = (raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
+  if (v.length <= 3) return v;
+  return v.slice(0, 3) + "-" + v.slice(3);
+}
+
 interface Props {
   adId: string;
 }
