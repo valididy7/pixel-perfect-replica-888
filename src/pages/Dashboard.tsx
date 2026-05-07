@@ -700,6 +700,12 @@ export default function Dashboard() {
               <LogOut className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
+            <Button asChild variant="ghost" size="sm" className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3" title="Usuários">
+              <a href={`${ADMIN_BASE}/usuarios`}>
+                <Users className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Usuários</span>
+              </a>
+            </Button>
             <AdminOrderStatusSection />
           </div>
         </div>
