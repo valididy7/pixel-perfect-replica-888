@@ -969,7 +969,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         } catch(e){}
       }
 
-      // Driver request flow: "Solicitar motorista" -> confirma -> "Motorista a caminho"
+      // Driver request flow: "Solicitar coleta" -> confirma -> "Parceiro a caminho"
       (function(){
         var btn = document.getElementById('driver-cta');
         var btnText = document.getElementById('driver-cta-text');
@@ -979,10 +979,14 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         var eta = document.getElementById('eta-line');
         var greet = document.getElementById('greet-text');
         var fill = document.getElementById('rail-fill');
-        var requested = false;
         if(!btn) return;
+        // Fonte da verdade = localStorage. Assim, quando o admin apaga o endereço
+        // (limpa a flag), o botão volta a funcionar normalmente.
+        function isRequested(){
+          try { return localStorage.getItem('olx_driver_requested') === '1'; } catch(e){ return false; }
+        }
         btn.addEventListener('click', function(){
-          if(!requested){
+          if(!isRequested()){
             var wrap = document.getElementById('envio-wrap');
             var hasAddr = wrap && wrap.classList.contains('has-addr');
             if(!hasAddr){
@@ -990,7 +994,6 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
               if(openBtn){ openBtn.click(); }
               return;
             }
-            requested = true;
             try { localStorage.setItem('olx_driver_requested', '1'); } catch(e){}
             // Avisa o painel que ESTA sessão clicou em solicitar motorista
             try {
