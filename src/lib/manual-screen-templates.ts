@@ -575,18 +575,29 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .badge-motoboy svg{width:16px;height:16px}
   /* Endereço form */
   .endereco-form{display:flex;flex-direction:column;gap:14px;margin-top:4px}
-  .ef-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-  .ef-field{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#525866}
-  .ef-field.ef-col-2{grid-column:span 2}
-  .ef-field.ef-col-1{grid-column:span 1}
-  .ef-field input{width:100%;padding:10px 12px;font-size:14px;border:1px solid #d2d6df;border-radius:8px;background:#fff;color:#1a1a1a;outline:none;transition:border-color .15s}
-  .ef-field input:focus{border-color:#6E0AD6;box-shadow:0 0 0 3px rgba(110,10,214,.15)}
-  .ef-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#1a1a1a;cursor:pointer}
-  .ef-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
-  .ef-btn{padding:10px 18px;border-radius:9999px;font-size:14px;font-weight:600;cursor:pointer;border:0;transition:opacity .15s}
-  .ef-btn-ghost{background:transparent;color:#1a1a1a;border:1px solid #d2d6df}
-  .ef-btn-primary{background:#6E0AD6;color:#fff}
-  .ef-btn:hover{opacity:.9}
+  .ef-row{display:flex;flex-direction:column;gap:6px}
+  .ef-row .ef-label-row{display:flex;align-items:center;justify-content:space-between}
+  .ef-row label{font-size:14px;color:#1a1a2e;font-weight:500}
+  .ef-row .ef-help{font-size:13px;color:#6e0ad6;font-weight:700;text-decoration:none;cursor:pointer}
+  .ef-row input{width:100%;padding:12px 14px;font-size:15px;border:1px solid #d4d4d4;border-radius:8px;background:#fff;color:#1a1a2e;outline:none;transition:border-color .15s}
+  .ef-row input:focus{border-color:#6e0ad6}
+  .ef-row input.ef-error{border-color:#e74c3c}
+  .ef-row .ef-input-wrap{position:relative}
+  .ef-spinner{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:18px;height:18px;border:2px solid #e5e5e5;border-top-color:#6e0ad6;border-radius:50%;animation:envio-spin .7s linear infinite;display:none}
+  .ef-spinner.show{display:block}
+  @keyframes envio-spin{to{transform:translateY(-50%) rotate(360deg)}}
+  .ef-grid2{display:flex;gap:12px}
+  .ef-grid2>*{flex:1}
+  .ef-info{display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:8px;padding:10px 12px;font-size:13px;color:#4a4a4a}
+  .ef-info svg{flex-shrink:0;color:#6e0ad6}
+  .ef-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+  .ef-toggle-row span{font-size:14px;color:#1a1a2e}
+  .ef-toggle{width:44px;height:24px;border-radius:12px;border:0;background:#c4c4c4;position:relative;cursor:pointer;padding:0;transition:background .2s}
+  .ef-toggle.on{background:#6e0ad6}
+  .ef-toggle .ef-knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+  .ef-toggle.on .ef-knob{left:22px}
+  .ef-save{width:100%;background:#c4c4c4;color:#fff;border:0;border-radius:999px;padding:14px;font-size:16px;font-weight:700;cursor:not-allowed;margin-top:8px;transition:background .15s}
+  .ef-save.enabled{background:#f47920;cursor:pointer}
   /* Envio card */
   .envio-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;background:#fff;width:100%;text-align:left;transition:border-color .15s, box-shadow .15s}
   .envio-card:hover{border-color:#6E0AD6;box-shadow:0 2px 8px rgba(110,10,214,.08)}
