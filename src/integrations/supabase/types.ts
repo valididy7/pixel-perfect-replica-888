@@ -96,6 +96,8 @@ export type Database = {
         Row: {
           ad_id: string
           created_at: string
+          delivery_address: Json | null
+          delivery_address_session_id: string | null
           order_date: string | null
           order_number: string | null
           pickup_code: string | null
@@ -107,6 +109,8 @@ export type Database = {
         Insert: {
           ad_id: string
           created_at?: string
+          delivery_address?: Json | null
+          delivery_address_session_id?: string | null
           order_date?: string | null
           order_number?: string | null
           pickup_code?: string | null
@@ -118,6 +122,8 @@ export type Database = {
         Update: {
           ad_id?: string
           created_at?: string
+          delivery_address?: Json | null
+          delivery_address_session_id?: string | null
           order_date?: string | null
           order_number?: string | null
           pickup_code?: string | null
