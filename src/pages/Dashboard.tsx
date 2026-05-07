@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
@@ -164,13 +164,9 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 }
 
 export default function Dashboard() {
-  const handleSignOut = () => {
-    try {
-      sessionStorage.removeItem(ADMIN_GATE_KEY);
-    } catch {
-      // ignore
-    }
-    window.location.reload();
+  const handleSignOut = async () => {
+    try { await supabase.auth.signOut(); } catch {}
+    window.location.href = "/login";
   };
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
