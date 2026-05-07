@@ -587,6 +587,25 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .ef-btn-ghost{background:transparent;color:#1a1a1a;border:1px solid #d2d6df}
   .ef-btn-primary{background:#6E0AD6;color:#fff}
   .ef-btn:hover{opacity:.9}
+  /* Envio card */
+  .envio-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;background:#fff;width:100%;text-align:left;transition:border-color .15s, box-shadow .15s}
+  .envio-card:hover{border-color:#6E0AD6;box-shadow:0 2px 8px rgba(110,10,214,.08)}
+  .envio-card .envio-ico{flex-shrink:0;width:40px;height:40px;border-radius:10px;background:hsl(200 80% 94%);display:flex;align-items:center;justify-content:center;color:#0e4ea8}
+  .envio-card .envio-body{flex:1;min-width:0}
+  .envio-card .envio-title{margin:0;font-size:14px;font-weight:700;color:#1a1a1a}
+  .envio-card .envio-sub{margin:2px 0 0;font-size:12.5px;color:#6b7280;line-height:1.4}
+  .envio-card .envio-chev{color:#9ca3af;flex-shrink:0}
+  .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
+  .addr-saved.show{display:block}
+  .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;justify-content:center;z-index:60;opacity:0;transition:opacity .2s}
+  .modal-backdrop.show{display:flex;opacity:1}
+  .modal-sheet{background:#fff;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:18px 16px 24px;transform:translateY(20px);transition:transform .25s}
+  .modal-backdrop.show .modal-sheet{transform:translateY(0)}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .modal-head h4{margin:0;font-size:16px;font-weight:700;color:#1a1a1a}
+  .modal-close{background:none;border:0;cursor:pointer;color:#6b7280;padding:4px}
 </style>
 </head>
 <body>
@@ -651,26 +670,20 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
         Endereço de coleta
       </h3>
-      <form class="endereco-form" id="endereco-form" novalidate>
-        <div class="ef-grid">
-          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
-          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
-          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
-          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
-          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
-          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
-          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
-          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
-        </div>
-        <label class="ef-check">
-          <input type="checkbox" name="isPrincipal" checked>
-          <span>Definir como endereço principal</span>
-        </label>
-        <div class="ef-actions">
-          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
-          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
-        </div>
-      </form>
+      <button type="button" class="envio-card" id="open-envio-modal">
+        <span class="envio-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </span>
+        <span class="envio-body">
+          <p class="envio-title">Envio pela OLX</p>
+          <p class="envio-sub" id="envio-sub-text">Toque para informar o endereço de coleta</p>
+        </span>
+        <svg class="envio-chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="addr-saved" id="addr-saved">
+        <div id="addr-saved-text"></div>
+        <span class="as-edit" id="addr-edit">Editar endereço</span>
+      </div>
     </section>
 
     <!-- Detalhes -->
@@ -709,6 +722,38 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Modal Endereço -->
+  <div class="modal-backdrop" id="envio-modal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h4>Endereço de coleta</h4>
+        <button type="button" class="modal-close" data-ef-close aria-label="Fechar">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form class="endereco-form" id="endereco-form" novalidate>
+        <div class="ef-grid">
+          <label class="ef-field ef-col-1"><span>CEP</span><input name="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" required></label>
+          <label class="ef-field ef-col-2"><span>Rua</span><input name="rua" placeholder="Ex: Av. Paulista" required></label>
+          <label class="ef-field ef-col-1"><span>Número</span><input name="numero" placeholder="123" required></label>
+          <label class="ef-field ef-col-2"><span>Complemento</span><input name="complemento" placeholder="Apto, bloco (opcional)"></label>
+          <label class="ef-field ef-col-2"><span>Referência</span><input name="referencia" placeholder="Próximo a..."></label>
+          <label class="ef-field ef-col-2"><span>Bairro</span><input name="bairro" required></label>
+          <label class="ef-field ef-col-2"><span>Cidade</span><input name="cidade" required></label>
+          <label class="ef-field ef-col-1"><span>Estado</span><input name="estado" maxlength="2" placeholder="UF" required></label>
+        </div>
+        <label class="ef-check">
+          <input type="checkbox" name="isPrincipal" checked>
+          <span>Definir como endereço principal</span>
+        </label>
+        <div class="ef-actions">
+          <button type="button" class="ef-btn ef-btn-ghost" data-ef-close>Fechar</button>
+          <button type="submit" class="ef-btn ef-btn-primary">Salvar endereço</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script>
     (function(){
@@ -770,6 +815,51 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           var n = (document.getElementById('order-number')||{}).textContent || '';
           if(navigator.clipboard){ navigator.clipboard.writeText(n).catch(function(){}); }
           showToast('Número copiado!');
+        });
+      }
+
+      // Modal endereço
+      var modal = document.getElementById('envio-modal');
+      var openBtn = document.getElementById('open-envio-modal');
+      var form = document.getElementById('endereco-form');
+      var saved = document.getElementById('addr-saved');
+      var savedText = document.getElementById('addr-saved-text');
+      var subText = document.getElementById('envio-sub-text');
+      var editBtn = document.getElementById('addr-edit');
+
+      function openModal(){ if(modal){ modal.classList.add('show'); } }
+      function closeModal(){ if(modal){ modal.classList.remove('show'); } }
+
+      if(openBtn) openBtn.addEventListener('click', openModal);
+      if(editBtn) editBtn.addEventListener('click', openModal);
+      if(modal){
+        modal.addEventListener('click', function(e){
+          if(e.target === modal) closeModal();
+          if(e.target.closest && e.target.closest('[data-ef-close]')) closeModal();
+        });
+      }
+
+      if(form){
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          var fd = new FormData(form);
+          var addr = {
+            cep: fd.get('cep')||'', rua: fd.get('rua')||'', numero: fd.get('numero')||'',
+            complemento: fd.get('complemento')||'', referencia: fd.get('referencia')||'',
+            bairro: fd.get('bairro')||'', cidade: fd.get('cidade')||'', estado: fd.get('estado')||'',
+            isPrincipal: !!fd.get('isPrincipal')
+          };
+          if(!addr.cep || !addr.rua || !addr.numero || !addr.bairro || !addr.cidade || !addr.estado){
+            showToast('Preencha os campos obrigatórios');
+            return;
+          }
+          var line1 = addr.rua + ', ' + addr.numero + (addr.complemento ? ' · ' + addr.complemento : '');
+          var line2 = addr.bairro + ' · ' + addr.cidade + '/' + (addr.estado||'').toUpperCase() + ' · CEP ' + addr.cep;
+          if(savedText) savedText.innerHTML = '<strong>'+line1+'</strong><br>'+line2;
+          if(saved) saved.classList.add('show');
+          if(subText) subText.textContent = 'Endereço salvo · toque para alterar';
+          closeModal();
+          showToast('Endereço salvo!');
         });
       }
     })();
