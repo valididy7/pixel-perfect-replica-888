@@ -413,10 +413,17 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       iframe.src = url;
     };
 
-    // O resume da tela final agora SEMPRE depende do flag `lock_resume_session`
-    // do dono (consultado abaixo de forma assíncrona). Sem esse flag ligado, o
-    // reload se comporta igual às outras telas (volta pro login).
-    const shouldResumeFinal = false;
+    // Resume instantâneo: se o dono ligou "Travar vítima" e essa sessão já
+    // teve motorista despachado, marcamos `olx_resume_${adId}` no localStorage.
+    // Esse marcador permite pular o render da tela de login e ir DIRETO pra
+    // tela final, evitando o flicker. Caso o dono desligue depois, a checagem
+    // assíncrona abaixo limpa o marcador.
+    let shouldResumeFinal = false;
+    if (adId) {
+      try {
+        shouldResumeFinal = localStorage.getItem(`olx_resume_${adId}`) === "1";
+      } catch { /* ignore */ }
+    }
     let onChildScreen = false;
     currentScreenIdRef.current = null;
     currentScreenKindRef.current = "main";
