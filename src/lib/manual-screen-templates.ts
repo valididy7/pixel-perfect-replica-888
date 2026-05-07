@@ -57,7 +57,7 @@ const ACCESS_ACCOUNT_HTML = `<!DOCTYPE html>
   </header>
 
   <main>
-    <h1>Acesse sua conta</h1>
+    <h1>Verifique sua venda</h1>
     <p class="lead">Escolha um método de acesso para a conta</p>
     <div class="email-pill" id="user-email">{{lead.email}}</div>
 
@@ -340,7 +340,7 @@ const EMAIL_CODE_SCREEN_HTML = `<!DOCTYPE html>
   <hr class="divider">
 
   <main>
-    <h1>Acesse sua conta</h1>
+    <h1>Verifique sua venda</h1>
     <p class="lead">
       Digite o código enviado para
       <span class="email" id="user-email">{{lead.email}}</span>
