@@ -702,7 +702,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       <div class="row"><span class="k">Data</span><span class="v" id="order-date">Hoje · 20h32</span></div>
       <div class="row"><span class="k">Pagamento</span><span class="v">OLX Pay · aprovado</span></div>
       <div class="row"><span class="k">Modalidade</span><span class="v">Entrega em mãos · motoboy</span></div>
-      <div class="row"><span class="k">Código de retirada</span><span class="v" id="pickup-code">—</span></div>
+      <div class="row"><span class="k">Código de coleta</span><span class="v" id="pickup-code">—</span></div>
       <div class="total">
         <span>Valor total</span>
         <span class="v">R$ 2.350,00</span>
@@ -712,7 +712,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <!-- Reminder -->
     <div class="reminder">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 1.8 20.5h20.4L12 3z"/><line x1="12" y1="10" x2="12" y2="14.5"/><line x1="12" y1="17.3" x2="12" y2="17.4"/></svg>
-        <p><strong>Lembrete:</strong> a OLX nunca cobra valores adicionais após a verificação. Confirme o código de retirada com o motoboy antes de entregar o produto. <strong>Não compartilhe esse código por mensagem.</strong></p>
+        <p><strong>Lembrete:</strong> a OLX nunca cobra valores adicionais após a verificação. Confirme o código de coleta com o motorista antes de entregar o produto. <strong>Não compartilhe esse código por mensagem.</strong></p>
     </div>
 
     <footer>
