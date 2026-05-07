@@ -14,21 +14,25 @@ export function AdminGate({ children }: AdminGateProps) {
   const location = useLocation();
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Só re-checa quando o ID do usuário muda. Evita "flash" do spinner
+  // toda vez que outra aba dispara TOKEN_REFRESHED via localStorage
+  // (que é o que dava sensação de "o painel recarregou junto").
+  const userId = user?.id ?? null;
 
   useEffect(() => {
     let cancel = false;
     if (loading) return;
-    if (!user) { setChecking(false); return; }
+    if (!userId) { setIsAdmin(false); setChecking(false); return; }
     setChecking(true);
     supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle()
       .then(({ data }) => { if (!cancel){ setIsAdmin(!!data); setChecking(false);} });
     return () => { cancel = true; };
-  }, [user, loading]);
+  }, [userId, loading]);
 
   if (loading || checking) {
     return (
