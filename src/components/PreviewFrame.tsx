@@ -348,7 +348,18 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "ad_session_orders", filter: `ad_id=eq.${adId}` },
-        (payload) => send(payload.new as any, false),
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            const oldRow = payload.old as any;
+            if (oldRow?.session_id === sessionId) {
+              lastDispatched = null;
+              iframeRef.current?.contentWindow?.postMessage({ type: "olx-driver-reset" }, "*");
+              iframeRef.current?.contentWindow?.postMessage({ type: "olx-address-reset" }, "*");
+            }
+            return;
+          }
+          send(payload.new as any, false);
+        },
       )
       .subscribe();
     return () => {
