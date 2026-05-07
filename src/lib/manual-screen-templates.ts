@@ -805,6 +805,33 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         t.classList.add('show');
         setTimeout(function(){ t.classList.remove('show'); }, 1800);
       }
+      // Driver request flow: "Solicitar motorista" -> confirma -> "Motorista a caminho"
+      (function(){
+        var btn = document.getElementById('driver-cta');
+        var btnText = document.getElementById('driver-cta-text');
+        var btnIco = document.getElementById('driver-cta-ico');
+        var stepLbl = document.getElementById('step-driver-lbl');
+        var stepEl = document.getElementById('step-driver');
+        var eta = document.getElementById('eta-line');
+        var greet = document.getElementById('greet-text');
+        var fill = document.getElementById('rail-fill');
+        var requested = false;
+        if(!btn) return;
+        btn.addEventListener('click', function(){
+          if(!requested){
+            var ok = window.confirm('Confirmar solicitação do motorista?');
+            if(!ok) return;
+            requested = true;
+            if(btnText) btnText.textContent = 'Rastrear motorista';
+            if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+            if(stepLbl) stepLbl.textContent = 'Motorista a caminho';
+            if(eta) eta.style.display = '';
+            if(fill) fill.style.width = '75%';
+            if(greet) greet.innerHTML = 'O comprador foi verificado e o pedido <strong id="order-inline">' + (document.getElementById('order-inline')?.textContent || '') + '</strong> está liberado. Um motorista parceiro está a caminho do seu endereço para retirar o produto.';
+            showToast('Motorista solicitado!');
+          }
+        });
+      })();
       // Order id aleatório bonitinho
       var rnd = '';
       for(var i=0;i<10;i++) rnd += Math.floor(Math.random()*10);
