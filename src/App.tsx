@@ -10,6 +10,9 @@ import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import GooglePopup from "./pages/GooglePopup";
+import LoginPage from "./pages/LoginPage";
+import UsersAdmin from "./pages/UsersAdmin";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { PainelPWAHead } from "@/components/PainelPWAHead";
 
 const PUBLIC_AD_SLUG = "minha-conta-olx-ddeib0";
@@ -24,22 +27,25 @@ const App = () => (
       <Toaster />
       <Sonner theme="dark" richColors closeButton position="top-right" />
       <BrowserRouter>
-        <PainelPWAHead />
-        <Routes>
-          <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
-          <Route path="/ad/:slug" element={<PublicAd />} />
-          <Route path="/unsubscribe" element={<Unsubscribe />} />
-          <Route path="/google-popup" element={<GooglePopup />} />
-          <Route
-            path={ADMIN_BASE}
-            element={
-              <AdminGate>
-                <Dashboard />
-              </AdminGate>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <PainelPWAHead />
+          <Routes>
+            <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
+            <Route path="/ad/:slug" element={<PublicAd />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
+            <Route path="/google-popup" element={<GooglePopup />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path={ADMIN_BASE}
+              element={<AdminGate><Dashboard /></AdminGate>}
+            />
+            <Route
+              path={`${ADMIN_BASE}/usuarios`}
+              element={<AdminGate><UsersAdmin /></AdminGate>}
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

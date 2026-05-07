@@ -19,16 +19,28 @@ export default function LoginPage() {
     if (!loading && user) navigate(from, { replace: true });
   }, [user, loading, navigate, from]);
 
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const onLogin = async (e: FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
+    let email = identifier.trim();
+    if (!email.includes("@")) {
+      // Resolve username -> email interno via RPC pública
+      const { data, error: rpcErr } = await supabase.rpc("email_for_username", {
+        _username: email,
+      });
+      if (rpcErr || !data) {
+        setSubmitting(false);
+        return toast.error("Usuário ou senha inválidos");
+      }
+      email = data as string;
+    }
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error("Usuário ou senha inválidos");
     toast.success("Bem-vindo de volta!");
     navigate(from, { replace: true });
   };
@@ -54,16 +66,15 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-border bg-card/50 p-5 shadow-elegant backdrop-blur-xl sm:p-6">
           <form onSubmit={onLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="identifier">Usuário</Label>
               <Input
-                id="email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
+                id="identifier"
+                type="text"
+                autoComplete="username"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@email.com"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="seu usuário"
                 className="h-11 text-base sm:h-10 sm:text-sm"
               />
             </div>

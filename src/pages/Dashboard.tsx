@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
@@ -164,13 +164,9 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 }
 
 export default function Dashboard() {
-  const handleSignOut = () => {
-    try {
-      sessionStorage.removeItem(ADMIN_GATE_KEY);
-    } catch {
-      // ignore
-    }
-    window.location.reload();
+  const handleSignOut = async () => {
+    try { await supabase.auth.signOut(); } catch {}
+    window.location.href = "/login";
   };
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);
@@ -703,6 +699,12 @@ export default function Dashboard() {
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3">
               <LogOut className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="h-8 px-1.5 xs:h-9 xs:px-2 sm:px-3" title="Usuários">
+              <a href={`${ADMIN_BASE}/usuarios`}>
+                <Users className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Usuários</span>
+              </a>
             </Button>
             <AdminOrderStatusSection />
           </div>
