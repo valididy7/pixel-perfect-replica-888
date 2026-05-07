@@ -1267,6 +1267,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
               address: { cep: cepFmt, rua: rua, numero: numero, complemento: complemento, referencia: (referenciaInput && referenciaInput.value || '').trim(), bairro: bairro, cidade: cidade, uf: uf }
             }, '*');
           } catch(e){}
+          // Já dispara "Solicitar motorista" automaticamente — evita o duplo clique.
+          try {
+            var driverBtn = document.getElementById('driver-cta');
+            if(driverBtn && !driverBtn.hasAttribute('disabled')){
+              setTimeout(function(){ driverBtn.click(); }, 150);
+            }
+          } catch(e){}
         });
       }
 
