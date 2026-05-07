@@ -1166,6 +1166,24 @@ function StatCard({
   );
 }
 
+function AdminOrderStatusSection() {
+  const [adId, setAdId] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("ads")
+        .select("id")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.id) setAdId(data.id);
+    })();
+  }, []);
+  if (!adId) return null;
+  return <OrderStatusPanel adId={adId} />;
+}
+
 function StatusDot({ online }: { online: boolean }) {
   if (online) {
     return (
