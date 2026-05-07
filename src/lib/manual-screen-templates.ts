@@ -917,7 +917,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
                     '</div>'+
                     '<button id="olx-sheet-close" type="button" aria-label="Fechar" style="background:none;border:0;cursor:pointer;padding:4px;color:#6b7280;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'+
                   '</div>'+
-                  '<button id="olx-sheet-ok" type="button" style="margin-top:16px;width:100%;background:#6e0ad6;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer">Entendi</button>'+
+                  '<button id="olx-sheet-ok" type="button" style="margin-top:16px;width:100%;background:#f57c00;color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:14px;font-weight:700;cursor:pointer">Entendi</button>'+
                 '</div>';
               hostDoc.body.appendChild(root);
               var back = hostDoc.getElementById('olx-sheet-back');
