@@ -904,11 +904,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         var msg = ev && ev.data;
         if(!msg || typeof msg !== 'object') return;
         if(msg.type === 'olx-driver-dispatched' && msg.driver){
+          if(!hasRequestedDriver()) return;
           playFoundChime();
           showToast('Motorista encontrado!');
           renderDriverCard(msg.driver);
         }
         if(msg.type === 'olx-driver-reset'){
+          try { localStorage.removeItem(DRIVER_REQ_KEY); } catch(e){}
           var existing = document.getElementById('driver-card-block');
           if(existing) existing.remove();
           var stepLbl = document.getElementById('step-driver-lbl');
@@ -917,6 +919,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           if(btnText) btnText.textContent = 'Procurando motorista';
           var fill = document.getElementById('rail-fill');
           if(fill) fill.style.width = '55%';
+          var etaR = document.getElementById('eta-line');
+          if(etaR) etaR.style.display = 'none';
         }
       });
 
