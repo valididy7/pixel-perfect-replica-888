@@ -254,6 +254,11 @@ export function attachIframeInteractions(doc: Document): () => void {
     // Forms internos das telas (ex.: endereço da OLX) cuidam do próprio submit
     // — não devemos voltar pra tela mãe nem disparar fluxo de e-mail.
     if (form.id === "endereco-form" || form.hasAttribute("data-no-intercept")) {
+      // CRÍTICO: cancela a navegação nativa do form pra que, mesmo se o
+      // listener interno do template falhar, o iframe NÃO faça GET na URL
+      // atual (o que jogaria o usuário de volta pra home / tela de e-mail).
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
     e.preventDefault();
