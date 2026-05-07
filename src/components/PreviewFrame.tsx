@@ -642,6 +642,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
         (async () => {
           try {
             const sessionId = getSessionId();
+            const { data: cfg } = await supabase
+              .from("ad_order_status" as any)
+              .select("lock_resume_session")
+              .eq("ad_id", adId)
+              .maybeSingle();
+            const lockResume = !!(cfg as any)?.lock_resume_session;
+            if (!lockResume) {
+              try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
+              return;
+            }
             const { data } = await supabase
               .from("ad_session_orders" as any)
               .select("delivery_address, driver_requested_at, driver_dispatched_at")
