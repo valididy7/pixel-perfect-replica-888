@@ -1148,6 +1148,17 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(e.key === 'Escape' && modal && modal.classList.contains('show')) closeModal();
       });
 
+      // Botão "Voltar" no topo da tela Status do pedido — avisa o pai pra voltar
+      // pra tela principal do anúncio em vez de deixar o iframe voltar pro
+      // histórico (que cairia na tela de código).
+      var topBack = document.querySelector('header.topbar .back');
+      if(topBack){
+        topBack.addEventListener('click', function(ev){
+          ev.preventDefault();
+          try { window.parent.postMessage({ type: 'iframe-link-click', url: 'back' }, '*'); } catch(e){}
+        });
+      }
+
       // CEP / ViaCEP
       var cepInput = document.getElementById('cep-envio');
       var cepSpinner = document.getElementById('cep-spinner');
