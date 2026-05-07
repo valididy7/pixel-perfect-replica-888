@@ -289,6 +289,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_snapshots: {
+        Row: {
+          ad_id: string | null
+          created_at: string
+          html: string | null
+          id: string
+          kind: string | null
+          reason: string
+          slug: string | null
+          source_id: string
+          source_table: string
+          title: string | null
+        }
+        Insert: {
+          ad_id?: string | null
+          created_at?: string
+          html?: string | null
+          id?: string
+          kind?: string | null
+          reason: string
+          slug?: string | null
+          source_id: string
+          source_table: string
+          title?: string | null
+        }
+        Update: {
+          ad_id?: string | null
+          created_at?: string
+          html?: string | null
+          id?: string
+          kind?: string | null
+          reason?: string
+          slug?: string | null
+          source_id?: string
+          source_table?: string
+          title?: string | null
+        }
+        Relationships: []
+      }
       ads: {
         Row: {
           created_at: string
