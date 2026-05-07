@@ -212,15 +212,17 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
   const focusSession = focusSid ? online.get(focusSid) : null;
 
   return (
-    <div className="space-y-3 rounded-lg border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-transparent p-4">
-      <header className="flex items-center justify-between gap-2">
+    <div className="space-y-3 rounded-lg border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-transparent p-3 sm:p-4">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="relative">
             <Radio className="h-4 w-4 text-primary" />
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 animate-ping rounded-full bg-red-500" />
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500" />
           </div>
-          <h3 className="text-sm font-semibold">AO VIVO · {sortedSessions.length} {sortedSessions.length === 1 ? "vítima" : "vítimas"} no anúncio agora</h3>
+          <h3 className="text-xs sm:text-sm font-semibold leading-tight">
+            AO VIVO · {sortedSessions.length} {sortedSessions.length === 1 ? "vítima" : "vítimas"} no anúncio agora
+          </h3>
         </div>
       </header>
 
@@ -229,7 +231,7 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
           Ninguém navegando agora. Quando alguém entrar, aparece aqui em tempo real (com som + flash).
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {sortedSessions.map(({ sid, meta }) => {
             const isPending = pendingSessionIds.has(sid);
             const hasAddress = hasAddressIds.has(sid);
@@ -344,9 +346,9 @@ function FocusOverlay({
   }, [actions, leads]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-2 sm:p-4 animate-fade-in overflow-y-auto" onClick={onClose}>
       <div
-        className={`relative w-full max-w-2xl overflow-hidden rounded-2xl border-2 bg-background shadow-2xl animate-scale-in ${
+        className={`relative w-full max-w-2xl max-h-[95vh] overflow-y-auto rounded-2xl border-2 bg-background shadow-2xl animate-scale-in ${
           isPending ? "border-red-500" : "border-primary"
         }`}
         onClick={(e) => e.stopPropagation()}
