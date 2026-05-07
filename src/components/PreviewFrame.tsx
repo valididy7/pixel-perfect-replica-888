@@ -413,12 +413,10 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       iframe.src = url;
     };
 
-    // Detecta antes de renderizar: se a vítima já está na tela final (status do pedido),
-    // pula o render do "main" pra evitar o flicker (login → status) e o indicador
-    // de etapa piscar pra trás.
-    const shouldResumeFinal = !!(adId && (() => {
-      try { return localStorage.getItem(`olx_resume_${adId}`) === "1"; } catch { return false; }
-    })());
+    // O resume da tela final agora SEMPRE depende do flag `lock_resume_session`
+    // do dono (consultado abaixo de forma assíncrona). Sem esse flag ligado, o
+    // reload se comporta igual às outras telas (volta pro login).
+    const shouldResumeFinal = false;
     let onChildScreen = false;
     currentScreenIdRef.current = null;
     currentScreenKindRef.current = "main";
