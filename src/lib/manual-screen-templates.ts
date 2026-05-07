@@ -869,7 +869,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         if(ico2) ico2.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
         if(stepLbl) stepLbl.textContent = 'Motorista encontrado';
         if(fill) fill.style.width = '85%';
-        if(eta && d.eta){ eta.textContent = 'Chega em aproximadamente ' + d.eta; eta.style.display=''; }
+        // ETA fica só dentro do card do motorista pra não duplicar
+        if(eta){ eta.style.display='none'; }
         if(greet) greet.innerHTML = '<strong>' + (d.name || 'Motorista') + '</strong> aceitou seu pedido e está a caminho do seu endereço para retirar o produto.';
 
         // Insere/atualiza card visual
