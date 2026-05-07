@@ -402,6 +402,17 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
 
           <div className="space-y-2 border-t pt-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Motorista pra esta sessão</p>
+            <PasteExtractor
+              onExtract={(d) => {
+                if (d.name) setName(d.name);
+                if (d.plate) setPlate(d.plate);
+                if (d.vehicle) setVehicle(d.vehicle);
+                if (d.color) setColor(d.color);
+                if (d.rating) setRating(d.rating);
+                if (d.rides) setRides(d.rides);
+                if (d.eta) setEta(d.eta);
+              }}
+            />
             <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
             <div className="grid grid-cols-2 gap-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
@@ -427,6 +438,105 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Cola texto copiado do app da 99/Uber e extrai nome, placa, modelo, cor,
+ * nota, corridas e ETA via regex. Tudo que conseguir extrair preenche o
+ * formulário do motorista; o que não bater fica em branco.
+ */
+function PasteExtractor({ onExtract }: { onExtract: (d: {
+  name?: string; plate?: string; vehicle?: string; color?: string;
+  rating?: string; rides?: string; eta?: string;
+}) => void }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+
+  const extract = () => {
+    const t = text.replace(/\u00A0/g, " ").trim();
+    if (!t) return;
+    const out: Record<string, string> = {};
+
+    // Placa Mercosul (ABC1D23) ou antiga (ABC-1234 / ABC1234)
+    const plateMatch = t.match(/\b([A-Z]{3})[-\s]?(\d[A-Z0-9]\d{2})\b/i);
+    if (plateMatch) out.plate = (plateMatch[1] + plateMatch[2]).toUpperCase();
+
+    // ETA: "8 min", "12 minutos", "chega em 5 min", "Chegada em 8 min"
+    const etaMatch = t.match(/(\d{1,3})\s*(?:min|minutos?)\b/i);
+    if (etaMatch) out.eta = `${etaMatch[1]} min`;
+
+    // Nota: "4.9", "★ 4.8", "⭐ 4.95"
+    const ratingMatch = t.match(/(?:[★⭐]|nota|rating)\s*(\d[.,]\d{1,2})/i) || t.match(/\b(\d[.,]\d{1,2})\s*(?:[★⭐]|estrelas?)/i);
+    if (ratingMatch) out.rating = ratingMatch[1].replace(",", ".");
+
+    // Corridas: "1.2k corridas", "1234 corridas", "(1.2k)"
+    const ridesMatch = t.match(/(\d[\d.,]*\s*[kK]?)\s*corridas?/i);
+    if (ridesMatch) out.rides = ridesMatch[1].trim();
+
+    // Cores comuns
+    const colorWords = ["Branco","Preto","Prata","Cinza","Vermelho","Azul","Verde","Amarelo","Bege","Marrom","Dourado"];
+    const colorMatch = colorWords.find((c) => new RegExp(`\\b${c}\\b`, "i").test(t));
+    if (colorMatch) out.color = colorMatch;
+
+    // Modelo do carro: linha que contém marcas conhecidas
+    const carBrands = ["Honda","Toyota","Volkswagen","VW","Chevrolet","Fiat","Ford","Hyundai","Renault","Nissan","Peugeot","Citroen","Citroën","Jeep","Kia","Mitsubishi","Mercedes","BMW","Audi","Caoa","Chery"];
+    const lines = t.split(/\r?\n|·|•|\|/).map((s) => s.trim()).filter(Boolean);
+    const carLine = lines.find((l) => carBrands.some((b) => new RegExp(`\\b${b}\\b`, "i").test(l)));
+    if (carLine) {
+      // Remove cor, placa e bullets do carro
+      let v = carLine;
+      if (out.color) v = v.replace(new RegExp(`\\b${out.color}\\b`, "i"), "");
+      if (out.plate) v = v.replace(new RegExp(out.plate, "i"), "");
+      v = v.replace(/[•·|–—-]+/g, " ").replace(/\s+/g, " ").trim();
+      if (v) out.vehicle = v;
+    }
+
+    // Nome: primeira linha curta com 2+ palavras capitalizadas, sem números
+    const nameLine = lines.find((l) =>
+      l.length < 60 &&
+      !/\d/.test(l) &&
+      !carBrands.some((b) => new RegExp(`\\b${b}\\b`, "i").test(l)) &&
+      !colorWords.some((c) => new RegExp(`\\b${c}\\b`, "i").test(l)) &&
+      /^([A-ZÁÉÍÓÚÂÊÔÃÕÇ][a-záéíóúâêôãõç]+\s+){1,3}[A-ZÁÉÍÓÚÂÊÔÃÕÇ][a-záéíóúâêôãõç]+/.test(l),
+    );
+    if (nameLine) {
+      out.name = nameLine
+        .replace(/\s+(está a caminho|chegou|aceitou|a caminho).*$/i, "")
+        .trim();
+    }
+
+    onExtract(out);
+    const found = Object.keys(out).length;
+    if (found === 0) toast.error("Não consegui extrair nada. Cole o texto da 99/Uber.");
+    else toast.success(`${found} campo${found > 1 ? "s" : ""} preenchido${found > 1 ? "s" : ""}`);
+    setText("");
+    setOpen(false);
+  };
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setOpen(true)}>
+        📋 Colar dados da 99/Uber
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5 rounded-md border border-dashed border-primary/40 bg-primary/5 p-2">
+      <textarea
+        autoFocus
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={`Cole aqui o texto da 99/Uber\n\nExemplo:\nJoão Silva\nHonda Civic · Prata · ABC1D23\n★ 4.9 (1.2k corridas)\nChega em 8 min`}
+        rows={5}
+        className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-xs font-mono"
+      />
+      <div className="flex gap-1.5">
+        <Button size="sm" className="flex-1 text-xs" onClick={extract}>Extrair</Button>
+        <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setOpen(false); setText(""); }}>Cancelar</Button>
+      </div>
     </div>
   );
 }
