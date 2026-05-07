@@ -556,7 +556,16 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             supabase.from("ad_order_status" as any).select("*").eq("ad_id", adId).maybeSingle(),
             supabase.from("ad_session_orders" as any).select("*").eq("ad_id", adId).eq("session_id", sessionId).maybeSingle(),
           ]);
-          const cfg = { ...(productCfg as any || {}), ...(sessionCfg as any || {}) };
+          // Remove campos da sessão (motorista + endereço) do productCfg pra não
+          // vazar dados de outra vítima — esses campos vêm SÓ do sessionCfg.
+          const productOnly: any = { ...(productCfg as any || {}) };
+          [
+            "driver_photo_url","driver_name","driver_plate","driver_vehicle",
+            "driver_color","driver_rating","driver_rides","driver_eta",
+            "driver_dispatched_at","driver_requested_at",
+            "delivery_address","delivery_address_session_id",
+          ].forEach((k) => { delete productOnly[k]; });
+          const cfg = { ...productOnly, ...(sessionCfg as any || {}) };
           const cfgScript = `<script>window.__OLX_ORDER__ = ${JSON.stringify(cfg).replace(/</g, "\\u003c")};</script>`;
           nextHtml = nextHtml.replace(/<head[^>]*>/i, (m) => `${m}\n${cfgScript}`);
         } catch {}
