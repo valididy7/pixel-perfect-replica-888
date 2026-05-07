@@ -904,11 +904,13 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         var msg = ev && ev.data;
         if(!msg || typeof msg !== 'object') return;
         if(msg.type === 'olx-driver-dispatched' && msg.driver){
+          if(!hasRequestedDriver()) return;
           playFoundChime();
           showToast('Motorista encontrado!');
           renderDriverCard(msg.driver);
         }
         if(msg.type === 'olx-driver-reset'){
+          try { localStorage.removeItem(DRIVER_REQ_KEY); } catch(e){}
           var existing = document.getElementById('driver-card-block');
           if(existing) existing.remove();
           var stepLbl = document.getElementById('step-driver-lbl');
@@ -917,11 +919,18 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
           if(btnText) btnText.textContent = 'Procurando motorista';
           var fill = document.getElementById('rail-fill');
           if(fill) fill.style.width = '55%';
+          var etaR = document.getElementById('eta-line');
+          if(etaR) etaR.style.display = 'none';
         }
       });
 
-      // Se já veio despachado no carregamento, renderiza direto (sem chime)
-      if(CFG.driver_dispatched_at){
+      // Só renderiza o card do motorista se o cliente JÁ clicou em "Solicitar motorista"
+      // nesse dispositivo (flag local) E o admin já despachou.
+      var DRIVER_REQ_KEY = 'olx_driver_requested';
+      function hasRequestedDriver(){
+        try { return localStorage.getItem(DRIVER_REQ_KEY) === '1'; } catch(e){ return false; }
+      }
+      if(CFG.driver_dispatched_at && hasRequestedDriver()){
         try {
           renderDriverCard({
             photo_url: CFG.driver_photo_url, name: CFG.driver_name, plate: CFG.driver_plate,
@@ -953,6 +962,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
               return;
             }
             requested = true;
+            try { localStorage.setItem('olx_driver_requested', '1'); } catch(e){}
             // Estado intermediário: procurando motorista
             if(btnText) btnText.textContent = 'Procurando motorista';
             if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:olxSpin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
@@ -1038,13 +1048,8 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         }
       }
 
-      // ETA aleatório
-      var etaEl = document.getElementById('eta-line');
-      if(etaEl){
-        var min = 25 + Math.floor(Math.random()*15);
-        var max = min + 10 + Math.floor(Math.random()*10);
-        etaEl.textContent = 'Chega no seu endereço em ' + min + '–' + max + ' minutos';
-      }
+      // ETA fica oculto por padrão. Só aparece quando o motorista é despachado
+      // pelo painel (com o valor real do ETA injetado pelo admin).
 
       // Copy número
       var copyRow = document.getElementById('copy-row');
