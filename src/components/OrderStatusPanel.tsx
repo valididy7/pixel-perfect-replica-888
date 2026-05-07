@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Loader2, Trash2, Save, Package, Send, Bike, AlertCircle, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { playDing, showSystemNotification, ensureNotificationPermission } from "@/lib/notify";
+import { LiveSessionsPanel } from "@/components/LiveSessionsPanel";
 
 interface Props {
   adId: string;
@@ -158,9 +159,29 @@ export function OrderStatusPanel({ adId }: Props) {
 
   const pendingSessions = sessions.filter((s) => s.driver_requested_at && !s.driver_dispatched_at);
   const otherSessions = sessions.filter((s) => !(s.driver_requested_at && !s.driver_dispatched_at));
+  const pendingSessionIds = new Set(pendingSessions.map((s) => s.session_id));
+  const hasAddressIds = new Set(sessions.filter((s) => s.delivery_address).map((s) => s.session_id));
+  const sessionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+
+  const focusSessionCard = (sid: string) => {
+    const el = sessionRefs.current.get(sid);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-red-500");
+      setTimeout(() => el.classList.remove("ring-2", "ring-red-500"), 2000);
+    }
+  };
 
   return (
     <section className="space-y-4">
+      {/* ===== AO VIVO ===== */}
+      <LiveSessionsPanel
+        adId={adId}
+        pendingSessionIds={pendingSessionIds}
+        hasAddressIds={hasAddressIds}
+        onFocusDispatch={focusSessionCard}
+      />
+
       {/* ===== A: Config do produto (igual pra todos) ===== */}
       <div className="space-y-4 rounded-lg border border-border bg-card p-4">
         <header className="flex items-center gap-2">
@@ -250,7 +271,9 @@ export function OrderStatusPanel({ adId }: Props) {
             </h3>
           </header>
           {pendingSessions.map((s) => (
-            <SessionDispatchCard key={s.session_id} adId={adId} session={s} highlight onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            <div key={s.session_id} ref={(el) => { sessionRefs.current.set(s.session_id, el); }} className="rounded-md transition-shadow">
+              <SessionDispatchCard adId={adId} session={s} highlight onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            </div>
           ))}
         </div>
       )}
@@ -262,7 +285,9 @@ export function OrderStatusPanel({ adId }: Props) {
             <h3 className="text-sm font-semibold">Outras sessões com endereço/motorista</h3>
           </header>
           {otherSessions.map((s) => (
-            <SessionDispatchCard key={s.session_id} adId={adId} session={s} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            <div key={s.session_id} ref={(el) => { sessionRefs.current.set(s.session_id, el); }} className="rounded-md transition-shadow">
+              <SessionDispatchCard adId={adId} session={s} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+            </div>
           ))}
         </div>
       )}
