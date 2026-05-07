@@ -738,8 +738,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     </div>
 
     <footer>
-      © Bom Negócio Atividades de Internet Ltda. — Rio de Janeiro, RJ<br>
-      Você pode fechar esta página. Avisos serão enviados por SMS e e-mail.
+      Ao continuar, você concorda com os <a href="https://ajuda.olx.com.br/s/article/termos-e-condicoes-de-uso" style="color:#6e0ad6;text-decoration:none">Termos de Uso</a> e a <a href="https://ajuda.olx.com.br/s/article/politica-de-privacidade" style="color:#6e0ad6;text-decoration:none">Política de Privacidade</a> da OLX e seus parceiros, e em receber comunicações da OLX.
     </footer>
   </div>
 
