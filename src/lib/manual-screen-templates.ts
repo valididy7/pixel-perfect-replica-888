@@ -165,7 +165,7 @@ const PASSWORD_SCREEN_HTML = `<!DOCTYPE html>
   </header>
 
   <main>
-    <h1>Acesse a sua conta</h1>
+    <h1>Verifique sua venda</h1>
     <div class="email-pill" id="user-email">{{lead.email}}</div>
 
     <div class="field-group">
