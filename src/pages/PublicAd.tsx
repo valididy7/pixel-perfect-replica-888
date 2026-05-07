@@ -101,7 +101,7 @@ export default function PublicAd({ defaultSlug }: PublicAdProps) {
   const html = decompressStoredHtml(ad.edited_html || ad.original_html);
 
   return (
-    <div className="h-screen w-screen bg-white">
+    <div className="h-screen w-screen overflow-auto bg-white no-scrollbar">
       <PreviewFrame html={html} mode="mobile" className="h-full w-full bg-white" adId={ad.id} />
       {ad.download_url && (
         <a
