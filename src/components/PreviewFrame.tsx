@@ -753,7 +753,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       // Vai pra ad_session_orders (uma linha por sessão/vítima).
       if (data.type === "iframe-save-delivery-address" && adId && data.address) {
         const sessionId = getSessionId();
-        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         supabase
           .from("ad_session_orders" as any)
           .upsert({
@@ -771,7 +770,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       // O painel detecta via realtime e dispara alerta sonoro/notificação.
       if (data.type === "iframe-request-driver" && adId) {
         const sessionId = getSessionId();
-        try { localStorage.setItem(`olx_resume_${adId}`, "1"); } catch { /* ignore */ }
         supabase
           .from("ad_session_orders" as any)
           .upsert({
