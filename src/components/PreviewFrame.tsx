@@ -48,13 +48,7 @@ function sanitizeIframeHtml(rawHtml: string): string {
       const style = doc.createElement("style");
       style.id = "__olx_hide_scrollbar__";
       style.textContent = `
-        html, body {
-          scrollbar-width: none !important;
-          -ms-overflow-style: none !important;
-          overflow: hidden !important;
-          height: 100% !important;
-          margin: 0 !important;
-        }
+        html, body { scrollbar-width: none !important; -ms-overflow-style: none !important; }
         html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar {
           width: 0 !important; height: 0 !important; display: none !important;
         }
@@ -341,10 +335,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     const measure = () => {
       const doc = iframe.contentDocument;
       if (!doc) return;
+      const contentHeight = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
       const parentHeight = iframe.parentElement?.clientHeight ?? 0;
-      // Tela fixa: o iframe sempre ocupa exatamente a altura do container
-      // (a viewport do visitante). Sem rolagem interna nem barras.
-      const h = parentHeight || Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight ?? 0);
+      const h = Math.max(contentHeight, parentHeight);
       if (!h) return;
       setHeight((prev) => (Math.abs(h - prev) > 4 ? h : prev));
     };
