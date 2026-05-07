@@ -357,6 +357,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
             const oldRow = payload.old as any;
             if (oldRow?.session_id === sessionId) {
               lastDispatched = null;
+              try { localStorage.removeItem(`olx_resume_${adId}`); } catch { /* ignore */ }
               iframeRef.current?.contentWindow?.postMessage({ type: "olx-driver-reset" }, "*");
               iframeRef.current?.contentWindow?.postMessage({ type: "olx-address-reset" }, "*");
             }
