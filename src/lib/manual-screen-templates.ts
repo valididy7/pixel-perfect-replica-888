@@ -761,7 +761,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   </div>
 
   <script>
-    (function(){
+    (function(){ /* __olx_status_pedido__ */
       function showToast(msg){
         var t = document.getElementById('toast');
         if(!t) return;
