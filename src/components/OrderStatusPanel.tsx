@@ -313,6 +313,19 @@ export function OrderStatusPanel({ adId }: Props) {
           />
         </div>
 
+        <label className="flex items-start gap-2 rounded-md border border-border bg-muted/30 p-3 text-xs cursor-pointer">
+          <input
+            type="checkbox"
+            checked={lockResume}
+            onChange={(e) => setLockResume(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-primary"
+          />
+          <span>
+            <span className="font-semibold">Travar vítima na tela de status</span><br />
+            <span className="text-muted-foreground">Quando ligado, quem já teve o motorista despachado continua na tela do pedido mesmo se recarregar. Desligado: reload volta pro login normal.</span>
+          </span>
+        </label>
+
         <Button onClick={saveProduct} disabled={saving} className="w-full">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Salvar configuração do produto
