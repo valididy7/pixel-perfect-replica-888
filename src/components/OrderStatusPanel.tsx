@@ -439,7 +439,7 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
                 if (d.photo) setPhoto(d.photo);
               }}
             />
-            <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
+            <PhotoPicker photo={photo} onChange={setPhoto} />
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
               <input value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="Placa" className="rounded-md border border-input bg-background px-3 py-2 text-xs" />
@@ -489,11 +489,12 @@ function PasteExtractor({ onExtract }: { onExtract: (d: {
       });
       if (error) throw error;
       const d = (data?.data || {}) as Record<string, string>;
-      const fields = { ...d, photo: dataUrl };
-      onExtract(fields);
+      // Não usa o print como foto do motorista — só preenche os campos de
+      // texto. A foto de perfil é colada/anexada separadamente abaixo.
+      onExtract(d);
       const found = Object.keys(d).length;
       if (found === 0) toast.error("Não consegui ler dados no print.");
-      else toast.success(`${found} campo${found > 1 ? "s" : ""} preenchido${found > 1 ? "s" : ""} pela IA + foto`);
+      else toast.success(`${found} campo${found > 1 ? "s" : ""} preenchido${found > 1 ? "s" : ""} pela IA`);
       setOpen(false);
       setText("");
     } catch (e: any) {
@@ -623,6 +624,59 @@ function PasteExtractor({ onExtract }: { onExtract: (d: {
           {busy ? "Lendo print..." : "Extrair texto"}
         </Button>
         <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setOpen(false); setText(""); }} disabled={busy}>Cancelar</Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Campo da foto do motorista: aceita URL, upload (Anexar) ou colar imagem
+ * (Ctrl+V) só dentro dele. NÃO usa o print da extração — é uma foto separada.
+ */
+function PhotoPicker({ photo, onChange }: { photo: string; onChange: (v: string) => void }) {
+  const handleFile = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Anexe uma imagem");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => onChange(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+  const onPaste = (e: React.ClipboardEvent) => {
+    const item = Array.from(e.clipboardData.items).find((i) => i.type.startsWith("image/"));
+    if (item) {
+      e.preventDefault();
+      const f = item.getAsFile();
+      if (f) handleFile(f);
+    }
+  };
+  return (
+    <div className="space-y-1.5" onPaste={onPaste}>
+      <div className="flex items-center gap-2">
+        {photo ? (
+          <img src={photo} alt="" className="h-10 w-10 rounded-full object-cover border border-border" />
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-[10px] text-muted-foreground">foto</div>
+        )}
+        <input
+          value={photo}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="URL da foto OU clique aqui e Ctrl+V"
+          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs"
+        />
+        <label className="cursor-pointer rounded border border-input bg-background px-2 py-1.5 text-[10px] hover:bg-muted whitespace-nowrap">
+          Anexar
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+          />
+        </label>
+        {photo && (
+          <button type="button" onClick={() => onChange("")} className="text-[10px] text-destructive hover:underline">limpar</button>
+        )}
       </div>
     </div>
   );
