@@ -390,6 +390,9 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
     };
     iframe.addEventListener("load", onLoad);
 
+    const onWindowResize = () => measure();
+    window.addEventListener("resize", onWindowResize);
+
     const handleViewportRestore = () => {
       const doc = iframe.contentDocument;
       doc?.getElementById("__olx_help_modal_host__")?.remove();
@@ -938,6 +941,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       window.removeEventListener("message", onMessage);
       window.removeEventListener("pageshow", onPageShow);
       window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("resize", onWindowResize);
       clearRestoreTimers?.();
       if (detach) detach();
       if (detachCapture) detachCapture();
