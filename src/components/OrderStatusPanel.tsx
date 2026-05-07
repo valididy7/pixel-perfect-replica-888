@@ -50,6 +50,7 @@ export function OrderStatusPanel({ adId }: Props) {
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
+  const sessionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
@@ -161,7 +162,6 @@ export function OrderStatusPanel({ adId }: Props) {
   const otherSessions = sessions.filter((s) => !(s.driver_requested_at && !s.driver_dispatched_at));
   const pendingSessionIds = new Set(pendingSessions.map((s) => s.session_id));
   const hasAddressIds = new Set(sessions.filter((s) => s.delivery_address).map((s) => s.session_id));
-  const sessionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
 
   const focusSessionCard = (sid: string) => {
     const el = sessionRefs.current.get(sid);
