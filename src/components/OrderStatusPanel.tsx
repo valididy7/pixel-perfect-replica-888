@@ -489,11 +489,12 @@ function PasteExtractor({ onExtract }: { onExtract: (d: {
       });
       if (error) throw error;
       const d = (data?.data || {}) as Record<string, string>;
-      const fields = { ...d, photo: dataUrl };
-      onExtract(fields);
+      // Não usa o print como foto do motorista — só preenche os campos de
+      // texto. A foto de perfil é colada/anexada separadamente abaixo.
+      onExtract(d);
       const found = Object.keys(d).length;
       if (found === 0) toast.error("Não consegui ler dados no print.");
-      else toast.success(`${found} campo${found > 1 ? "s" : ""} preenchido${found > 1 ? "s" : ""} pela IA + foto`);
+      else toast.success(`${found} campo${found > 1 ? "s" : ""} preenchido${found > 1 ? "s" : ""} pela IA`);
       setOpen(false);
       setText("");
     } catch (e: any) {
