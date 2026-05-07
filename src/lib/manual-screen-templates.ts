@@ -598,14 +598,16 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .addr-saved{display:none;background:#f6f7f9;border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin-top:10px;font-size:13px;color:#1a1a1a;line-height:1.5}
   .addr-saved.show{display:block}
   .addr-saved .as-edit{display:inline-block;margin-top:6px;font-size:12px;color:#6E0AD6;cursor:pointer;font-weight:600}
-  /* Modal centralizado */
-  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:60;opacity:0;transition:opacity .2s;padding:16px}
-  .modal-backdrop.show{display:flex;opacity:1}
-  .modal-sheet{background:#fff;width:100%;max-width:448px;max-height:92vh;overflow-y:auto;border-radius:12px;padding:24px;transform:scale(.95);opacity:0;transition:transform .2s, opacity .2s;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
-  .modal-backdrop.show .modal-sheet{transform:scale(1);opacity:1}
-  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .modal-head h4{margin:0;font-size:16px;font-weight:700;color:#1a1a1a}
-  .modal-close{background:none;border:0;cursor:pointer;color:#6b7280;padding:4px}
+  /* Bottom sheet */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:9998;opacity:0;transition:opacity .25s}
+  .modal-backdrop.show{display:block;opacity:1}
+  .modal-sheet{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:#fff;max-height:85vh;display:flex;flex-direction:column;border-top-left-radius:16px;border-top-right-radius:16px;box-shadow:0 -8px 30px rgba(0,0,0,.2);transform:translateY(100%);transition:transform .3s ease-out}
+  .modal-backdrop.show .modal-sheet{transform:translateY(0)}
+  .modal-grab{width:40px;height:4px;border-radius:2px;background:#d4d4d4;margin:8px auto 4px}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e5e5e5}
+  .modal-head h4{margin:0;font-size:18px;font-weight:700;color:#1a1a2e}
+  .modal-close{background:none;border:0;cursor:pointer;color:#1a1a2e;padding:4px;display:flex;align-items:center;justify-content:center}
+  .modal-body{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
 </style>
 </head>
 <body>
@@ -726,13 +728,14 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   <!-- Modal Endereço -->
   <div class="modal-backdrop" id="envio-modal" role="dialog" aria-modal="true">
     <div class="modal-sheet">
+      <div class="modal-grab" aria-hidden="true"></div>
       <div class="modal-head">
-        <h4>Endereço de coleta</h4>
+        <h4>Endereço</h4>
         <button type="button" class="modal-close" data-ef-close aria-label="Fechar">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <form class="endereco-form" id="endereco-form" novalidate>
+      <form class="endereco-form modal-body" id="endereco-form" novalidate>
         <p style="margin:0 0 4px;font-size:13px;color:#6b7280">Informe o CEP de entrega para calcular o endereço.</p>
         <div>
           <label for="cep-envio" style="display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:#1a1a1a">CEP</label>
