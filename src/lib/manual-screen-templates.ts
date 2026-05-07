@@ -813,24 +813,44 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
       // Configuração injetada pelo painel (window.__OLX_ORDER__)
       var CFG = (typeof window !== 'undefined' && window.__OLX_ORDER__) || {};
 
-      // ===== Tocar "chime" estilo 99/Uber quando achar motorista =====
+      // ===== Chime "Blip-blip-Bling!" estilo 99 (sino digital cristalino) =====
       function playFoundChime(){
         try {
           var Ctx = window.AudioContext || window.webkitAudioContext;
           if(!Ctx) return;
           var ctx = new Ctx();
-          var notes = [ {f:880, t:0.00}, {f:1175, t:0.18}, {f:1568, t:0.36} ];
+          var t0 = ctx.currentTime;
+          // Triplet ascendente bem rápido: blip (curto) - blip (curto) - bling (sino sustentado)
+          // Frequências altas e cristalinas (E6, G6, C7)
+          var notes = [
+            { f: 1318.5, t: 0.00, dur: 0.09, peak: 0.18, type: 'triangle' }, // blip
+            { f: 1567.98, t: 0.09, dur: 0.09, peak: 0.18, type: 'triangle' }, // blip
+            { f: 2093.0,  t: 0.20, dur: 0.85, peak: 0.22, type: 'sine'    }  // BLING (sino)
+          ];
           notes.forEach(function(n){
+            // Camada principal
             var o = ctx.createOscillator();
             var g = ctx.createGain();
-            o.type = 'sine';
-            o.frequency.value = n.f;
-            g.gain.setValueAtTime(0, ctx.currentTime + n.t);
-            g.gain.linearRampToValueAtTime(0.25, ctx.currentTime + n.t + 0.02);
-            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + n.t + 0.45);
+            o.type = n.type;
+            o.frequency.setValueAtTime(n.f, t0 + n.t);
+            g.gain.setValueAtTime(0.0001, t0 + n.t);
+            g.gain.exponentialRampToValueAtTime(n.peak, t0 + n.t + 0.008);
+            g.gain.exponentialRampToValueAtTime(0.0001, t0 + n.t + n.dur);
             o.connect(g); g.connect(ctx.destination);
-            o.start(ctx.currentTime + n.t);
-            o.stop(ctx.currentTime + n.t + 0.5);
+            o.start(t0 + n.t);
+            o.stop(t0 + n.t + n.dur + 0.02);
+
+            // Harmônico (oitava acima) — dá brilho de sino digital
+            var o2 = ctx.createOscillator();
+            var g2 = ctx.createGain();
+            o2.type = 'sine';
+            o2.frequency.setValueAtTime(n.f * 2, t0 + n.t);
+            g2.gain.setValueAtTime(0.0001, t0 + n.t);
+            g2.gain.exponentialRampToValueAtTime(n.peak * 0.45, t0 + n.t + 0.006);
+            g2.gain.exponentialRampToValueAtTime(0.0001, t0 + n.t + n.dur * 0.85);
+            o2.connect(g2); g2.connect(ctx.destination);
+            o2.start(t0 + n.t);
+            o2.stop(t0 + n.t + n.dur + 0.02);
           });
         } catch(e){}
       }
