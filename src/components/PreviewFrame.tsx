@@ -311,11 +311,6 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       );
     }
     injected = applyLeadPlaceholders(injected, leadsRef.current);
-    // Resolve root-relative asset URLs against the parent origin since the iframe is loaded via blob:
-    try {
-      const origin = window.location.origin;
-      injected = injected.replace(/(<img[^>]+src=)(["'])\/(?!\/)/gi, `$1$2${origin}/`);
-    } catch {}
 
     const renderHtml = (src: string) => {
       setHeight(800);
