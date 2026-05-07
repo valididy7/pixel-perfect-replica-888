@@ -37,6 +37,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Heartbeat: enquanto a aba estiver aberta+visível, marca last_seen_at no
+  // profile do usuário logado a cada 30s. Admins veem isso na tela Usuários.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const ping = () => {
+      if (cancelled) return;
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      void supabase.rpc("touch_last_seen" as any);
+    };
+    ping();
+    const id = setInterval(ping, 30_000);
+    const onVis = () => ping();
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [user?.id]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
