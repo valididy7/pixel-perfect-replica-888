@@ -411,6 +411,7 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
                 if (d.rating) setRating(d.rating);
                 if (d.rides) setRides(d.rides);
                 if (d.eta) setEta(d.eta);
+                if (d.photo) setPhoto(d.photo);
               }}
             />
             <input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="URL da foto" className="w-full rounded-md border border-input bg-background px-3 py-2 text-xs" />
