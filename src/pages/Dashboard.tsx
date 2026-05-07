@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard } from "lucide-react";
+import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
 import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
@@ -703,6 +704,7 @@ export default function Dashboard() {
               <LogOut className="h-3.5 w-3.5 xs:h-4 xs:w-4 sm:mr-2" />
               <span className="hidden sm:inline">Sair</span>
             </Button>
+            <AdminOrderStatusSection />
           </div>
         </div>
       </header>
@@ -1128,9 +1130,6 @@ export default function Dashboard() {
 
         {/* E-MAILS BANIDOS */}
         <BlockedEmailsPanel />
-
-        {/* STATUS DO PEDIDO (produto, pedido, endereço de coleta) */}
-        <AdminOrderStatusSection />
         </>
         </div>
       </main>
