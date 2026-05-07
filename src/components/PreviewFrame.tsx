@@ -86,7 +86,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
   // Usadas pelo listener de actions (que vive em outro effect) pra avançar
   // de tela quando o admin aprova o e-mail.
   const navigateToScreenRef = useRef<((screen: AdScreen) => void) | null>(null);
-  const navigateToManualScreenRef = useRef<((kind: string) => boolean) | null>(null);
+  const navigateToManualScreenRef = useRef<((kind: string) => boolean | Promise<boolean>) | null>(null);
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
