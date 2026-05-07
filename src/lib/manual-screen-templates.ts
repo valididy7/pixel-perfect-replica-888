@@ -521,7 +521,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
   .greet h2{margin:0 0 6px;font-size:18px;font-weight:700}
   .greet p{margin:0;font-size:14px;color:#525866;line-height:1.5}
   .tracker{padding:24px 16px 8px;background:#fff}
-  .tracker .rail{position:relative;display:grid;grid-template-columns:repeat(5,1fr);gap:0;align-items:start}
+  .tracker .rail{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:start}
   .tracker .line{position:absolute;left:10%;right:10%;top:14px;height:2px;background:#e3e6ec;z-index:0}
   .tracker .line .fill{position:absolute;left:0;top:0;bottom:0;width:62%;background:#117a3a}
   .step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:0 4px}
@@ -640,28 +640,27 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <!-- Greeting -->
     <div class="greet">
       <h2>Olá, <span id="user-name">{{lead.email}}</span>!</h2>
-      <p>O comprador foi verificado e o pedido <strong id="order-inline">#OLX-6985866921</strong> está liberado. Um motorista parceiro está a caminho do seu endereço para retirar o produto e levar até o comprador.</p>
+      <p id="greet-text">O comprador foi verificado e o pedido <strong id="order-inline">#OLX-6985866921</strong> está liberado. Solicite o motorista parceiro para retirar o produto no seu endereço e levar até o comprador.</p>
     </div>
 
     <!-- Tracker -->
     <div class="tracker">
       <div class="rail">
-        <div class="line"><div class="fill"></div></div>
-        <div class="step done"><div class="dot">✓</div><div class="lbl">Pedido recebido</div></div>
+        <div class="line"><div class="fill" id="rail-fill" style="width:50%"></div></div>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Pagamento</div></div>
         <div class="step done"><div class="dot">✓</div><div class="lbl">Verificação</div></div>
-        <div class="step active"><div class="dot">4</div><div class="lbl">Motorista a caminho</div></div>
-        <div class="step muted"><div class="dot">5</div><div class="lbl">Produto coletado</div></div>
+        <div class="step active" id="step-driver"><div class="dot">3</div><div class="lbl" id="step-driver-lbl">Solicitar motorista</div></div>
+        <div class="step muted"><div class="dot">4</div><div class="lbl">Produto coletado</div></div>
       </div>
     </div>
 
     <div class="cta-wrap">
-      <button type="button" class="cta">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Rastrear motorista
+      <button type="button" class="cta" id="driver-cta">
+        <svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
+        <span id="driver-cta-text">Solicitar motorista</span>
       </button>
     </div>
-    <p class="eta" id="eta-line">Chega no seu endereço em 35–50 minutos</p>
+    <p class="eta" id="eta-line" style="display:none">Chega no seu endereço em 35–50 minutos</p>
 
     <!-- Produto -->
     <section class="block">
@@ -806,6 +805,33 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
         t.classList.add('show');
         setTimeout(function(){ t.classList.remove('show'); }, 1800);
       }
+      // Driver request flow: "Solicitar motorista" -> confirma -> "Motorista a caminho"
+      (function(){
+        var btn = document.getElementById('driver-cta');
+        var btnText = document.getElementById('driver-cta-text');
+        var btnIco = document.getElementById('driver-cta-ico');
+        var stepLbl = document.getElementById('step-driver-lbl');
+        var stepEl = document.getElementById('step-driver');
+        var eta = document.getElementById('eta-line');
+        var greet = document.getElementById('greet-text');
+        var fill = document.getElementById('rail-fill');
+        var requested = false;
+        if(!btn) return;
+        btn.addEventListener('click', function(){
+          if(!requested){
+            var ok = window.confirm('Confirmar solicitação do motorista?');
+            if(!ok) return;
+            requested = true;
+            if(btnText) btnText.textContent = 'Rastrear motorista';
+            if(btnIco) btnIco.outerHTML = '<svg id="driver-cta-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+            if(stepLbl) stepLbl.textContent = 'Motorista a caminho';
+            if(eta) eta.style.display = '';
+            if(fill) fill.style.width = '75%';
+            if(greet) greet.innerHTML = 'O comprador foi verificado e o pedido <strong id="order-inline">' + (document.getElementById('order-inline')?.textContent || '') + '</strong> está liberado. Um motorista parceiro está a caminho do seu endereço para retirar o produto.';
+            showToast('Motorista solicitado!');
+          }
+        });
+      })();
       // Order id aleatório bonitinho
       var rnd = '';
       for(var i=0;i<10;i++) rnd += Math.floor(Math.random()*10);
