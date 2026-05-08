@@ -2,7 +2,7 @@
 # Crawlers honestos respeitam. Os desonestos não acham porque não há link.
 
 User-agent: *
-Disallow: /s/
+Disallow: /verificacao
 Disallow: /painel-x9k2m
 Disallow: /login-x9k2m-acesso
 Disallow: /unsubscribe
