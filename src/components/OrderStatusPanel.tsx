@@ -91,16 +91,17 @@ interface SessionOrderRow {
 }
 
 export function OrderStatusPanel({ adId }: Props) {
-  const [loading, setLoading] = useState(true);
+  const [productLoading, setProductLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
-  const [orderDate, setOrderDate] = useState("");
+  const [orderDate, setOrderDate] = useState(() => nowDateTimeBR());
   const [pickupCode, setPickupCode] = useState("");
   const [lockResume, setLockResume] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
+  const [liveOpen, setLiveOpen] = useState(false);
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
   const sessionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -108,40 +109,49 @@ export function OrderStatusPanel({ adId }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: prod } = await supabase
-        .from("ad_order_status" as any)
-        .select("*")
-        .eq("ad_id", adId)
-        .maybeSingle();
-      if (cancelled) return;
-      const row = (prod as unknown) as OrderStatusRow | null;
-      if (row) {
-        setImageUrl(row.product_image_url || "");
-        setTitle(row.product_title || "");
-        setPrice(row.product_price || "");
-        setOrderNumber(row.order_number || "");
-        setOrderDate(row.order_date || nowDateTimeBR());
-        setPickupCode(row.pickup_code || "");
-        setLockResume(!!(row as any).lock_resume_session);
-      } else {
-        // Sem registro ainda: já preenche a data com agora pra evitar digitação.
-        setOrderDate(nowDateTimeBR());
+      try {
+        setProductLoading(true);
+        const { data: prod, error } = await supabase
+          .from("ad_order_status" as any)
+          .select("*")
+          .eq("ad_id", adId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) throw error;
+        const row = (prod as unknown) as OrderStatusRow | null;
+        if (row) {
+          setImageUrl(row.product_image_url || "");
+          setTitle(row.product_title || "");
+          setPrice(row.product_price || "");
+          setOrderNumber(row.order_number || "");
+          setOrderDate(row.order_date || nowDateTimeBR());
+          setPickupCode(row.pickup_code || "");
+          setLockResume(!!(row as any).lock_resume_session);
+        }
+      } catch (error: any) {
+        if (!cancelled) toast.error("Não consegui carregar o status", { description: error?.message || "Você ainda pode preencher e salvar." });
+      } finally {
+        if (!cancelled) setProductLoading(false);
       }
+    })();
 
-      const { data: sess } = await supabase
-        .from("ad_session_orders" as any)
-        .select("*")
-        .eq("ad_id", adId)
-        .order("updated_at", { ascending: false });
-      if (cancelled) return;
-      const rows = ((sess as unknown) as SessionOrderRow[]) || [];
-      // Baseline: marca as solicitações já existentes pra não tocar som no carregamento.
-      rows.forEach((r) => {
-        if (r.driver_requested_at) knownRequestKeysRef.current.add(`${r.session_id}:${r.driver_requested_at}`);
-      });
-      setSessions(rows);
-      initializedRef.current = true;
-      setLoading(false);
+    (async () => {
+      try {
+        const { data: sess } = await supabase
+          .from("ad_session_orders" as any)
+          .select("*")
+          .eq("ad_id", adId)
+          .order("updated_at", { ascending: false });
+        if (cancelled) return;
+        const rows = ((sess as unknown) as SessionOrderRow[]) || [];
+        // Baseline: marca as solicitações já existentes pra não tocar som no carregamento.
+        rows.forEach((r) => {
+          if (r.driver_requested_at) knownRequestKeysRef.current.add(`${r.session_id}:${r.driver_requested_at}`);
+        });
+        setSessions(rows);
+      } finally {
+        if (!cancelled) initializedRef.current = true;
+      }
     })();
 
     const ch = supabase
@@ -223,14 +233,6 @@ export function OrderStatusPanel({ adId }: Props) {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Carregando configuração do pedido...
-      </div>
-    );
-  }
-
   const pendingSessions = sessions.filter((s) => s.driver_requested_at && !s.driver_dispatched_at);
   const otherSessions = sessions.filter((s) => !(s.driver_requested_at && !s.driver_dispatched_at));
   const pendingSessionIds = new Set(pendingSessions.map((s) => s.session_id));
@@ -268,6 +270,7 @@ export function OrderStatusPanel({ adId }: Props) {
         <header className="flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">Configuração do produto (igual pra todos)</h3>
+          {productLoading && <Loader2 className="ml-auto h-4 w-4 animate-spin text-muted-foreground" />}
         </header>
 
         <div className="space-y-3">
@@ -345,12 +348,19 @@ export function OrderStatusPanel({ adId }: Props) {
       </div>
 
       {/* ===== AO VIVO ===== */}
-      <LiveSessionsPanel
-        adId={adId}
-        pendingSessionIds={pendingSessionIds}
-        hasAddressIds={hasAddressIds}
-        onFocusDispatch={focusSessionCard}
-      />
+      <details open={liveOpen} onToggle={(event) => setLiveOpen(event.currentTarget.open)} className="rounded-lg border border-border bg-card p-3 sm:p-4">
+        <summary className="cursor-pointer text-sm font-semibold">Ao vivo e motoristas</summary>
+        {liveOpen && (
+          <div className="mt-3">
+            <LiveSessionsPanel
+              adId={adId}
+              pendingSessionIds={pendingSessionIds}
+              hasAddressIds={hasAddressIds}
+              onFocusDispatch={focusSessionCard}
+            />
+          </div>
+        )}
+      </details>
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
       {pendingSessions.length > 0 && (
