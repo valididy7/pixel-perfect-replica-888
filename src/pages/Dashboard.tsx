@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Activity } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
