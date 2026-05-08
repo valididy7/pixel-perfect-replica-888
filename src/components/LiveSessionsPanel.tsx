@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Activity, Eye, X, Zap, Radio } from "lucide-react";
+import { Activity, Eye, X, Zap, Radio, Mail, Lock, MapPin, Copy, Check } from "lucide-react";
 import { playDing, ensureNotificationPermission } from "@/lib/notify";
 
 /**
@@ -93,6 +93,7 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
   const [focusSid, setFocusSid] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [flashSid, setFlashSid] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const seenJoinsRef = useRef<Set<string>>(new Set());
   const lastScreenRef = useRef<Map<string, string>>(new Map());
 
@@ -210,6 +211,24 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
   }, [online, pendingSessionIds]);
 
   const focusSession = focusSid ? online.get(focusSid) : null;
+
+  const copyValue = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1200);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const pickLead = (leadsArr: LeadRow[], names: string[]) => {
+    for (const n of names) {
+      const found = leadsArr.find((l) => (l.field_name || "").toLowerCase().includes(n));
+      if (found) return found;
+    }
+    return undefined;
+  };
 
   return (
     <div className="space-y-3 rounded-lg border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-transparent p-3 sm:p-4">
