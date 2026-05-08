@@ -372,19 +372,24 @@ export function OrderStatusPanel({ adId }: Props) {
       </div>
 
       {/* ===== AO VIVO ===== */}
-      <details open={liveOpen} onToggle={(event) => setLiveOpen(event.currentTarget.open)} className="rounded-lg border border-border bg-card p-3 sm:p-4">
-        <summary className="cursor-pointer text-sm font-semibold">Ao vivo e motoristas</summary>
+      <div className="rounded-lg border border-border bg-card p-3 sm:p-4">
+        <Button type="button" variant="outline" className="w-full justify-between" onClick={() => setLiveOpen((open) => !open)}>
+          <span>Ao vivo</span>
+          {liveOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
         {liveOpen && (
           <div className="mt-3">
-            <LiveSessionsPanel
-              adId={adId}
-              pendingSessionIds={pendingSessionIds}
-              hasAddressIds={hasAddressIds}
-              onFocusDispatch={focusSessionCard}
-            />
+            <PanelErrorBoundary>
+              <LiveSessionsPanel
+                adId={adId}
+                pendingSessionIds={pendingSessionIds}
+                hasAddressIds={hasAddressIds}
+                onFocusDispatch={focusSessionCard}
+              />
+            </PanelErrorBoundary>
           </div>
         )}
-      </details>
+      </div>
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
       {pendingSessions.length > 0 && (
