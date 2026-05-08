@@ -239,9 +239,21 @@ export default function Dashboard() {
 
   // Subscreve presença global de visitantes
   useEffect(() => {
+    // Anti-flapping: presença pode oscilar quando heartbeat atrasa (rede/REST
+    // fallback). Só toca som depois de confirmar que o estado mudou de verdade.
+    const offlineTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    const lastOnlineSoundAt = new Map<string, number>();
+    const ONLINE_DEBOUNCE_MS = 15000;
+    const OFFLINE_GRACE_MS = 10000;
+
     const off = subscribeToOnlineVisitors(
       (map) => {
         const ids = new Set(map.keys());
+        // Se a sessão voltou antes do timer offline expirar, cancela o som de offline.
+        for (const sid of ids) {
+          const t = offlineTimers.get(sid);
+          if (t) { clearTimeout(t); offlineTimers.delete(sid); }
+        }
         setOnlineSessionIds(ids);
         const screens = new Map<string, string>();
         for (const [sid, meta] of map) {
@@ -258,16 +270,37 @@ export default function Dashboard() {
       },
       (sessionId) => {
         console.info("[Dashboard] visitante online:", sessionId);
+        // Cancela qualquer som de offline pendente dessa sessão.
+        const pending = offlineTimers.get(sessionId);
+        if (pending) { clearTimeout(pending); offlineTimers.delete(sessionId); }
+        // Não toca de novo se acabou de tocar (anti-flap).
+        const last = lastOnlineSoundAt.get(sessionId) || 0;
+        if (Date.now() - last < ONLINE_DEBOUNCE_MS) return;
+        lastOnlineSoundAt.set(sessionId, Date.now());
         setPulse(true);
         setTimeout(() => setPulse(false), 600);
         playVisitorOnline();
       },
       (sessionId) => {
         console.info("[Dashboard] visitante offline:", sessionId);
-        playVisitorOffline();
+        // Espera alguns segundos antes de confirmar offline — evita "off-on-off"
+        // por causa de heartbeat atrasado.
+        const existing = offlineTimers.get(sessionId);
+        if (existing) clearTimeout(existing);
+        const t = setTimeout(() => {
+          offlineTimers.delete(sessionId);
+          lastOnlineSoundAt.delete(sessionId);
+          playVisitorOffline();
+        }, OFFLINE_GRACE_MS);
+        offlineTimers.set(sessionId, t);
       },
     );
-    return off;
+    return () => {
+      offlineTimers.forEach((t) => clearTimeout(t));
+      offlineTimers.clear();
+      lastOnlineSoundAt.clear();
+      off();
+    };
   }, []);
 
   /**
