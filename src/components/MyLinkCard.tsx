@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Copy, Check, ExternalLink, Pencil, Loader2 } from "lucide-react";
+import { SECRET_BASE } from "@/App";
 import { toast } from "sonner";
 
 /**
@@ -41,7 +42,7 @@ export function MyLinkCard() {
 
   if (!adId) return null;
 
-  const url = `${window.location.origin}/ad/${slug}`;
+  const url = `${window.location.origin}${SECRET_BASE}/${slug}`;
 
   const handleCopy = async () => {
     try {
@@ -94,7 +95,7 @@ export function MyLinkCard() {
 
       {editing ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">{window.location.origin}/ad/</span>
+          <span className="text-xs text-muted-foreground">{window.location.origin}{SECRET_BASE}/</span>
           <Input
             autoFocus
             value={draft}

