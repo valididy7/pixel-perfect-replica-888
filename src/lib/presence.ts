@@ -241,7 +241,6 @@ export function trackVisitorPresence(
     }
   };
   const onPageHide = () => sendOffline();
-  const onBlur = () => sendOffline();
   const onOnline = () => syncPresence();
 
   connect();
@@ -249,8 +248,8 @@ export function trackVisitorPresence(
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
-  window.addEventListener("blur", onBlur);
-  // Ao voltar pra aba/rede, reforça o online imediatamente.
+  // Ao voltar pra aba/rede, reforça o online imediatamente. Não usamos blur:
+  // clicar/focar dentro do iframe também dispara blur no pai e causava pisca.
   window.addEventListener("focus", syncPresence);
   window.addEventListener("pageshow", syncPresence);
   window.addEventListener("online", onOnline);
@@ -263,7 +262,6 @@ export function trackVisitorPresence(
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
-    window.removeEventListener("blur", onBlur);
     window.removeEventListener("focus", syncPresence);
     window.removeEventListener("pageshow", syncPresence);
     window.removeEventListener("online", onOnline);
