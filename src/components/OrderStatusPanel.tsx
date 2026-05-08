@@ -232,14 +232,6 @@ export function OrderStatusPanel({ adId }: Props) {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Carregando configuração do pedido...
-      </div>
-    );
-  }
-
   const pendingSessions = sessions.filter((s) => s.driver_requested_at && !s.driver_dispatched_at);
   const otherSessions = sessions.filter((s) => !(s.driver_requested_at && !s.driver_dispatched_at));
   const pendingSessionIds = new Set(pendingSessions.map((s) => s.session_id));
