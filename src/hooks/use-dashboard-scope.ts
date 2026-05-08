@@ -17,11 +17,23 @@ export interface OwnerOption {
  *  - `null`  → sem filtro (admin vendo todo mundo)
  *  - `Set`   → só anúncios destes IDs (vazio = não mostra nada)
  */
+const SCOPE_STORAGE_KEY = "dash_selected_owner_id";
+
 export function useDashboardScope() {
   const { user } = useAuth();
   const { isAdmin, checking: adminChecking } = useIsAdmin();
   // Admin escolhe um usuário específico. Default = ele mesmo.
-  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
+  const [selectedOwnerId, _setSelectedOwnerId] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem(SCOPE_STORAGE_KEY) || "";
+  });
+  const setSelectedOwnerId = (id: string) => {
+    _setSelectedOwnerId(id);
+    if (typeof window !== "undefined") {
+      if (id) localStorage.setItem(SCOPE_STORAGE_KEY, id);
+      else localStorage.removeItem(SCOPE_STORAGE_KEY);
+    }
+  };
   const [owners, setOwners] = useState<OwnerOption[]>([]);
   const [adIds, setAdIds] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
