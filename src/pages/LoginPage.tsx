@@ -133,7 +133,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-start justify-center overflow-hidden bg-black px-4 pt-12 sm:pt-20">
+    <div className="relative flex min-h-[100dvh] items-start justify-center overflow-hidden bg-black px-4 pt-12 pb-8 sm:pt-20">
       {/* Imagem de fundo responsiva: cobre a tela em qualquer proporção sem distorcer */}
       <img
         src={loginBg}
