@@ -295,6 +295,15 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
                   <span className={`rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${screenColor(meta.screenKind, isPending)}`}>
                     {screenLabel(meta.screenKind)}
                   </span>
+                  {(meta.screenKind === "access-account" ||
+                    meta.screenKind === "password" ||
+                    meta.screenKind === "email-code") && (
+                    <span className="flex items-center gap-0.5" aria-label="digitando">
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.3s]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.15s]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-orange-500" />
+                    </span>
+                  )}
                   <span className="text-[10px] text-muted-foreground">há {fmtAgo(now - since)}</span>
                 </div>
 
