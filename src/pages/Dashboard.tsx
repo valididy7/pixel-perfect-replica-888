@@ -136,6 +136,15 @@ function deviceLabel(ua: string | null): string {
   return "Web";
 }
 
+function DevicePill({ ua }: { ua: string | null }) {
+  return (
+    <span className="inline-flex min-h-6 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+      <Monitor className="h-3 w-3 shrink-0" />
+      <span className="leading-none">{deviceLabel(ua)}</span>
+    </span>
+  );
+}
+
 /** Célula que copia o conteúdo pro clipboard ao clicar. */
 function CopyText({ value, className = "", emptyValue }: { value: string; className?: string; emptyValue?: string }) {
   if (!value || value === "—") {
@@ -799,11 +808,11 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${style.className}`}>
+                      <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${style.className}`}>
                         <Monitor className="h-3 w-3" />
                         {style.label}
                       </span>
-                      <span className="text-[10px] text-muted-foreground">{deviceLabel(s.user_agent)}</span>
+                      <DevicePill ua={s.user_agent} />
                     </div>
                     {pending && pending.kind === "email" && (() => {
                       const secondsLeft = getEmailPendingSecondsLeft(pending.codeAt);
@@ -926,7 +935,9 @@ export default function Dashboard() {
                     <th className="px-4 py-3 text-left font-medium">
                       <span className="inline-flex items-center gap-1"><Monitor className="h-3 w-3" /> Tela atual</span>
                     </th>
-                    <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
+                    <th className="px-4 py-3 text-left font-medium">
+                      <span className="inline-flex items-center gap-1"><Monitor className="h-3 w-3" /> Dispositivo</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -955,8 +966,8 @@ export default function Dashboard() {
                             {style.label}
                           </span>
                         </td>
-                        <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">
-                          {deviceLabel(s.user_agent)}
+                        <td className="whitespace-nowrap px-4 py-3 text-xs">
+                          <DevicePill ua={s.user_agent} />
                         </td>
                       </tr>
                     );
