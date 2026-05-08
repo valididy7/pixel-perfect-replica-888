@@ -172,7 +172,7 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 
 export default function Dashboard() {
   const handleSignOut = async () => {
-    try { await supabase.auth.signOut(); } catch {}
+    try { await supabase.auth.signOut(); } catch { /* ignore sign-out race */ }
     window.location.href = "/login";
   };
   const [leads, setLeads] = useState<LeadRow[]>([]);
@@ -184,7 +184,7 @@ export default function Dashboard() {
     return (localStorage.getItem("dash_tab") as "painel" | "emails") || "painel";
   });
   useEffect(() => {
-    try { localStorage.setItem("dash_tab", tab); } catch {}
+    try { localStorage.setItem("dash_tab", tab); } catch { /* ignore storage restrictions */ }
   }, [tab]);
 
   /** Sessões com aba aberta + visível agora (presença pura, ao vivo). */
