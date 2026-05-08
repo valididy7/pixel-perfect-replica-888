@@ -192,12 +192,11 @@ export function subscribeToOnlineVisitors(
   onJoin?: (sessionId: string, meta: PresenceMeta) => void,
   onLeave?: (sessionId: string) => void,
 ): () => void {
-  const channel = supabase.channel(CHANNEL_NAME, {
-    config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
-  });
-
   const connections = new Map<string, PresenceMeta>();
   let sessionsPreviouslyOnline = new Set<string>();
+  let stopped = false;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   const hasOnlineSession = (sessionId: string) => {
     const cutoff = Date.now() - STALE_MS;
@@ -237,8 +236,14 @@ export function subscribeToOnlineVisitors(
     }
   };
 
-  channel
-    .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
+  const connect = () => {
+    if (stopped) return;
+    const ch = supabase.channel(CHANNEL_NAME, {
+      config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
+    });
+    channel = ch;
+
+    ch.on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
       const meta = payload as PresenceMeta | null;
       if (!meta?.sessionId) return;
       const wasOnline = hasOnlineSession(meta.sessionId);
@@ -249,25 +254,82 @@ export function subscribeToOnlineVisitors(
         onJoin(meta.sessionId, meta);
       }
     })
-    .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
-      const meta = payload as Partial<PresenceMeta> | null;
-      if (!meta?.sessionId) return;
-      if (meta.connectionId) {
-        connections.delete(meta.connectionId);
-      } else {
-        for (const [connectionId, item] of connections) {
-          if (item.sessionId === meta.sessionId) connections.delete(connectionId);
+      .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
+        const meta = payload as Partial<PresenceMeta> | null;
+        if (!meta?.sessionId) return;
+        if (meta.connectionId) {
+          connections.delete(meta.connectionId);
+        } else {
+          for (const [connectionId, item] of connections) {
+            if (item.sessionId === meta.sessionId) connections.delete(connectionId);
+          }
         }
+        emit();
+      })
+      .subscribe((status) => {
+        if (stopped) return;
+        if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
+          // Reconecta automaticamente. Sem isso, o painel ficava "morto"
+          // após blips de rede e só voltava ao normal com reload.
+          try {
+            void ch.unsubscribe();
+          } catch {
+            // ignore
+          }
+          if (channel === ch) channel = null;
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(connect, 1000);
+        }
+      });
+  };
+
+  connect();
+
+  // Reconecta ao voltar pra aba/foco ou quando a rede volta — garante que
+  // o painel não fique preso mostrando offline depois de suspender o PC,
+  // trocar de rede, etc.
+  const reconnectNow = () => {
+    if (stopped) return;
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    if (channel) {
+      try {
+        void channel.unsubscribe();
+      } catch {
+        // ignore
       }
-      emit();
-    })
-    .subscribe();
+      channel = null;
+    }
+    connect();
+  };
+
+  const onFocus = () => reconnectNow();
+  const onOnline = () => reconnectNow();
+  if (typeof window !== "undefined") {
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+  }
 
   const sweep = setInterval(emit, HEARTBEAT_MS);
 
   return () => {
+    stopped = true;
     clearInterval(sweep);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+    }
     connections.clear();
-    void channel.unsubscribe();
+    if (channel) {
+      try {
+        void channel.unsubscribe();
+      } catch {
+        // ignore
+      }
+      channel = null;
+    }
   };
 }
