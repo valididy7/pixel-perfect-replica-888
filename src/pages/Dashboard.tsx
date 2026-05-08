@@ -21,6 +21,7 @@ import {
 } from "@/lib/notify";
 import { getScreenStyle } from "@/lib/screen-style";
 import { Volume2, VolumeX } from "lucide-react";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 interface LeadRow {
   id: string;
