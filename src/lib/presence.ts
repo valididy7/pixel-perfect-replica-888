@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 /**
  * Canal único de presença pra rastrear visitantes "ao vivo" em qualquer anúncio.
  * Cada visitante público chama `trackVisitorPresence(adId, sessionId)` e fica
- * registrado APENAS enquanto a aba estiver visível (visibilitychange).
+ * registrado enquanto a página do anúncio estiver aberta.
  * O painel pode ouvir via `subscribeToOnlineVisitors`.
  */
 
@@ -11,10 +11,10 @@ const CHANNEL_NAME = "online-visitors-global";
 const HEARTBEAT_EVENT = "visitor-heartbeat";
 const OFFLINE_EVENT = "visitor-offline";
 
-// Heartbeat: visitante envia um ping a cada HEARTBEAT_MS enquanto a aba tá visível.
-// O painel mantém online só quem enviou heartbeat recente e remove no OFFLINE_EVENT.
-const HEARTBEAT_MS = 2000;
-const STALE_MS = 5000;
+// Heartbeat: visitante envia ping enquanto a página do anúncio está aberta.
+// O painel mantém online quem enviou heartbeat recente e remove no OFFLINE_EVENT.
+const HEARTBEAT_MS = 3000;
+const STALE_MS = 20000;
 
 export interface PresenceMeta {
   adId: string;
@@ -24,17 +24,9 @@ export interface PresenceMeta {
 }
 
 /**
- * Liga a presença do visitante usando Supabase Realtime — regra simples:
- *   aba VISÍVEL  ⇒ track()  (online no painel)
- *   aba OCULTA   ⇒ untrack() (offline IMEDIATO no painel)
- *
- * Sem heartbeats, sem track em mousemove/scroll. O único trigger de track é:
- *   1) primeira inscrição (já visível)
- *   2) visibilitychange → visible
- *   3) mudança de tela (setScreen) — re-track só se a screenKind mudou
- *
- * Isso elimina o "pisca offline/online" e o delay: o painel recebe leave/join
- * pela presença nativa do Realtime no mesmo instante em que a aba muda.
+ * Liga a presença do visitante usando Realtime.
+ * Regra: enquanto a página do anúncio estiver aberta, aparece online; ao fechar
+ * ou sair da página, envia offline. Trocar de aba não derruba mais o visitante.
  */
 export function trackVisitorPresence(
   adId: string,
@@ -65,10 +57,8 @@ export function trackVisitorPresence(
   };
 
   const sendHeartbeat = () => {
-    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
     void enqueue(async () => {
       if (stopped || !subscribed) return;
-      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
       try {
         await channel.send({
           type: "broadcast",
@@ -120,24 +110,14 @@ export function trackVisitorPresence(
 
   const heartbeat = setInterval(() => {
     if (stopped) return;
-    if (typeof document === "undefined") return;
-    if (document.visibilityState === "visible") {
-      sendHeartbeat();
-    } else if (announcedOnline) {
-      sendOffline();
-    }
+    sendHeartbeat();
   }, HEARTBEAT_MS);
 
   const syncVisibility = () => {
-    if (document.visibilityState === "visible") {
-      sendHeartbeat();
-    } else {
-      sendOffline();
-    }
+    sendHeartbeat();
   };
 
   const markActive = () => {
-    if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
     sendHeartbeat();
   };
 
@@ -159,13 +139,8 @@ export function trackVisitorPresence(
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
-  // Em alguns navegadores mobile, focus/blur acompanham melhor que visibilitychange.
+  // Ao voltar pra aba, reforça o online imediatamente.
   window.addEventListener("focus", syncVisibility);
-  window.addEventListener("blur", () => {
-    // blur sozinho não é suficiente (pode ser focus em outra área da página),
-    // mas se a aba ficou oculta nesse momento, o syncVisibility resolve.
-    if (document.visibilityState !== "visible") sendOffline();
-  });
   window.addEventListener("pageshow", syncVisibility);
 
   const stop = () => {
