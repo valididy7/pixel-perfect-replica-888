@@ -142,6 +142,7 @@ export function OrderStatusPanel({ adId }: Props) {
   const [lockResume, setLockResume] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
   const [liveOpen, setLiveOpen] = useState(false);
+  const [onlineMap, setOnlineMap] = useState<Map<string, PresenceMeta>>(new Map());
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
   const sessionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -236,6 +237,24 @@ export function OrderStatusPanel({ adId }: Props) {
       cancelled = true;
       void ch.unsubscribe();
     };
+  }, [adId]);
+
+  // Presence ao vivo no nível do painel — usado pra mostrar online/offline +
+  // tela atual no cabeçalho de cada sessão (sem precisar abrir o "Ao vivo").
+  useEffect(() => {
+    let stop: (() => void) | undefined;
+    try {
+      stop = subscribeToOnlineVisitors((map) => {
+        const filtered = new Map<string, PresenceMeta>();
+        map.forEach((meta, sid) => {
+          if (meta.adId === adId) filtered.set(sid, meta);
+        });
+        setOnlineMap(filtered);
+      });
+    } catch {
+      // se realtime falhar, segue sem badges — não derruba o painel
+    }
+    return () => stop?.();
   }, [adId]);
 
   const saveProduct = async () => {
@@ -418,7 +437,7 @@ export function OrderStatusPanel({ adId }: Props) {
           </header>
           {pendingSessions.map((s) => (
             <div key={s.session_id} ref={(el) => { sessionRefs.current.set(s.session_id, el); }} className="rounded-md transition-shadow">
-              <SessionDispatchCard adId={adId} session={s} highlight onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+              <SessionDispatchCard adId={adId} session={s} highlight presence={onlineMap.get(s.session_id)} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
             </div>
           ))}
         </div>
@@ -432,7 +451,7 @@ export function OrderStatusPanel({ adId }: Props) {
           </header>
           {otherSessions.map((s) => (
             <div key={s.session_id} ref={(el) => { sessionRefs.current.set(s.session_id, el); }} className="rounded-md transition-shadow">
-              <SessionDispatchCard adId={adId} session={s} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
+              <SessionDispatchCard adId={adId} session={s} presence={onlineMap.get(s.session_id)} onRemoved={(sid) => setSessions((prev) => prev.filter((r) => r.session_id !== sid))} />
             </div>
           ))}
         </div>
@@ -447,7 +466,7 @@ export function OrderStatusPanel({ adId }: Props) {
   );
 }
 
-function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: string; session: SessionOrderRow; highlight?: boolean; onRemoved?: (sessionId: string) => void }) {
+function SessionDispatchCard({ adId, session, highlight, presence, onRemoved }: { adId: string; session: SessionOrderRow; highlight?: boolean; presence?: PresenceMeta; onRemoved?: (sessionId: string) => void }) {
   const [open, setOpen] = useState(!!highlight);
   const [photo, setPhoto] = useState(session.driver_photo_url || "");
   const [name, setName] = useState(session.driver_name || "");
@@ -545,6 +564,17 @@ function SessionDispatchCard({ adId, session, highlight, onRemoved }: { adId: st
         <div className="flex items-center gap-2 min-w-0">
           <MapPin className="h-3.5 w-3.5 shrink-0 text-primary" />
           <span className="text-xs font-mono text-muted-foreground">#{shortSid}</span>
+          {presence ? (
+            <span className="flex items-center gap-1 rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-semibold text-green-700">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+              </span>
+              online · {screenLabel(presence.screenKind)}
+            </span>
+          ) : (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">offline</span>
+          )}
           {requested && !dispatched && (
             <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase text-orange-600">Pedindo motorista</span>
           )}
