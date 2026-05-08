@@ -139,8 +139,8 @@ export function showSystemNotification(title: string, body?: string) {
   try {
     const n = new Notification(title, {
       body,
-      icon: "/painel-icon-192.png",
-      tag: "painel-attempt",
+      icon: "/k7m2-icon-192.png",
+      tag: "k7m2-attempt",
       renotify: true,
     } as NotificationOptions & { renotify?: boolean });
     n.onclick = () => {

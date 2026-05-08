@@ -1,8 +1,15 @@
 /**
- * Prefixo da rota secreta do painel admin.
- * Centralizado pra ser fácil trocar caso necessário.
+ * Rotas internas em formato ofuscado (base64) pra não aparecerem
+ * como texto puro em buscas no bundle.
  */
-export const ADMIN_BASE = "/painel-valididy";
+const _d = (s: string) => {
+  if (typeof atob === "function") return atob(s);
+  // fallback Node/SSR
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (globalThis as any).Buffer?.from(s, "base64").toString("utf-8") ?? "";
+};
+
+export const ADMIN_BASE = _d("L2s3bTItenE5eC1yNG44");
 
 export const adminPath = (sub: string = "") => {
   if (!sub) return ADMIN_BASE;
@@ -11,5 +18,4 @@ export const adminPath = (sub: string = "") => {
 
 export const ADMIN_GATE_KEY = "olx_admin_gate_token";
 
-/** Rota de login escondida — não usar `/login` puro. */
-export const ADMIN_LOGIN_PATH = "/login-x9k2m-acesso";
+export const ADMIN_LOGIN_PATH = _d("L2EzdjgtcHcyay1sNnl0");

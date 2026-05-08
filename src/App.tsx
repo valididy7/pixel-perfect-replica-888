@@ -44,7 +44,6 @@ const App = () => (
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/google-popup" element={<GooglePopup />} />
             <Route path={ADMIN_LOGIN_PATH} element={<LoginPage />} />
-            <Route path="/login" element={<NotFound />} />
             <Route
               path={ADMIN_BASE}
               element={<AdminGate><Dashboard /></AdminGate>}

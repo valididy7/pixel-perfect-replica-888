@@ -21,7 +21,7 @@ export function PainelPWAHead() {
 
     const manifest = document.createElement("link");
     manifest.rel = "manifest";
-    manifest.href = "/painel-manifest.webmanifest";
+    manifest.href = "/k7m2-manifest.webmanifest";
 
     const themeColor = document.createElement("meta");
     themeColor.name = "theme-color";
@@ -30,7 +30,7 @@ export function PainelPWAHead() {
 
     const appleIcon = document.createElement("link");
     appleIcon.rel = "apple-touch-icon";
-    appleIcon.href = "/painel-icon-192.png";
+    appleIcon.href = "/k7m2-icon-192.png";
 
     const appleCapable = document.createElement("meta");
     appleCapable.name = "apple-mobile-web-app-capable";
@@ -62,7 +62,7 @@ export function PainelPWAHead() {
     const painelFavicon = document.createElement("link");
     painelFavicon.rel = "icon";
     painelFavicon.type = "image/png";
-    painelFavicon.href = "/painel-favicon.png";
+    painelFavicon.href = "/k7m2-favicon.png";
     painelFavicon.setAttribute("data-painel-pwa", "true");
     head.appendChild(painelFavicon);
 
@@ -70,7 +70,7 @@ export function PainelPWAHead() {
     const ogTitle = "[CLASSIFICADO] Project Valididy";
     const ogDescription =
       "ACESSO RESTRITO · Documento confidencial · Nível de autorização requerido para visualização.";
-    const ogImage = `${window.location.origin}/painel-og-preview.jpg`;
+    const ogImage = `${window.location.origin}/k7m2-og-preview.jpg`;
     const ogUrl = window.location.href;
 
     const metaTags: HTMLMetaElement[] = [];

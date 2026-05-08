@@ -1,22 +1,22 @@
 {
-  "name": "Painel Valididy",
-  "short_name": "Valididy",
-  "description": "Painel Valididy",
-  "start_url": "/painel-valididy",
-  "scope": "/painel-valididy",
+  "name": "Console",
+  "short_name": "Console",
+  "description": "Console",
+  "start_url": "/k7m2-zq9x-r4n8",
+  "scope": "/k7m2-zq9x-r4n8",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a0a0f",
   "theme_color": "#6d28d9",
   "icons": [
     {
-      "src": "/painel-icon-192.png",
+      "src": "/k7m2-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/painel-icon-512.png",
+      "src": "/k7m2-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
