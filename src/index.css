@@ -103,8 +103,10 @@
       radial-gradient(ellipse at bottom left, hsl(350 90% 30% / 0.18), transparent 65%),
       linear-gradient(hsl(356 95% 58% / 0.03) 1px, transparent 1px),
       linear-gradient(90deg, hsl(356 95% 58% / 0.03) 1px, transparent 1px);
-    background-size: auto, auto, auto, 40px 40px, 40px 40px;
+    background-size: 200% 200%, 200% 200%, 200% 200%, 40px 40px, 40px 40px;
+    background-position: 0% 0%, 100% 100%, 0% 100%, 0 0, 0 0;
     background-attachment: fixed;
+    animation: red-shift 18s ease-in-out infinite alternate;
   }
 
   /* Scrollbar minimalista */
@@ -125,11 +127,60 @@
 }
 
 @layer utilities {
-  .text-gradient {
-    background: var(--gradient-neon);
+  /* Animação: as manchas vermelhas do fundo migram suavemente */
+  @keyframes red-shift {
+    0%   { background-position: 0% 0%, 100% 100%, 0% 100%, 0 0, 0 0; }
+    50%  { background-position: 100% 30%, 0% 60%, 100% 0%, 0 0, 0 0; }
+    100% { background-position: 30% 100%, 70% 0%, 50% 50%, 0 0, 0 0; }
+  }
+
+  /* Texto com vermelho que muda de tom (coral → escarlate → carmim → coral) */
+  @keyframes red-hue {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  .text-red-flow {
+    background: linear-gradient(
+      90deg,
+      hsl(356 100% 70%),
+      hsl(8 100% 62%),
+      hsl(350 95% 52%),
+      hsl(342 90% 60%),
+      hsl(356 100% 70%)
+    );
+    background-size: 300% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    animation: red-hue 6s ease-in-out infinite;
+  }
+
+  /* Glow pulsante em vermelhos diferentes */
+  @keyframes red-pulse {
+    0%, 100% { box-shadow: 0 0 24px hsl(356 95% 58% / 0.45), 0 0 0 1px hsl(356 95% 58% / 0.4); }
+    33%      { box-shadow: 0 0 28px hsl(8 95% 58% / 0.45),   0 0 0 1px hsl(8 95% 58% / 0.4); }
+    66%      { box-shadow: 0 0 26px hsl(342 95% 58% / 0.45), 0 0 0 1px hsl(342 95% 58% / 0.4); }
+  }
+
+  .glow-red-pulse {
+    animation: red-pulse 5s ease-in-out infinite;
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      90deg,
+      hsl(356 100% 70%),
+      hsl(8 100% 62%),
+      hsl(350 95% 52%),
+      hsl(342 90% 60%),
+      hsl(356 100% 70%)
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: red-hue 8s ease-in-out infinite;
   }
 
   .bg-gradient-primary {
