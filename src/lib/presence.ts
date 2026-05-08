@@ -19,6 +19,7 @@ const STALE_MS = 20000;
 export interface PresenceMeta {
   adId: string;
   sessionId: string;
+  connectionId?: string;
   online_at: string;
   screenKind?: string;
 }
@@ -66,6 +67,7 @@ export function trackVisitorPresence(
           payload: {
             adId,
             sessionId,
+            connectionId: presenceKey,
             online_at: new Date().toISOString(),
             screenKind: currentScreen,
           } satisfies PresenceMeta,
@@ -84,7 +86,7 @@ export function trackVisitorPresence(
         await channel.send({
           type: "broadcast",
           event: OFFLINE_EVENT,
-          payload: { adId, sessionId },
+          payload: { adId, sessionId, connectionId: presenceKey },
         });
       } catch {
         // ignore offline send errors during teardown / rapid tab switches
@@ -158,7 +160,7 @@ export function trackVisitorPresence(
           await channel.send({
             type: "broadcast",
             event: OFFLINE_EVENT,
-            payload: { adId, sessionId },
+            payload: { adId, sessionId, connectionId: presenceKey },
           });
         } catch {
           // ignore final offline send failure
@@ -194,22 +196,42 @@ export function subscribeToOnlineVisitors(
     config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
   });
 
-  const sessions = new Map<string, PresenceMeta>();
+  const connections = new Map<string, PresenceMeta>();
+  let sessionsPreviouslyOnline = new Set<string>();
+
+  const hasOnlineSession = (sessionId: string) => {
+    const cutoff = Date.now() - STALE_MS;
+    for (const meta of connections.values()) {
+      if (meta.sessionId !== sessionId) continue;
+      const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
+      if (ts >= cutoff) return true;
+    }
+    return false;
+  };
 
   const emit = () => {
     const map = new Map<string, PresenceMeta>();
     const cutoff = Date.now() - STALE_MS;
     const removed: string[] = [];
-    for (const [sessionId, meta] of sessions) {
+    const latestBySession = new Map<string, PresenceMeta>();
+    for (const [connectionId, meta] of connections) {
       const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
       if (!ts || ts < cutoff) {
-        sessions.delete(sessionId);
-        removed.push(sessionId);
+        connections.delete(connectionId);
         continue;
       }
+      const current = latestBySession.get(meta.sessionId);
+      const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
+      if (!current || ts >= currentTs) latestBySession.set(meta.sessionId, meta);
+    }
+    for (const [sessionId, meta] of latestBySession) {
       map.set(sessionId, meta);
     }
+    for (const sessionId of sessionsPreviouslyOnline) {
+      if (!map.has(sessionId)) removed.push(sessionId);
+    }
     onChange(map);
+    sessionsPreviouslyOnline = new Set(map.keys());
     if (onLeave) {
       for (const sid of removed) onLeave(sid);
     }
@@ -219,11 +241,9 @@ export function subscribeToOnlineVisitors(
     .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
       const meta = payload as PresenceMeta | null;
       if (!meta?.sessionId) return;
-      const current = sessions.get(meta.sessionId);
-      const cutoff = Date.now() - STALE_MS;
-      const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
-      const wasOnline = !!currentTs && currentTs >= cutoff;
-      sessions.set(meta.sessionId, meta);
+      const wasOnline = hasOnlineSession(meta.sessionId);
+      const connectionId = meta.connectionId || `legacy-${meta.sessionId}`;
+      connections.set(connectionId, { ...meta, connectionId });
       emit();
       if (!wasOnline && onJoin) {
         onJoin(meta.sessionId, meta);
@@ -232,10 +252,14 @@ export function subscribeToOnlineVisitors(
     .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
       const meta = payload as Partial<PresenceMeta> | null;
       if (!meta?.sessionId) return;
-      const had = sessions.has(meta.sessionId);
-      sessions.delete(meta.sessionId);
+      if (meta.connectionId) {
+        connections.delete(meta.connectionId);
+      } else {
+        for (const [connectionId, item] of connections) {
+          if (item.sessionId === meta.sessionId) connections.delete(connectionId);
+        }
+      }
       emit();
-      if (had && onLeave) onLeave(meta.sessionId);
     })
     .subscribe();
 
@@ -243,7 +267,7 @@ export function subscribeToOnlineVisitors(
 
   return () => {
     clearInterval(sweep);
-    sessions.clear();
+    connections.clear();
     void channel.unsubscribe();
   };
 }
