@@ -720,7 +720,15 @@ export default function Dashboard() {
               className={`ml-0.5 inline-flex shrink-0 items-center text-[8px] font-medium uppercase xs:ml-1 xs:text-[10px] sm:ml-2 sm:text-xs ${activeOnlineSessionIds.size > 0 ? "text-success" : "text-muted-foreground"} ${pulse ? "animate-pulse" : ""}`}
               aria-label={activeOnlineSessionIds.size > 0 ? "Visitantes online" : "Ninguém online"}
             >
-              {activeOnlineSessionIds.size > 0 ? "online" : "offline"}
+              {activeOnlineSessionIds.size > 0 ? (() => {
+                const screens = Array.from(new Set(
+                  Array.from(activeOnlineSessionIds)
+                    .map((sid) => liveScreens.get(sid))
+                    .filter((k): k is string => !!k)
+                    .map((k) => screenKindLabel(k))
+                ));
+                return screens.length > 0 ? `online · ${screens.join(", ")}` : "online";
+              })() : "offline"}
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-1 xs:gap-2 sm:gap-3">
