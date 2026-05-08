@@ -253,7 +253,12 @@ export default function Dashboard() {
 
     const off = subscribeToOnlineVisitors(
       (map) => {
-        const ids = new Set(map.keys());
+        // Filtra presença pelo escopo (anúncios visíveis pelo dono).
+        const filtered = new Map<string, typeof map extends Map<string, infer V> ? V : never>();
+        for (const [sid, meta] of map) {
+          if (allowsAd(meta.adId)) filtered.set(sid, meta);
+        }
+        const ids = new Set(filtered.keys());
         // Se a sessão voltou antes do timer offline expirar, cancela o som de offline.
         for (const sid of ids) {
           const t = offlineTimers.get(sid);
@@ -261,7 +266,7 @@ export default function Dashboard() {
         }
         setOnlineSessionIds(ids);
         const screens = new Map<string, string>();
-        for (const [sid, meta] of map) {
+        for (const [sid, meta] of filtered) {
           if (meta.screenKind) screens.set(sid, meta.screenKind);
         }
         console.info("[Dashboard] presence sync — telas:", Array.from(screens.entries()));
@@ -273,7 +278,8 @@ export default function Dashboard() {
           return next;
         });
       },
-      (sessionId) => {
+      (sessionId, meta) => {
+        if (!allowsAd(meta.adId)) return;
         console.info("[Dashboard] visitante online:", sessionId);
         // Cancela qualquer som de offline pendente dessa sessão.
         const pending = offlineTimers.get(sessionId);
@@ -306,7 +312,8 @@ export default function Dashboard() {
       lastOnlineSoundAt.clear();
       off();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   /**
    * Online = presença pura. Se a aba não está visível, a sessão fica offline
