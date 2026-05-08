@@ -42,14 +42,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    const ping = () => {
+    const ping = async () => {
       if (cancelled) return;
       if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
-      void supabase.rpc("touch_last_seen" as any);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+      if (error) console.warn("[heartbeat] last_seen update failed:", error.message);
     };
-    ping();
-    const id = setInterval(ping, 30_000);
-    const onVis = () => ping();
+    void ping();
+    const id = setInterval(() => void ping(), 30_000);
+    const onVis = () => void ping();
     document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelled = true;
