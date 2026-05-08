@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
+import { ADMIN_BASE } from "@/lib/admin-route";
 
 /**
  * Injeta dinamicamente as tags PWA (manifest, theme-color, apple-touch-icon)
@@ -9,11 +9,11 @@ import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
  */
 export function PainelPWAHead() {
   const { pathname } = useLocation();
+  // Login fica disfarçada como a fachada OLX (favicon/og originais).
+  // Só ativa o tema do painel dentro da área admin autenticada.
   const isPainelArea =
     pathname === ADMIN_BASE ||
-    pathname.startsWith(`${ADMIN_BASE}/`) ||
-    pathname === ADMIN_LOGIN_PATH ||
-    pathname.startsWith(`${ADMIN_LOGIN_PATH}/`);
+    pathname.startsWith(`${ADMIN_BASE}/`);
 
   useEffect(() => {
     if (!isPainelArea) return;
