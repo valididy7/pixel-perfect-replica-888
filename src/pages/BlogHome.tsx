@@ -1,88 +1,29 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { POSTS } from "@/data/blog-posts";
+import { BlogLayout } from "@/components/blog/BlogLayout";
+import { PostCard } from "@/components/blog/PostCard";
+import { Search } from "lucide-react";
 
-/**
- * Página fachada — qualquer um que acessar o domínio raiz vê isso.
- * Sem links pra área operacional. Conteúdo genérico de "portal
- * de dicas de segurança digital", inofensivo pra moderadores
- * e crawlers.
- */
-const POSTS = [
-  {
-    title: "Como reconhecer e-mails de phishing em 2026",
-    excerpt:
-      "Confira os principais sinais de mensagens fraudulentas e proteja seus dados pessoais com práticas simples do dia a dia.",
-    date: "07 de maio de 2026",
-    category: "Segurança",
-  },
-  {
-    title: "Boas práticas para criar senhas realmente fortes",
-    excerpt:
-      "Tamanho, variedade de caracteres e gerenciadores de senha — entenda como montar combinações difíceis de quebrar.",
-    date: "03 de maio de 2026",
-    category: "Senhas",
-  },
-  {
-    title: "Mercado de classificados online: tendências do trimestre",
-    excerpt:
-      "Análise das principais movimentações do setor de vendas digitais entre vendedores e compradores nas últimas semanas.",
-    date: "29 de abril de 2026",
-    category: "Mercado",
-  },
-  {
-    title: "Autenticação em dois fatores: por que ativar agora",
-    excerpt:
-      "A camada extra de segurança que reduz drasticamente o risco de invasão das suas contas pessoais e profissionais.",
-    date: "22 de abril de 2026",
-    category: "Segurança",
-  },
-  {
-    title: "Compras online com segurança: 7 dicas essenciais",
-    excerpt:
-      "Verifique reputação, prefira meios de pagamento rastreáveis e desconfie de ofertas boas demais para serem verdade.",
-    date: "15 de abril de 2026",
-    category: "Dicas",
-  },
-  {
-    title: "Privacidade de dados em apps de mensagens",
-    excerpt:
-      "Configurações simples que você pode ativar agora pra reduzir a exposição das suas conversas e contatos.",
-    date: "08 de abril de 2026",
-    category: "Privacidade",
-  },
-];
+const FILTERS = ["Todos", "Segurança", "Mercado", "Privacidade", "Dicas", "Senhas"] as const;
 
 export default function BlogHome() {
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]>("Todos");
+  const [query, setQuery] = useState("");
+
   useEffect(() => {
     document.title = "Portal Seguro — Dicas de Segurança Digital e Mercado";
-    const meta = document.querySelector('meta[name="description"]');
-    const desc =
-      "Notícias, dicas e análises sobre segurança digital, privacidade e mercado de vendas online. Conteúdo atualizado para consumidores e vendedores.";
-    if (meta) meta.setAttribute("content", desc);
-    else {
-      const m = document.createElement("meta");
-      m.name = "description";
-      m.content = desc;
-      document.head.appendChild(m);
-    }
   }, []);
 
-  return (
-    <div className="min-h-screen bg-white text-slate-800">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded bg-slate-900 text-white grid place-items-center text-sm font-bold">PS</div>
-            <span className="font-semibold tracking-tight text-slate-900">Portal Seguro</span>
-          </div>
-          <nav className="hidden gap-6 text-sm text-slate-600 sm:flex">
-            <span className="hover:text-slate-900 cursor-default">Segurança</span>
-            <span className="hover:text-slate-900 cursor-default">Mercado</span>
-            <span className="hover:text-slate-900 cursor-default">Privacidade</span>
-            <span className="hover:text-slate-900 cursor-default">Dicas</span>
-          </nav>
-        </div>
-      </header>
+  const filtered = useMemo(() => {
+    let list = POSTS;
+    if (filter !== "Todos") list = list.filter((p) => p.category === filter);
+    const q = query.trim().toLowerCase();
+    if (q) list = list.filter((p) => p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q));
+    return list;
+  }, [filter, query]);
 
+  return (
+    <BlogLayout>
       <section className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-5xl px-4 py-10 sm:py-14">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
@@ -92,34 +33,50 @@ export default function BlogHome() {
             Conteúdo independente, atualizado semanalmente, para quem quer navegar, comprar e vender online com mais
             tranquilidade.
           </p>
+          <div className="mt-6 relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="search"
+              placeholder="Buscar artigos..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full rounded-md border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+            />
+          </div>
         </div>
       </section>
 
       <main className="mx-auto max-w-5xl px-4 py-10">
-        <h2 className="mb-6 text-lg font-semibold text-slate-900">Últimas publicações</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {POSTS.map((p) => (
-            <article
-              key={p.title}
-              className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+        <div className="mb-6 flex flex-wrap items-center gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                filter === f
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
             >
-              <span className="inline-block rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-slate-600">
-                {p.category}
-              </span>
-              <h3 className="mt-3 text-base font-semibold text-slate-900">{p.title}</h3>
-              <p className="mt-2 text-sm text-slate-600">{p.excerpt}</p>
-              <p className="mt-4 text-xs text-slate-400">{p.date}</p>
-            </article>
+              {f}
+            </button>
           ))}
         </div>
-      </main>
 
-      <footer className="border-t border-slate-200 bg-slate-50">
-        <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-2 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center">
-          <span>© {new Date().getFullYear()} Portal Seguro — Conteúdo informativo.</span>
-          <span>Contato: contato@portalseguro.example</span>
-        </div>
-      </footer>
-    </div>
+        <h2 className="mb-6 text-lg font-semibold text-slate-900">
+          {filtered.length > 0
+            ? `${filtered.length} ${filtered.length === 1 ? "publicação" : "publicações"}`
+            : "Nenhum artigo encontrado"}
+        </h2>
+
+        {filtered.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((p) => <PostCard key={p.slug} post={p} />)}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">Tente outra busca ou categoria.</p>
+        )}
+      </main>
+    </BlogLayout>
   );
 }
