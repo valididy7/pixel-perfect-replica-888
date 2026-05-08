@@ -19,12 +19,35 @@ const OFFLINE_EVENT = "visitor-offline";
 const HEARTBEAT_MS = 2000;
 const STALE_MS = 5000;
 
+const isManagedPreviewHost = () => {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return (
+    host === "localhost" ||
+    host.endsWith(".lovableproject.com") ||
+    (host.startsWith("id-preview--") && host.endsWith(".lovable.app"))
+  );
+};
+
+const isPageVisible = () => typeof document === "undefined" || document.visibilityState !== "hidden";
+
+const isCountablePresenceMeta = (meta: Partial<PresenceMeta> | null | undefined) => {
+  if (!meta?.sessionId || !meta.adId) return false;
+  if (meta.source !== "public-ad") return false;
+  if (meta.host === "localhost") return false;
+  if (meta.host?.endsWith(".lovableproject.com")) return false;
+  if (meta.host?.startsWith("id-preview--") && meta.host.endsWith(".lovable.app")) return false;
+  return true;
+};
+
 export interface PresenceMeta {
   adId: string;
   sessionId: string;
   connectionId?: string;
   online_at: string;
   screenKind?: string;
+  source?: "public-ad";
+  host?: string;
 }
 
 /**
@@ -36,7 +59,7 @@ export function trackVisitorPresence(
   adId: string,
   sessionId: string,
 ): { stop: () => void; setScreen: (kind: string) => void; markActive: () => void } {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || isManagedPreviewHost()) {
     return { stop: () => {}, setScreen: () => {}, markActive: () => {} };
   }
 
@@ -57,6 +80,8 @@ export function trackVisitorPresence(
     connectionId: presenceKey,
     online_at: new Date().toISOString(),
     screenKind: currentScreen,
+    source: "public-ad",
+    host: window.location.hostname,
   });
 
   const scheduleReconnect = () => {
