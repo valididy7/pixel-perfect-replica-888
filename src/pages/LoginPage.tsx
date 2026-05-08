@@ -67,10 +67,18 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/50 p-5 shadow-elegant backdrop-blur-xl sm:p-6">
-          <form onSubmit={onLogin} className="space-y-4">
+        <div className="relative rounded-2xl border border-primary/25 bg-card/40 p-5 shadow-[0_20px_60px_-20px_hsl(356_95%_30%/0.55)] backdrop-blur-2xl sm:p-7">
+          {/* Borda gradiente sutil em volta do card */}
+          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-b from-primary/20 via-transparent to-accent/15 opacity-60 [mask:linear-gradient(#000,#000)_content-box,linear-gradient(#000,#000)] [mask-composite:exclude] p-px" />
+
+          <form onSubmit={onLogin} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="identifier">Usuário</Label>
+              <Label
+                htmlFor="identifier"
+                className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+              >
+                Usuário
+              </Label>
               <Input
                 id="identifier"
                 type="text"
@@ -79,11 +87,16 @@ export default function LoginPage() {
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 placeholder="seu usuário"
-                className="h-11 text-base sm:h-10 sm:text-sm"
+                className="h-12 rounded-xl border-primary/20 bg-background/50 px-4 text-base text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:border-primary/60 focus-visible:bg-background/70 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.15),0_0_24px_hsl(var(--primary)/0.25)] focus-visible:ring-0 sm:text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label
+                htmlFor="password"
+                className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+              >
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -92,10 +105,14 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-11 text-base sm:h-10 sm:text-sm"
+                className="h-12 rounded-xl border-primary/20 bg-background/50 px-4 text-base text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:border-primary/60 focus-visible:bg-background/70 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.15),0_0_24px_hsl(var(--primary)/0.25)] focus-visible:ring-0 sm:text-sm"
               />
             </div>
-            <Button type="submit" disabled={submitting} className="h-11 w-full bg-gradient-primary shadow-glow hover:opacity-90 sm:h-10">
+            <Button
+              type="submit"
+              disabled={submitting}
+              className="group relative mt-2 h-12 w-full overflow-hidden rounded-xl bg-gradient-primary text-base font-semibold tracking-wide shadow-glow transition-all hover:shadow-[0_0_32px_hsl(var(--primary)/0.6)] hover:brightness-110 sm:text-sm"
+            >
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>
