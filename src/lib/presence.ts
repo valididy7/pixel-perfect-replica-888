@@ -13,8 +13,11 @@ const OFFLINE_EVENT = "visitor-offline";
 
 // Heartbeat: visitante envia ping enquanto a página do anúncio está aberta.
 // O painel mantém online quem enviou heartbeat recente e remove no OFFLINE_EVENT.
-const HEARTBEAT_MS = 3000;
-const STALE_MS = 20000;
+// Heartbeat curto + stale curto = offline quase instantâneo quando a pessoa
+// fecha/sai da página. O visitante manda ping a cada 2s e o painel considera
+// offline depois de ~5s sem receber nada.
+const HEARTBEAT_MS = 2000;
+const STALE_MS = 5000;
 
 export interface PresenceMeta {
   adId: string;
