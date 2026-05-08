@@ -7,7 +7,7 @@ import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, A
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
-import { subscribeToOnlineVisitors } from "@/lib/presence";
+import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { OrderStatusPanel } from "@/components/OrderStatusPanel";
 import {
