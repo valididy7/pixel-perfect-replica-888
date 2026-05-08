@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { EyeOfHorus } from "@/components/icons/EyeOfHorus";
+import { Activity } from "lucide-react";
 import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_GATE_KEY } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors } from "@/lib/presence";
@@ -751,7 +751,7 @@ export default function Dashboard() {
         <>
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
         <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
-          <StatCard label="Em andamento" value={activeSessions.length} icon={<EyeOfHorus className="h-5 w-5" />} highlight={activeSessions.length > 0} />
+          <StatCard label="Em andamento" value={activeSessions.length} icon={<Activity className="h-5 w-5" />} highlight={activeSessions.length > 0} />
           <StatCard label="Ao vivo" value={live.length} icon={<Radio className="h-4 w-4" />} highlight={live.length > 0} />
           <StatCard label="Aprovados" value={approvedCount} icon={<Check className="h-4 w-4" />} />
           <StatCard label="Rejeitados" value={rejectedCount} icon={<X className="h-4 w-4" />} />
@@ -761,7 +761,7 @@ export default function Dashboard() {
         <section className="mt-0 rounded-xl border border-border bg-card shadow-card xs:mt-6 sm:mt-8">
           <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-3 xs:px-5 xs:py-4">
             <div className="flex items-center gap-2">
-              <EyeOfHorus className="h-4 w-4 text-primary xs:h-5 xs:w-5" />
+              <Activity className="h-4 w-4 text-primary xs:h-5 xs:w-5" />
               <h2 className="font-display text-sm font-semibold tracking-wider uppercase xs:text-base">Sessões em andamento</h2>
               <Badge variant="secondary" className="text-[10px]">{activeSessions.length}</Badge>
             </div>
