@@ -11,6 +11,9 @@ import GooglePopup from "./pages/GooglePopup";
 import LoginPage from "./pages/LoginPage";
 import UsersAdmin from "./pages/UsersAdmin";
 import BlogHome from "./pages/BlogHome";
+import BlogPost from "./pages/blog/BlogPost";
+import BlogCategory from "./pages/blog/BlogCategory";
+import BlogAbout from "./pages/blog/BlogAbout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PainelPWAHead } from "@/components/PainelPWAHead";
 
@@ -32,6 +35,9 @@ const App = () => (
           <Routes>
             {/* Fachada pública. Único conteúdo visível em / */}
             <Route path="/" element={<BlogHome />} />
+            <Route path="/post/:slug" element={<BlogPost />} />
+            <Route path="/categoria/:slug" element={<BlogCategory />} />
+            <Route path="/sobre" element={<BlogAbout />} />
             {/* Operação real, escondida. */}
             <Route path={SECRET_BASE} element={<PublicAd defaultSlug={PUBLIC_AD_SLUG} />} />
             <Route path={`${SECRET_BASE}/:slug`} element={<PublicAd />} />
