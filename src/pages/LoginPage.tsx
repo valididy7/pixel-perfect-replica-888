@@ -47,7 +47,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+    <div className="relative flex min-h-screen items-start justify-center overflow-hidden bg-background px-4 pt-12 sm:pt-20">
       {/* Imagem de fundo responsiva: cobre a tela em qualquer proporção sem distorcer */}
       <img
         src={loginBg}
@@ -62,12 +62,7 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-4 text-center">
-          <Link to={ADMIN_BASE} className="inline-flex items-center gap-2">
-            <img
-              src="/painel-favicon.png"
-              alt=""
-              className="h-9 w-9 object-contain drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)] sm:h-10 sm:w-10"
-            />
+          <Link to={ADMIN_BASE} className="inline-block">
             <span className="text-xl font-bold tracking-tight sm:text-2xl">Painel Valididy</span>
           </Link>
         </div>
