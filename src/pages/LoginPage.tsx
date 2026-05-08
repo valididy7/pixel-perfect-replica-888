@@ -61,12 +61,12 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-gradient-glow opacity-60" />
 
       <div className="relative w-full max-w-md animate-fade-in">
-        <div className="mb-6 text-center sm:mb-8">
-          <Link to={ADMIN_BASE} className="inline-flex flex-col items-center gap-3">
+        <div className="mb-4 text-center">
+          <Link to={ADMIN_BASE} className="inline-flex items-center gap-2">
             <img
               src="/painel-favicon.png"
-              alt="Painel Valididy"
-              className="h-20 w-20 object-contain drop-shadow-[0_0_24px_hsl(var(--primary)/0.6)] sm:h-24 sm:w-24"
+              alt=""
+              className="h-9 w-9 object-contain drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)] sm:h-10 sm:w-10"
             />
             <span className="text-xl font-bold tracking-tight sm:text-2xl">Painel Valididy</span>
           </Link>
