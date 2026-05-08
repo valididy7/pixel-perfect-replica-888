@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /s/
 Disallow: /painel-x9k2m
 Disallow: /login-x9k2m-acesso
-Disallow: /ad/
 Disallow: /unsubscribe
