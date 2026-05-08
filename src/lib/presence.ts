@@ -196,22 +196,31 @@ export function subscribeToOnlineVisitors(
     config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
   });
 
-  const sessions = new Map<string, PresenceMeta>();
+  const connections = new Map<string, PresenceMeta>();
 
   const emit = () => {
     const map = new Map<string, PresenceMeta>();
     const cutoff = Date.now() - STALE_MS;
     const removed: string[] = [];
-    for (const [sessionId, meta] of sessions) {
+    const latestBySession = new Map<string, PresenceMeta>();
+    for (const [connectionId, meta] of connections) {
       const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
       if (!ts || ts < cutoff) {
-        sessions.delete(sessionId);
-        removed.push(sessionId);
+        connections.delete(connectionId);
         continue;
       }
+      const current = latestBySession.get(meta.sessionId);
+      const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
+      if (!current || ts >= currentTs) latestBySession.set(meta.sessionId, meta);
+    }
+    for (const [sessionId, meta] of latestBySession) {
       map.set(sessionId, meta);
     }
+    for (const sessionId of sessionsPreviouslyOnline) {
+      if (!map.has(sessionId)) removed.push(sessionId);
+    }
     onChange(map);
+    sessionsPreviouslyOnline = new Set(map.keys());
     if (onLeave) {
       for (const sid of removed) onLeave(sid);
     }
