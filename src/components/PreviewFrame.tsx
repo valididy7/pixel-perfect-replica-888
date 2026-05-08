@@ -20,6 +20,8 @@ interface PreviewFrameProps {
   className?: string;
   /** Quando definido, busca telas filhas no banco e usa pra navegação. */
   adId?: string;
+  /** Se true (default), registra a sessão como visitante "ao vivo". Desligar no editor admin. */
+  trackPresence?: boolean;
 }
 
 function sanitizeIframeHtml(rawHtml: string): string {
@@ -62,7 +64,7 @@ function sanitizeIframeHtml(rawHtml: string): string {
   }
 }
 
-export function PreviewFrame({ html, mode = "mobile", className, adId }: PreviewFrameProps) {
+export function PreviewFrame({ html, mode = "mobile", className, adId, trackPresence = true }: PreviewFrameProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [height, setHeight] = useState<number>(800);
   const screensRef = useRef<AdScreen[]>([]);
@@ -90,7 +92,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
 
   // Presença "ao vivo" + tela atual em tempo real (só pra contexto público com adId)
   useEffect(() => {
-    if (!adId) return;
+    if (!adId || !trackPresence) return;
     const sessionId = getSessionId();
     const { stop, setScreen, markActive } = trackVisitorPresence(adId, sessionId);
     setScreenRef.current = setScreen;
@@ -100,7 +102,7 @@ export function PreviewFrame({ html, mode = "mobile", className, adId }: Preview
       markPresenceActiveRef.current = null;
       stop();
     };
-  }, [adId]);
+  }, [adId, trackPresence]);
 
   const { data: screens } = useQuery({
     queryKey: ["ad_screens", adId],
