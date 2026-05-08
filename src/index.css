@@ -1,74 +1,87 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Design system — Tema vermelho.
-   Preto profundo + vermelho intenso. Tokens em HSL. */
+/* Design system — Tema vermelho futurista / tech.
+   Preto profundo + várias camadas de vermelho (carmim, escarlate, neon, vinho).
+   Tokens em HSL. */
 
 @layer base {
   :root {
-    /* Preto profundo com leve matiz vermelho como base */
-    --background: 0 30% 5%;
-    --foreground: 0 15% 92%;
+    /* Preto profundo quase puro — base "carbon" */
+    --background: 0 25% 4%;
+    --foreground: 0 10% 95%;
 
-    --card: 0 30% 8%;
-    --card-foreground: 0 15% 92%;
+    --card: 0 30% 7%;
+    --card-foreground: 0 10% 95%;
 
-    --popover: 0 35% 7%;
-    --popover-foreground: 0 15% 92%;
+    --popover: 0 35% 6%;
+    --popover-foreground: 0 10% 95%;
 
-    /* Vermelho intenso como cor primária */
-    --primary: 0 78% 52%;
+    /* Vermelho neon — primário */
+    --primary: 358 92% 56%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 0 90% 62%;
+    --primary-glow: 0 100% 65%;
 
-    /* Acento vermelho mais escuro / sangue */
-    --accent: 350 80% 45%;
+    /* Acento — escarlate quente */
+    --accent: 12 90% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --secondary: 0 35% 14%;
-    --secondary-foreground: 0 15% 92%;
+    /* Vermelho vinho profundo */
+    --secondary: 350 60% 18%;
+    --secondary-foreground: 0 10% 95%;
 
-    --muted: 0 25% 12%;
-    --muted-foreground: 0 10% 65%;
+    --muted: 0 20% 11%;
+    --muted-foreground: 0 8% 68%;
 
-    --destructive: 0 84% 50%;
+    --destructive: 0 95% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 158 60% 45%;
+    --success: 158 70% 48%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 60%;
-    --warning-foreground: 0 30% 5%;
+    --warning: 30 95% 60%;
+    --warning-foreground: 0 25% 5%;
 
-    --border: 0 50% 22%;
-    --input: 0 30% 11%;
-    --ring: 0 78% 52%;
+    /* Borda com leve neon */
+    --border: 358 70% 22%;
+    --input: 0 30% 10%;
+    --ring: 358 92% 56%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Gradientes — vermelho sobre preto */
-    --gradient-primary: linear-gradient(135deg, hsl(0 90% 62%), hsl(350 80% 40%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 30% 7%), hsl(0 35% 4%));
-    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(0 78% 52% / 0.25), transparent 70%);
-    --gradient-gold: linear-gradient(135deg, hsl(0 95% 70%), hsl(350 80% 42%) 50%, hsl(0 90% 55%));
+    /* Camadas de vermelho — usar como tokens utilitários */
+    --red-neon: 358 100% 60%;
+    --red-scarlet: 12 90% 55%;
+    --red-crimson: 350 85% 45%;
+    --red-blood: 355 75% 32%;
+    --red-wine: 350 60% 18%;
+    --red-ember: 18 95% 58%;
 
-    /* Shadows com brilho vermelho */
-    --shadow-glow: 0 0 40px hsl(0 78% 52% / 0.35);
-    --shadow-elegant: 0 10px 40px -10px hsl(0 80% 2% / 0.75);
-    --shadow-card: 0 1px 3px hsl(0 80% 2% / 0.5), 0 4px 12px hsl(0 80% 2% / 0.35);
+    /* Gradientes futuristas */
+    --gradient-primary: linear-gradient(135deg, hsl(358 100% 60%), hsl(350 85% 35%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 30% 6%), hsl(0 35% 3%));
+    --gradient-glow: radial-gradient(circle at 50% 0%, hsl(358 92% 56% / 0.3), transparent 70%);
+    --gradient-neon: linear-gradient(90deg, hsl(358 100% 60%), hsl(12 95% 58%), hsl(350 90% 50%));
+    --gradient-cyber: linear-gradient(135deg, hsl(0 25% 4%) 0%, hsl(355 60% 10%) 50%, hsl(0 25% 4%) 100%);
 
-    /* Sidebar (mantido pra shadcn) */
-    --sidebar-background: 0 35% 6%;
-    --sidebar-foreground: 0 10% 85%;
-    --sidebar-primary: 0 78% 52%;
+    /* Sombras com glow neon */
+    --shadow-glow: 0 0 32px hsl(358 92% 56% / 0.45), 0 0 80px hsl(358 92% 56% / 0.15);
+    --shadow-elegant: 0 10px 40px -10px hsl(0 90% 2% / 0.85);
+    --shadow-card: 0 1px 0 hsl(358 70% 22% / 0.4) inset, 0 4px 16px hsl(0 90% 2% / 0.6);
+    --shadow-neon: 0 0 0 1px hsl(358 92% 56% / 0.5), 0 0 24px hsl(358 92% 56% / 0.4);
+
+    /* Sidebar */
+    --sidebar-background: 0 30% 5%;
+    --sidebar-foreground: 0 8% 88%;
+    --sidebar-primary: 358 92% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 35% 12%;
-    --sidebar-accent-foreground: 0 15% 92%;
-    --sidebar-border: 0 50% 22%;
-    --sidebar-ring: 0 78% 52%;
+    --sidebar-accent: 350 50% 12%;
+    --sidebar-accent-foreground: 0 10% 95%;
+    --sidebar-border: 358 70% 22%;
+    --sidebar-ring: 358 92% 56%;
   }
 }
 
@@ -85,31 +98,35 @@
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     background-image:
-      radial-gradient(ellipse at top, hsl(0 78% 52% / 0.08), transparent 60%),
-      radial-gradient(ellipse at bottom, hsl(0 60% 10% / 0.6), transparent 70%);
+      radial-gradient(ellipse at top, hsl(358 92% 56% / 0.12), transparent 55%),
+      radial-gradient(ellipse at bottom right, hsl(12 90% 40% / 0.10), transparent 60%),
+      radial-gradient(ellipse at bottom left, hsl(350 85% 25% / 0.15), transparent 65%),
+      linear-gradient(hsl(358 92% 56% / 0.025) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(358 92% 56% / 0.025) 1px, transparent 1px);
+    background-size: auto, auto, auto, 40px 40px, 40px 40px;
     background-attachment: fixed;
   }
 
   /* Scrollbar minimalista */
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: hsl(var(--background));
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.4);
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.6), hsl(var(--accent) / 0.5));
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.7);
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.9), hsl(var(--accent) / 0.8));
   }
 }
 
 @layer utilities {
   .text-gradient {
-    background: var(--gradient-gold);
+    background: var(--gradient-neon);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -127,13 +144,23 @@
     background: var(--gradient-glow);
   }
 
-  .bg-gradient-gold {
-    background: var(--gradient-gold);
+  .bg-gradient-neon {
+    background: var(--gradient-neon);
+  }
+
+  .bg-gradient-cyber {
+    background: var(--gradient-cyber);
   }
 
   .font-display {
-    font-family: 'Cinzel', 'Times New Roman', serif;
-    letter-spacing: 0.04em;
+    font-family: 'Orbitron', 'Inter', sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .font-mono-tech {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    letter-spacing: 0.02em;
   }
 
   .shadow-glow {
@@ -146,6 +173,16 @@
 
   .shadow-card {
     box-shadow: var(--shadow-card);
+  }
+
+  .shadow-neon {
+    box-shadow: var(--shadow-neon);
+  }
+
+  /* Borda com brilho neon sutil */
+  .border-neon {
+    border: 1px solid hsl(var(--primary) / 0.5);
+    box-shadow: 0 0 12px hsl(var(--primary) / 0.25), inset 0 0 12px hsl(var(--primary) / 0.05);
   }
 
   .font-mono-tabular {
