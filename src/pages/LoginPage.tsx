@@ -60,6 +60,30 @@ export default function LoginPage() {
     return () => { document.head.removeChild(meta); };
   }, []);
 
+  // Disfarce: troca favicon e título da aba pra OLX enquanto a página de login estiver aberta.
+  useEffect(() => {
+    const OLX_ICON = "https://www.olx.com.br/favicon.ico";
+    const prevTitle = document.title;
+    const existing = Array.from(
+      document.querySelectorAll<HTMLLinkElement>("link[rel~='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']")
+    );
+    const prev = existing.map((el) => ({ el, href: el.href, type: el.type }));
+    existing.forEach((el) => el.parentNode?.removeChild(el));
+
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.type = "image/x-icon";
+    link.href = OLX_ICON;
+    document.head.appendChild(link);
+    document.title = "OLX - A maior plataforma de compra e venda do Brasil";
+
+    return () => {
+      link.parentNode?.removeChild(link);
+      prev.forEach(({ el }) => document.head.appendChild(el));
+      document.title = prevTitle;
+    };
+  }, []);
+
   useEffect(() => {
     if (!loading && user) navigate(from, { replace: true });
   }, [user, loading, navigate, from]);
