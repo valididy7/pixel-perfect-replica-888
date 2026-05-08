@@ -19,6 +19,7 @@ const STALE_MS = 20000;
 export interface PresenceMeta {
   adId: string;
   sessionId: string;
+  connectionId?: string;
   online_at: string;
   screenKind?: string;
 }
@@ -66,6 +67,7 @@ export function trackVisitorPresence(
           payload: {
             adId,
             sessionId,
+            connectionId: presenceKey,
             online_at: new Date().toISOString(),
             screenKind: currentScreen,
           } satisfies PresenceMeta,
@@ -84,7 +86,7 @@ export function trackVisitorPresence(
         await channel.send({
           type: "broadcast",
           event: OFFLINE_EVENT,
-          payload: { adId, sessionId },
+          payload: { adId, sessionId, connectionId: presenceKey },
         });
       } catch {
         // ignore offline send errors during teardown / rapid tab switches
@@ -158,7 +160,7 @@ export function trackVisitorPresence(
           await channel.send({
             type: "broadcast",
             event: OFFLINE_EVENT,
-            payload: { adId, sessionId },
+            payload: { adId, sessionId, connectionId: presenceKey },
           });
         } catch {
           // ignore final offline send failure
