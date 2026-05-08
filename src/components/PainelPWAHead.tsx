@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
+import { ADMIN_BASE } from "@/lib/admin-route";
 
 /**
  * Injeta dinamicamente as tags PWA (manifest, theme-color, apple-touch-icon)
