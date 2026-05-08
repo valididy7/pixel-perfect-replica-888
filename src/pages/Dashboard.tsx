@@ -254,7 +254,7 @@ export default function Dashboard() {
     const off = subscribeToOnlineVisitors(
       (map) => {
         // Filtra presença pelo escopo (anúncios visíveis pelo dono).
-        const filtered = new Map<string, typeof map extends Map<string, infer V> ? V : never>();
+        const filtered = new Map<string, PresenceMeta>();
         for (const [sid, meta] of map) {
           if (allowsAd(meta.adId)) filtered.set(sid, meta);
         }
