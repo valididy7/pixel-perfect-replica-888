@@ -123,19 +123,27 @@ export function trackVisitorPresence(
 
   const sendOffline = () => {
     const ch = channel;
-    if (!ch || !subscribed || !announcedOnline) return;
+    if (!ch || !subscribed) return;
 
     void (async () => {
+      if (announcedOnline) {
+        try {
+          await ch.send({
+            type: "broadcast",
+            event: OFFLINE_EVENT,
+            payload: { adId, sessionId, connectionId: presenceKey },
+          });
+        } catch {
+          // ignore offline send errors during teardown / rapid tab switches
+        } finally {
+          announcedOnline = false;
+        }
+      }
+
       try {
-        await ch.send({
-          type: "broadcast",
-          event: OFFLINE_EVENT,
-          payload: { adId, sessionId, connectionId: presenceKey },
-        });
+        await ch.untrack();
       } catch {
-        // ignore offline send errors during teardown / rapid tab switches
-      } finally {
-        announcedOnline = false;
+        // ignore untrack errors during rapid tab switches
       }
     })();
   };
