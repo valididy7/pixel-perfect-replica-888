@@ -10,6 +10,7 @@ import { ADMIN_BASE } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { OrderStatusPanel } from "@/components/OrderStatusPanel";
+import { MyLinkCard } from "@/components/MyLinkCard";
 import {
   ensureNotificationPermission,
   isSoundEnabled,
@@ -844,6 +845,8 @@ export default function Dashboard() {
         {/* Painel: sempre visível em <360px, e em ≥360px só quando tab=painel */}
         <div className={tab === "painel" ? "" : "xs:hidden"}>
         <>
+        {/* Link público do dono — cada usuário vê só o próprio. */}
+        <MyLinkCard />
         {/* Cards de resumo — escondidos em telas micro (<360px, ex: smartwatch) */}
         <div className="hidden grid-cols-2 gap-3 xs:grid sm:grid-cols-4 sm:gap-4">
           <StatCard label="Em andamento" value={activeSessions.length} icon={<Activity className="h-5 w-5" />} highlight={activeSessions.length > 0} />
