@@ -310,6 +310,7 @@ export default function EditorPage() {
               mode={mode}
               className="block w-full rounded-xl bg-white"
               adId={ad.id}
+              trackPresence={false}
             />
           </div>
         </main>
