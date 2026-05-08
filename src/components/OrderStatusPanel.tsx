@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -60,6 +60,30 @@ function formatPlate(raw: string): string {
 
 interface Props {
   adId: string;
+}
+
+class PanelErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; message: string }> {
+  state = { hasError: false, message: "" };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Erro no painel ao vivo", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          Não consegui abrir o ao vivo agora. O restante do status do pedido continua funcionando.
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 interface OrderStatusRow {
