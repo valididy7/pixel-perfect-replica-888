@@ -479,3 +479,45 @@ function FocusOverlay({
     </div>
   );
 }
+
+function CredField({
+  icon,
+  label,
+  value,
+  tone,
+  copied,
+  onCopy,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone: "email" | "password" | "address";
+  copied: boolean;
+  onCopy: (e: React.MouseEvent) => void;
+}) {
+  const toneClass =
+    tone === "password"
+      ? "border-orange-500/40 bg-orange-500/10"
+      : tone === "email"
+      ? "border-yellow-500/40 bg-yellow-500/10"
+      : "border-green-500/40 bg-green-500/10";
+  const iconColor =
+    tone === "password" ? "text-orange-600" : tone === "email" ? "text-yellow-700" : "text-green-700";
+  return (
+    <div className={`flex items-center gap-1.5 rounded-md border ${toneClass} px-1.5 py-1`}>
+      <span className={iconColor}>{icon}</span>
+      <span className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">{label}</span>
+      <span className="ml-auto min-w-0 flex-1 truncate text-right font-mono text-[11px] font-semibold text-foreground">
+        {value}
+      </span>
+      <button
+        type="button"
+        onClick={onCopy}
+        className="rounded p-0.5 text-muted-foreground hover:bg-background hover:text-foreground"
+        aria-label={`Copiar ${label}`}
+      >
+        {copied ? <Check className="h-3 w-3 text-green-600" /> : <Copy className="h-3 w-3" />}
+      </button>
+    </div>
+  );
+}
