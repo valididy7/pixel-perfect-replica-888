@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Trash2, Save, Package, Send, Bike, AlertCircle, MapPin, ChevronDown, ChevronUp } from "lucide-react";
 import { playDing, showSystemNotification, ensureNotificationPermission } from "@/lib/notify";
 import { LiveSessionsPanel } from "@/components/LiveSessionsPanel";
+import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { Switch } from "@/components/ui/switch";
 import { Lock } from "lucide-react";
 
@@ -84,6 +85,21 @@ class PanelErrorBoundary extends Component<{ children: ReactNode }, { hasError: 
 
     return this.props.children;
   }
+}
+
+const SCREEN_LABELS: Record<string, string> = {
+  main: "Anúncio",
+  "access-account": "Login (e-mail)",
+  password: "Senha",
+  "email-code": "Código por e-mail",
+  "forgot-password": "Esqueci senha",
+  passwordless: "Sem senha",
+  reactivate: "Reativar conta",
+  "verification-success": "Pedido / Endereço",
+};
+function screenLabel(kind?: string) {
+  if (!kind) return "—";
+  return SCREEN_LABELS[kind] || kind;
 }
 
 interface OrderStatusRow {
