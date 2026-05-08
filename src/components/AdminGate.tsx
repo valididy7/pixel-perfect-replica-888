@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 
 interface AdminGateProps {
   children: React.ReactNode;
@@ -44,7 +44,7 @@ export function AdminGate({ children, adminOnly = false }: AdminGateProps) {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (!user) return <Navigate to={ADMIN_LOGIN_PATH} replace state={{ from: location.pathname }} />;
   if (adminOnly && !isAdmin) return <Navigate to={ADMIN_BASE} replace />;
   return <>{children}</>;
 }
