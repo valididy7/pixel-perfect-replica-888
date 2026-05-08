@@ -159,6 +159,9 @@ export function trackVisitorPresence(
 
   const heartbeat = setInterval(() => {
     if (stopped) return;
+    // Não manda heartbeat se a aba não está visível — assim a pessoa
+    // some do "ao vivo" enquanto está em outra aba/janela.
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
     if (!subscribed) {
       scheduleReconnect();
       return;
