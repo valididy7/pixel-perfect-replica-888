@@ -29,9 +29,10 @@
     <meta name="twitter:card" content="summary_large_image">
     <style>
       /* Evita flash vermelho do tema antes do CSS/JS carregar.
-         Body começa preto; o tema da app aplica em cima depois. */
-      html, body { background: #000 !important; }
-      #root:empty { background: #000; min-height: 100vh; }
+         Apenas a cor de fundo é forçada — gradientes/imagens do tema
+         continuam funcionando depois. */
+      html, body { background-color: #000 !important; }
+      #root:empty { background-color: #000; min-height: 100vh; }
     </style>
   </head>
 
