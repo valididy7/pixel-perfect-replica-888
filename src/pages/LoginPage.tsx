@@ -133,12 +133,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-start justify-center overflow-hidden bg-background px-4 pt-12 sm:pt-20">
+    <div className="relative flex min-h-screen items-start justify-center overflow-hidden bg-black px-4 pt-12 sm:pt-20">
       {/* Imagem de fundo responsiva: cobre a tela em qualquer proporção sem distorcer */}
       <img
         src={loginBg}
         alt=""
         aria-hidden="true"
+        loading="eager"
+        decoding="async"
+        // @ts-expect-error fetchpriority é HTML válido mas ainda não tipado no React
+        fetchpriority="high"
         className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center select-none"
       />
       {/* Overlay pra deixar o conteúdo legível */}
