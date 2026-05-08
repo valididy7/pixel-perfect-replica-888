@@ -463,7 +463,10 @@ function FocusOverlay({
         <div className={`p-6 ${isPending ? "bg-red-500/10" : "bg-primary/5"}`}>
           <div className="mb-2 flex items-center gap-2">
             <Activity className="h-5 w-5 text-primary animate-pulse" />
-            <span className="text-xs font-medium text-muted-foreground">VÍTIMA #{sid.slice(-8)}</span>
+            <span className="font-mono text-xs font-bold tracking-wider text-foreground">
+              VISITANTE {visitorBadge(sid)}
+            </span>
+            <span className="text-[10px] font-medium uppercase text-green-600">● online</span>
           </div>
           <h2 className="text-2xl font-bold">{screenLabel(meta.screenKind)}</h2>
           <p className="mt-1 text-sm text-muted-foreground">Há {fmtAgo(now - since)} nesta tela</p>
