@@ -263,15 +263,7 @@ export function OrderStatusPanel({ adId }: Props) {
         <Switch checked={lockResume} onCheckedChange={toggleLockResume} />
       </div>
 
-      {/* ===== AO VIVO ===== */}
-      <LiveSessionsPanel
-        adId={adId}
-        pendingSessionIds={pendingSessionIds}
-        hasAddressIds={hasAddressIds}
-        onFocusDispatch={focusSessionCard}
-      />
-
-      {/* ===== A: Config do produto (igual pra todos) ===== */}
+      {/* ===== Config do produto (igual pra todos) ===== */}
       <div className="space-y-4 rounded-lg border border-border bg-card p-3 sm:p-4">
         <header className="flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" />
@@ -351,6 +343,14 @@ export function OrderStatusPanel({ adId }: Props) {
         </Button>
         </div>
       </div>
+
+      {/* ===== AO VIVO ===== */}
+      <LiveSessionsPanel
+        adId={adId}
+        pendingSessionIds={pendingSessionIds}
+        hasAddressIds={hasAddressIds}
+        onFocusDispatch={focusSessionCard}
+      />
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
       {pendingSessions.length > 0 && (
