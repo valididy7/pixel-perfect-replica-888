@@ -271,6 +271,12 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
         </div>
       </header>
 
+      {loadError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          Ao vivo carregou sem histórico porque o banco recusou/retornou erro. Pode continuar usando o status do pedido normal.
+        </div>
+      )}
+
       {sortedSessions.length === 0 ? (
         <div className="rounded-md border border-dashed border-border bg-card/40 p-3 text-center text-xs text-muted-foreground">
           Ninguém navegando agora. Quando alguém entrar, aparece aqui em tempo real (com som + flash).
