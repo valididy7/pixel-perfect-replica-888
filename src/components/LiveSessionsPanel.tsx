@@ -100,6 +100,7 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
   const [screenSince, setScreenSince] = useState<Map<string, number>>(new Map());
   const [actions, setActions] = useState<ActionRow[]>([]);
   const [leads, setLeads] = useState<LeadRow[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [focusSid, setFocusSid] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
   const [flashSid, setFlashSid] = useState<string | null>(null);
@@ -120,7 +121,7 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
 
     (async () => {
       const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
-      const [{ data: acts }, { data: lds }] = await Promise.all([
+      const [{ data: acts, error: actsError }, { data: lds, error: leadsError }] = await Promise.all([
         supabase
           .from("ad_session_actions")
           .select("id, session_id, action, payload, created_at")
@@ -137,9 +138,19 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
           .limit(200),
       ]);
       if (cancelled) return;
+      const error = actsError || leadsError;
+      if (error) {
+        setLoadError(error.message || "Falha ao carregar ao vivo");
+        setActions([]);
+        setLeads([]);
+        return;
+      }
+      setLoadError(null);
       setActions((acts as ActionRow[]) || []);
       setLeads((lds as LeadRow[]) || []);
-    })();
+    })().catch((error) => {
+      if (!cancelled) setLoadError(error?.message || "Falha ao carregar ao vivo");
+    });
 
     const ch = supabase
       .channel(`live-actions-${adId}`)
@@ -167,7 +178,9 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
 
   // Presence ao vivo
   useEffect(() => {
-    const stop = subscribeToOnlineVisitors(
+    let stop: (() => void) | undefined;
+    try {
+      stop = subscribeToOnlineVisitors(
       (map) => {
         // Filtra só quem tá no MEU anúncio
         const filtered = new Map<string, PresenceMeta>();
@@ -201,8 +214,11 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
         seenJoinsRef.current.delete(sid);
         lastScreenRef.current.delete(sid);
       },
-    );
-    return stop;
+      );
+    } catch (error: any) {
+      setLoadError(error?.message || "Falha ao conectar ao vivo");
+    }
+    return () => stop?.();
   }, [adId]);
 
   const sortedSessions = useMemo(() => {
@@ -254,6 +270,12 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
           </h3>
         </div>
       </header>
+
+      {loadError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          Ao vivo carregou sem histórico porque o banco recusou/retornou erro. Pode continuar usando o status do pedido normal.
+        </div>
+      )}
 
       {sortedSessions.length === 0 ? (
         <div className="rounded-md border border-dashed border-border bg-card/40 p-3 text-center text-xs text-muted-foreground">

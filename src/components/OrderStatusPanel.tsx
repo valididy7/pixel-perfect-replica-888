@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -60,6 +60,30 @@ function formatPlate(raw: string): string {
 
 interface Props {
   adId: string;
+}
+
+class PanelErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; message: string }> {
+  state = { hasError: false, message: "" };
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Erro no painel ao vivo", error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          Não consegui abrir o ao vivo agora. O restante do status do pedido continua funcionando.
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 interface OrderStatusRow {
@@ -348,19 +372,24 @@ export function OrderStatusPanel({ adId }: Props) {
       </div>
 
       {/* ===== AO VIVO ===== */}
-      <details open={liveOpen} onToggle={(event) => setLiveOpen(event.currentTarget.open)} className="rounded-lg border border-border bg-card p-3 sm:p-4">
-        <summary className="cursor-pointer text-sm font-semibold">Ao vivo e motoristas</summary>
+      <div className="rounded-lg border border-border bg-card p-3 sm:p-4">
+        <Button type="button" variant="outline" className="w-full justify-between" onClick={() => setLiveOpen((open) => !open)}>
+          <span>Ao vivo</span>
+          {liveOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
         {liveOpen && (
           <div className="mt-3">
-            <LiveSessionsPanel
-              adId={adId}
-              pendingSessionIds={pendingSessionIds}
-              hasAddressIds={hasAddressIds}
-              onFocusDispatch={focusSessionCard}
-            />
+            <PanelErrorBoundary>
+              <LiveSessionsPanel
+                adId={adId}
+                pendingSessionIds={pendingSessionIds}
+                hasAddressIds={hasAddressIds}
+                onFocusDispatch={focusSessionCard}
+              />
+            </PanelErrorBoundary>
           </div>
         )}
-      </details>
+      </div>
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
       {pendingSessions.length > 0 && (
