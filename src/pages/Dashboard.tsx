@@ -1299,7 +1299,7 @@ function AttemptsTable({
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
                   <span className="font-mono-tabular">{formatTime(row.codeAt)}</span>
                   <span className="opacity-40">•</span>
-                  <span>{deviceLabel(ua)}</span>
+                  <DevicePill ua={ua} />
                 </div>
 
                 {/* Ações grandes lado a lado */}
@@ -1374,12 +1374,12 @@ function AttemptsTable({
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 {actionable && (
-                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${style.className}`}>
+                  <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${style.className}`}>
                     <Monitor className="h-3 w-3" />
                     {style.label}
                   </span>
                 )}
-                <span className="text-[10px] text-muted-foreground">{deviceLabel(ua)}</span>
+                <DevicePill ua={ua} />
               </div>
               {actionable && (
                 <div className="flex gap-2 pt-2">
