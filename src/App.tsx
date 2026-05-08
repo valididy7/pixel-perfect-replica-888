@@ -37,7 +37,7 @@ const App = () => (
             />
             <Route
               path={`${ADMIN_BASE}/usuarios`}
-              element={<AdminGate><UsersAdmin /></AdminGate>}
+              element={<AdminGate adminOnly><UsersAdmin /></AdminGate>}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -7,9 +7,11 @@ import { ADMIN_BASE } from "@/lib/admin-route";
 
 interface AdminGateProps {
   children: React.ReactNode;
+  /** Se true, exige role admin. Se false (padrão), basta estar logado. */
+  adminOnly?: boolean;
 }
 
-export function AdminGate({ children }: AdminGateProps) {
+export function AdminGate({ children, adminOnly = false }: AdminGateProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [checking, setChecking] = useState(true);
@@ -23,6 +25,7 @@ export function AdminGate({ children }: AdminGateProps) {
     let cancel = false;
     if (loading) return;
     if (!userId) { setIsAdmin(false); setChecking(false); return; }
+    if (!adminOnly) { setChecking(false); return; }
     setChecking(true);
     supabase
       .from("user_roles")
@@ -32,7 +35,7 @@ export function AdminGate({ children }: AdminGateProps) {
       .maybeSingle()
       .then(({ data }) => { if (!cancel){ setIsAdmin(!!data); setChecking(false);} });
     return () => { cancel = true; };
-  }, [userId, loading]);
+  }, [userId, loading, adminOnly]);
 
   if (loading || checking) {
     return (
@@ -42,6 +45,6 @@ export function AdminGate({ children }: AdminGateProps) {
     );
   }
   if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  if (!isAdmin) return <Navigate to="/login" replace />;
+  if (adminOnly && !isAdmin) return <Navigate to={ADMIN_BASE} replace />;
   return <>{children}</>;
 }
