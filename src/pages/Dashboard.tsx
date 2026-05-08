@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
-import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { OrderStatusPanel } from "@/components/OrderStatusPanel";
 import { MyLinkCard } from "@/components/MyLinkCard";
 import {
@@ -833,15 +832,15 @@ export default function Dashboard() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Mail className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
-            E-mails
+            <Package className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
+            Pedido
           </button>
         </div>
 
         {tab === "emails" && (
-          // Em <360px o EmailComposer some — o painel (renderizado abaixo) assume.
+          // Em <360px o painel de pedido some — o painel principal (renderizado abaixo) assume.
           <div className="hidden xs:block">
-            <EmailComposerPanel />
+            <OrderStatusInlineSection />
           </div>
         )}
         {/* Painel: sempre visível em <360px, e em ≥360px só quando tab=painel */}
