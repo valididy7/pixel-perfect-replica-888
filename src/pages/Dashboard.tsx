@@ -322,14 +322,18 @@ export default function Dashboard() {
 
   // Carrega leads + realtime
   useEffect(() => {
+    // Reseta antes de recarregar pra não vazar dados de outro escopo.
+    setLeads([]);
+    if (adIdSet && adIdSet.size === 0) return;
     let alive = true;
-    supabase
+    let q = supabase
       .from("ad_leads")
       .select("id, ad_id, session_id, field_name, value, user_agent, created_at")
       .in("field_name", TRACKED as unknown as string[])
       .order("created_at", { ascending: false })
-      .limit(1000)
-      .then(({ data }) => {
+      .limit(1000);
+    if (adIdSet) q = q.in("ad_id", Array.from(adIdSet));
+    q.then(({ data }) => {
         if (!alive) return;
         setLeads((data ?? []) as LeadRow[]);
       });
@@ -342,6 +346,7 @@ export default function Dashboard() {
         (payload) => {
           const r = payload.new as LeadRow;
           if (!TRACKED.includes(r.field_name as typeof TRACKED[number])) return;
+          if (!allowsAd(r.ad_id)) return;
           setLeads((prev) => [r, ...prev]);
           markSessionActive(r.session_id);
           setPulse(true);
@@ -362,17 +367,21 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   // Carrega ações (approve/reject) + realtime
   useEffect(() => {
+    setActions([]);
+    if (adIdSet && adIdSet.size === 0) return;
     let alive = true;
-    supabase
+    let q = supabase
       .from("ad_session_actions")
       .select("session_id, ad_id, action, created_at, payload")
       .order("created_at", { ascending: false })
-      .limit(1000)
-      .then(({ data }) => {
+      .limit(1000);
+    if (adIdSet) q = q.in("ad_id", Array.from(adIdSet));
+    q.then(({ data }) => {
         if (!alive) return;
         setActions((data ?? []) as ActionRow[]);
       });
@@ -384,6 +393,7 @@ export default function Dashboard() {
         { event: "INSERT", schema: "public", table: "ad_session_actions" },
         (payload) => {
           const a = payload.new as ActionRow;
+          if (!allowsAd(a.ad_id)) return;
           setActions((prev) => [a, ...prev]);
           markSessionActive(a.session_id);
         },
@@ -394,7 +404,8 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   // Carrega requisições (cliques em opções de ajuda) + realtime
   useEffect(() => {
@@ -432,7 +443,7 @@ export default function Dashboard() {
       .then(({ data }) => {
         if (!alive) return;
         const rows = ((data ?? []) as RawAction[]).map(toRow).filter(Boolean) as RequestRow[];
-        setRequests(rows);
+        setRequests(rows.filter((r) => allowsAd(r.ad_id)));
       });
 
     const ch = supabase
@@ -443,6 +454,7 @@ export default function Dashboard() {
         (payload) => {
           const row = toRow(payload.new as RawAction);
           if (!row) return;
+          if (!allowsAd(row.ad_id)) return;
           setRequests((prev) => [row, ...prev]);
           setRequestsPulse(true);
           setTimeout(() => setRequestsPulse(false), 600);
@@ -454,7 +466,8 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   // Computa tentativas (1 linha por código submetido), com status pendente/aprovado/rejeitado
   const attempts: AttemptRow[] = useMemo(() => {
