@@ -53,7 +53,7 @@ export interface PresenceMeta {
 /**
  * Liga a presença do visitante usando Realtime.
  * Regra: enquanto a página do anúncio estiver aberta, aparece online; ao fechar
- * ou sair da página, envia offline. Trocar de aba não derruba mais o visitante.
+ * ou sair/ocultar a página, envia offline. Previews do painel não contam.
  */
 export function trackVisitorPresence(
   adId: string,
