@@ -174,6 +174,10 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 
 export default function Dashboard() {
   const { isAdmin } = useIsAdmin();
+  const { adIdSet, owners, selectedOwnerId, setSelectedOwnerId, isAdmin: scopeIsAdmin } = useDashboardScope();
+  // Chave estável pra usar como dep de effects (Set não é estável).
+  const adIdScopeKey = adIdSet === null ? "__all__" : Array.from(adIdSet).sort().join(",");
+  const allowsAd = (id: string) => adIdSet === null || adIdSet.has(id);
   const handleSignOut = async () => {
     try { await supabase.auth.signOut(); } catch { /* ignore sign-out race */ }
     window.location.href = "/login";
