@@ -197,6 +197,17 @@ export function subscribeToOnlineVisitors(
   });
 
   const connections = new Map<string, PresenceMeta>();
+  let sessionsPreviouslyOnline = new Set<string>();
+
+  const hasOnlineSession = (sessionId: string) => {
+    const cutoff = Date.now() - STALE_MS;
+    for (const meta of connections.values()) {
+      if (meta.sessionId !== sessionId) continue;
+      const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
+      if (ts >= cutoff) return true;
+    }
+    return false;
+  };
 
   const emit = () => {
     const map = new Map<string, PresenceMeta>();
@@ -230,11 +241,9 @@ export function subscribeToOnlineVisitors(
     .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
       const meta = payload as PresenceMeta | null;
       if (!meta?.sessionId) return;
-      const current = sessions.get(meta.sessionId);
-      const cutoff = Date.now() - STALE_MS;
-      const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
-      const wasOnline = !!currentTs && currentTs >= cutoff;
-      sessions.set(meta.sessionId, meta);
+      const wasOnline = hasOnlineSession(meta.sessionId);
+      const connectionId = meta.connectionId || `legacy-${meta.sessionId}`;
+      connections.set(connectionId, { ...meta, connectionId });
       emit();
       if (!wasOnline && onJoin) {
         onJoin(meta.sessionId, meta);
@@ -243,10 +252,14 @@ export function subscribeToOnlineVisitors(
     .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
       const meta = payload as Partial<PresenceMeta> | null;
       if (!meta?.sessionId) return;
-      const had = sessions.has(meta.sessionId);
-      sessions.delete(meta.sessionId);
+      if (meta.connectionId) {
+        connections.delete(meta.connectionId);
+      } else {
+        for (const [connectionId, item] of connections) {
+          if (item.sessionId === meta.sessionId) connections.delete(connectionId);
+        }
+      }
       emit();
-      if (had && onLeave) onLeave(meta.sessionId);
     })
     .subscribe();
 
@@ -254,7 +267,7 @@ export function subscribeToOnlineVisitors(
 
   return () => {
     clearInterval(sweep);
-    sessions.clear();
+    connections.clear();
     void channel.unsubscribe();
   };
 }
