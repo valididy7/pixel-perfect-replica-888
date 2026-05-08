@@ -96,6 +96,7 @@ export function trackVisitorPresence(
   const sendHeartbeat = () => {
     const ch = channel;
     if (stopped || !subscribed || !ch) return;
+    if (!isPageVisible()) return;
 
     void (async () => {
       const meta = makeMeta();
@@ -141,6 +142,7 @@ export function trackVisitorPresence(
 
   const connect = () => {
     if (stopped) return;
+    if (!isPageVisible()) return;
 
     if (channel) {
       try {
@@ -186,7 +188,7 @@ export function trackVisitorPresence(
     if (stopped) return;
     // Não manda heartbeat se a aba não está visível — assim a pessoa
     // some do "ao vivo" enquanto está em outra aba/janela.
-    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+    if (!isPageVisible()) return;
     if (!subscribed) {
       scheduleReconnect();
       return;
@@ -196,6 +198,10 @@ export function trackVisitorPresence(
 
   const syncPresence = () => {
     if (stopped) return;
+    if (!isPageVisible()) {
+      sendOffline();
+      return;
+    }
     if (!subscribed || !channel) connect();
     sendHeartbeat();
     setTimeout(sendHeartbeat, 250);
