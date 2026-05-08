@@ -37,53 +37,68 @@ export function trackVisitorPresence(
     return { stop: () => {}, setScreen: () => {}, markActive: () => {} };
   }
 
-  // Key única por CONEXÃO (não por sessionId). Garante que sair e voltar
-  // sempre dispara um novo "join" no painel, mesmo que o session_id (cookie)
-  // do visitante seja o mesmo.
+  // Key única por CONEXÃO (não por sessionId). Garante que sair de uma
+  // aba/celular não derrube outra conexão do mesmo visitante.
   const presenceKey = `visitor-${sessionId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   let currentScreen = "main";
   let stopped = false;
   let subscribed = false;
   let announcedOnline = false;
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const channel = supabase.channel(CHANNEL_NAME, {
-    config: { presence: { key: presenceKey } },
+  const makeMeta = (): PresenceMeta => ({
+    adId,
+    sessionId,
+    connectionId: presenceKey,
+    online_at: new Date().toISOString(),
+    screenKind: currentScreen,
   });
 
-  let queue = Promise.resolve();
-  const enqueue = (job: () => Promise<void>) => {
-    queue = queue.catch(() => undefined).then(job);
-    return queue;
+  const scheduleReconnect = () => {
+    if (stopped) return;
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connect();
+    }, 1000);
   };
 
   const sendHeartbeat = () => {
-    void enqueue(async () => {
-      if (stopped || !subscribed) return;
+    const ch = channel;
+    if (stopped || !subscribed || !ch) return;
+
+    void (async () => {
+      const meta = makeMeta();
       try {
-        await channel.send({
+        // Presence nativa dá replay/sync pro painel quando ele reconecta ou recarrega.
+        await ch.track(meta);
+      } catch {
+        // ignore track errors during reconnects
+      }
+
+      try {
+        // Broadcast mantém compatibilidade e reduz latência das atualizações.
+        await ch.send({
           type: "broadcast",
           event: HEARTBEAT_EVENT,
-          payload: {
-            adId,
-            sessionId,
-            connectionId: presenceKey,
-            online_at: new Date().toISOString(),
-            screenKind: currentScreen,
-          } satisfies PresenceMeta,
+          payload: meta,
         });
         announcedOnline = true;
       } catch {
         // ignore heartbeat send errors during reconnects
       }
-    });
+    })();
   };
 
   const sendOffline = () => {
-    void enqueue(async () => {
-      if (!subscribed || !announcedOnline) return;
+    const ch = channel;
+    if (!ch || !subscribed || !announcedOnline) return;
+
+    void (async () => {
       try {
-        await channel.send({
+        await ch.send({
           type: "broadcast",
           event: OFFLINE_EVENT,
           payload: { adId, sessionId, connectionId: presenceKey },
@@ -93,71 +108,119 @@ export function trackVisitorPresence(
       } finally {
         announcedOnline = false;
       }
+    })();
+  };
+
+  const connect = () => {
+    if (stopped) return;
+
+    if (channel) {
+      try {
+        void channel.unsubscribe();
+      } catch {
+        // ignore old channel cleanup
+      }
+      channel = null;
+    }
+
+    subscribed = false;
+    const ch = supabase.channel(CHANNEL_NAME, {
+      config: { presence: { key: presenceKey } },
+    });
+    channel = ch;
+
+    ch.subscribe((status) => {
+      if (stopped || channel !== ch) return;
+
+      if (status === "SUBSCRIBED") {
+        subscribed = true;
+        sendHeartbeat();
+        setTimeout(sendHeartbeat, 250);
+        setTimeout(sendHeartbeat, 1000);
+        return;
+      }
+
+      if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
+        subscribed = false;
+        announcedOnline = false;
+        if (channel === ch) channel = null;
+        try {
+          void ch.unsubscribe();
+        } catch {
+          // ignore
+        }
+        scheduleReconnect();
+      }
     });
   };
 
-  channel.subscribe((status) => {
-    if (stopped) return;
-    if (status === "SUBSCRIBED") {
-      subscribed = true;
-      sendHeartbeat();
-      return;
-    }
-
-    if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
-      subscribed = false;
-      announcedOnline = false;
-    }
-  });
-
   const heartbeat = setInterval(() => {
     if (stopped) return;
+    if (!subscribed) {
+      scheduleReconnect();
+      return;
+    }
     sendHeartbeat();
   }, HEARTBEAT_MS);
 
-  const syncVisibility = () => {
+  const syncPresence = () => {
+    if (stopped) return;
+    if (!subscribed || !channel) connect();
     sendHeartbeat();
+    setTimeout(sendHeartbeat, 250);
   };
 
   const markActive = () => {
-    sendHeartbeat();
+    syncPresence();
   };
 
   const setScreen = (kind: string) => {
     const next = kind || "main";
     if (next === currentScreen && announcedOnline) return;
     currentScreen = next;
-    sendHeartbeat();
-    // Reenvia logo em seguida pra cobrir casos de race no broadcast
+    syncPresence();
+    // Reenvia logo em seguida pra cobrir casos de race no broadcast/presence
     // (ex.: voltar pelo botão do navegador). Sem isso o painel às vezes
     // ficava travado mostrando a tela anterior.
-    setTimeout(() => sendHeartbeat(), 150);
-    setTimeout(() => sendHeartbeat(), 600);
+    setTimeout(sendHeartbeat, 150);
+    setTimeout(sendHeartbeat, 600);
   };
 
-  const onVisibility = () => syncVisibility();
+  const onVisibility = () => syncPresence();
   const onPageHide = () => sendOffline();
+  const onOnline = () => syncPresence();
+
+  connect();
 
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
-  // Ao voltar pra aba, reforça o online imediatamente.
-  window.addEventListener("focus", syncVisibility);
-  window.addEventListener("pageshow", syncVisibility);
+  // Ao voltar pra aba/rede, reforça o online imediatamente.
+  window.addEventListener("focus", syncPresence);
+  window.addEventListener("pageshow", syncPresence);
+  window.addEventListener("online", onOnline);
 
   const stop = () => {
     if (stopped) return;
     stopped = true;
     clearInterval(heartbeat);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
-    window.removeEventListener("focus", syncVisibility);
-    window.removeEventListener("pageshow", syncVisibility);
-    void enqueue(async () => {
+    window.removeEventListener("focus", syncPresence);
+    window.removeEventListener("pageshow", syncPresence);
+    window.removeEventListener("online", onOnline);
+
+    const ch = channel;
+    channel = null;
+    subscribed = false;
+
+    if (!ch) return;
+    void (async () => {
       if (announcedOnline) {
         try {
-          await channel.send({
+          await ch.send({
             type: "broadcast",
             event: OFFLINE_EVENT,
             payload: { adId, sessionId, connectionId: presenceKey },
@@ -170,13 +233,17 @@ export function trackVisitorPresence(
       }
 
       try {
-        await channel.unsubscribe();
+        await ch.untrack();
+      } catch {
+        // ignore untrack failure
+      }
+
+      try {
+        await ch.unsubscribe();
       } catch {
         // ignore unsubscribe failure
-      } finally {
-        subscribed = false;
       }
-    });
+    })();
   };
 
   return { stop, setScreen, markActive };
