@@ -779,6 +779,30 @@ function openHelpModal(doc: Document): void {
 // =====================================================================
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Provedores de e-mail aceitos. Qualquer outro domínio é bloqueado no campo.
+// Foco: e-mails reais de pessoas (Gmail, Hotmail, Outlook, Yahoo, iCloud, etc.).
+const ALLOWED_EMAIL_DOMAINS = new Set<string>([
+  // Google
+  "gmail.com", "googlemail.com",
+  // Microsoft
+  "hotmail.com", "hotmail.com.br", "outlook.com", "outlook.com.br", "live.com", "live.com.br", "msn.com",
+  // Yahoo
+  "yahoo.com", "yahoo.com.br", "ymail.com", "rocketmail.com",
+  // Apple
+  "icloud.com", "me.com", "mac.com",
+  // BR populares
+  "uol.com.br", "bol.com.br", "terra.com.br", "ig.com.br", "globo.com", "globomail.com", "r7.com", "zipmail.com.br",
+  // Outros comuns
+  "proton.me", "protonmail.com", "aol.com", "gmx.com", "gmx.net", "zoho.com",
+]);
+
+function isAllowedEmailDomain(email: string): boolean {
+  const at = email.lastIndexOf("@");
+  if (at < 0) return false;
+  const dom = email.slice(at + 1).trim().toLowerCase();
+  return ALLOWED_EMAIL_DOMAINS.has(dom);
+}
+
 // Domínios descartáveis bloqueados ainda no client (resposta instantânea, sem ida ao servidor)
 const DISPOSABLE_DOMAINS = new Set<string>([
   "mailinator.com", "yopmail.com", "yopmail.fr", "yopmail.net", "tempmail.com",
@@ -879,6 +903,11 @@ function validateEmailField(doc: Document, input: HTMLInputElement | null): bool
   const value = (input.value || "").trim();
   const valid = EMAIL_RE.test(value);
   if (valid) {
+    if (isDisposableDomain(value) || !isAllowedEmailDomain(value)) {
+      showEmailError(doc, input, "Use um e-mail válido (Gmail, Hotmail, Outlook, Yahoo, etc.).");
+      try { input.focus(); } catch { /* ignore */ }
+      return false;
+    }
     clearEmailError(doc, input);
     return true;
   }
@@ -946,7 +975,10 @@ function showEmailError(doc: Document, input: HTMLInputElement, message?: string
   // Limpa quando o usuário corrigir
   if (!(input as any).__olxEmailListener) {
     const onInput = () => {
-      if (EMAIL_RE.test((input.value || "").trim())) clearEmailError(doc, input);
+      const v = (input.value || "").trim();
+      if (EMAIL_RE.test(v) && isAllowedEmailDomain(v) && !isDisposableDomain(v)) {
+        clearEmailError(doc, input);
+      }
     };
     input.addEventListener("input", onInput);
     (input as any).__olxEmailListener = onInput;
