@@ -1266,6 +1266,34 @@ function StatCard({
   );
 }
 
+function OrderStatusInlineSection() {
+  const [adId, setAdId] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("ads")
+        .select("id")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.id) setAdId(data.id);
+    })();
+  }, []);
+  if (!adId) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground shadow-card">
+        Nenhum anúncio ativo ainda. Crie um anúncio para gerenciar o status do pedido.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-border bg-card p-3 shadow-card xs:p-5">
+      <OrderStatusPanel adId={adId} />
+    </div>
+  );
+}
+
 function AdminOrderStatusSection() {
   const [adId, setAdId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
