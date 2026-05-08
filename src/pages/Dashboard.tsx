@@ -759,6 +759,22 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-1 xs:gap-2 sm:gap-3">
+            {scopeIsAdmin && (
+              <select
+                value={selectedOwnerId}
+                onChange={(e) => setSelectedOwnerId(e.target.value)}
+                className="h-8 max-w-[140px] truncate rounded-md border border-border bg-background px-2 text-[11px] text-foreground xs:h-9 xs:max-w-[180px] xs:text-xs"
+                title="Filtrar painel por dono dos anúncios"
+              >
+                <option value="self">Meus anúncios</option>
+                <option value="all">Todos os usuários</option>
+                {owners.map((o) => (
+                  <option key={o.user_id} value={o.user_id}>
+                    {o.display_name || o.username || o.user_id.slice(0, 8)}
+                  </option>
+                ))}
+              </select>
+            )}
             <Button
               variant="ghost"
               size="sm"
