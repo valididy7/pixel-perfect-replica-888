@@ -93,7 +93,9 @@ export default function PublicAd({ defaultSlug }: PublicAdProps) {
         </div>
         <h1 className="text-2xl font-bold">Anúncio não encontrado</h1>
         <p className="text-sm text-muted-foreground">Esse link não existe ou foi removido.</p>
-        <Button asChild><Link to="/">Ir para o início</Link></Button>
+        <Button asChild>
+          <Link to="/">Ir para o início</Link>
+        </Button>
       </div>
     );
   }
