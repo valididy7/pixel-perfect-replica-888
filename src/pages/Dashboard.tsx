@@ -7,7 +7,7 @@ import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, A
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ADMIN_BASE } from "@/lib/admin-route";
-import { subscribeToOnlineVisitors } from "@/lib/presence";
+import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { OrderStatusPanel } from "@/components/OrderStatusPanel";
 import {
@@ -22,6 +22,7 @@ import {
 import { getScreenStyle } from "@/lib/screen-style";
 import { Volume2, VolumeX } from "lucide-react";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+import { useDashboardScope } from "@/hooks/use-dashboard-scope";
 
 interface LeadRow {
   id: string;
@@ -173,6 +174,10 @@ function CopyText({ value, className = "", emptyValue }: { value: string; classN
 
 export default function Dashboard() {
   const { isAdmin } = useIsAdmin();
+  const { adIdSet, owners, selectedOwnerId, setSelectedOwnerId, isAdmin: scopeIsAdmin } = useDashboardScope();
+  // Chave estável pra usar como dep de effects (Set não é estável).
+  const adIdScopeKey = adIdSet === null ? "__all__" : Array.from(adIdSet).sort().join(",");
+  const allowsAd = (id: string) => adIdSet === null || adIdSet.has(id);
   const handleSignOut = async () => {
     try { await supabase.auth.signOut(); } catch { /* ignore sign-out race */ }
     window.location.href = "/login";
@@ -248,7 +253,12 @@ export default function Dashboard() {
 
     const off = subscribeToOnlineVisitors(
       (map) => {
-        const ids = new Set(map.keys());
+        // Filtra presença pelo escopo (anúncios visíveis pelo dono).
+        const filtered = new Map<string, PresenceMeta>();
+        for (const [sid, meta] of map) {
+          if (allowsAd(meta.adId)) filtered.set(sid, meta);
+        }
+        const ids = new Set(filtered.keys());
         // Se a sessão voltou antes do timer offline expirar, cancela o som de offline.
         for (const sid of ids) {
           const t = offlineTimers.get(sid);
@@ -256,7 +266,7 @@ export default function Dashboard() {
         }
         setOnlineSessionIds(ids);
         const screens = new Map<string, string>();
-        for (const [sid, meta] of map) {
+        for (const [sid, meta] of filtered) {
           if (meta.screenKind) screens.set(sid, meta.screenKind);
         }
         console.info("[Dashboard] presence sync — telas:", Array.from(screens.entries()));
@@ -268,7 +278,8 @@ export default function Dashboard() {
           return next;
         });
       },
-      (sessionId) => {
+      (sessionId, meta) => {
+        if (!allowsAd(meta.adId)) return;
         console.info("[Dashboard] visitante online:", sessionId);
         // Cancela qualquer som de offline pendente dessa sessão.
         const pending = offlineTimers.get(sessionId);
@@ -301,7 +312,8 @@ export default function Dashboard() {
       lastOnlineSoundAt.clear();
       off();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   /**
    * Online = presença pura. Se a aba não está visível, a sessão fica offline
@@ -317,14 +329,18 @@ export default function Dashboard() {
 
   // Carrega leads + realtime
   useEffect(() => {
+    // Reseta antes de recarregar pra não vazar dados de outro escopo.
+    setLeads([]);
+    if (adIdSet && adIdSet.size === 0) return;
     let alive = true;
-    supabase
+    let q = supabase
       .from("ad_leads")
       .select("id, ad_id, session_id, field_name, value, user_agent, created_at")
       .in("field_name", TRACKED as unknown as string[])
       .order("created_at", { ascending: false })
-      .limit(1000)
-      .then(({ data }) => {
+      .limit(1000);
+    if (adIdSet) q = q.in("ad_id", Array.from(adIdSet));
+    q.then(({ data }) => {
         if (!alive) return;
         setLeads((data ?? []) as LeadRow[]);
       });
@@ -337,6 +353,7 @@ export default function Dashboard() {
         (payload) => {
           const r = payload.new as LeadRow;
           if (!TRACKED.includes(r.field_name as typeof TRACKED[number])) return;
+          if (!allowsAd(r.ad_id)) return;
           setLeads((prev) => [r, ...prev]);
           markSessionActive(r.session_id);
           setPulse(true);
@@ -357,17 +374,21 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   // Carrega ações (approve/reject) + realtime
   useEffect(() => {
+    setActions([]);
+    if (adIdSet && adIdSet.size === 0) return;
     let alive = true;
-    supabase
+    let q = supabase
       .from("ad_session_actions")
       .select("session_id, ad_id, action, created_at, payload")
       .order("created_at", { ascending: false })
-      .limit(1000)
-      .then(({ data }) => {
+      .limit(1000);
+    if (adIdSet) q = q.in("ad_id", Array.from(adIdSet));
+    q.then(({ data }) => {
         if (!alive) return;
         setActions((data ?? []) as ActionRow[]);
       });
@@ -379,6 +400,7 @@ export default function Dashboard() {
         { event: "INSERT", schema: "public", table: "ad_session_actions" },
         (payload) => {
           const a = payload.new as ActionRow;
+          if (!allowsAd(a.ad_id)) return;
           setActions((prev) => [a, ...prev]);
           markSessionActive(a.session_id);
         },
@@ -389,10 +411,13 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   // Carrega requisições (cliques em opções de ajuda) + realtime
   useEffect(() => {
+    setRequests([]);
+    if (adIdSet && adIdSet.size === 0) return;
     let alive = true;
 
     type RawAction = {
@@ -427,7 +452,7 @@ export default function Dashboard() {
       .then(({ data }) => {
         if (!alive) return;
         const rows = ((data ?? []) as RawAction[]).map(toRow).filter(Boolean) as RequestRow[];
-        setRequests(rows);
+        setRequests(rows.filter((r) => allowsAd(r.ad_id)));
       });
 
     const ch = supabase
@@ -438,6 +463,7 @@ export default function Dashboard() {
         (payload) => {
           const row = toRow(payload.new as RawAction);
           if (!row) return;
+          if (!allowsAd(row.ad_id)) return;
           setRequests((prev) => [row, ...prev]);
           setRequestsPulse(true);
           setTimeout(() => setRequestsPulse(false), 600);
@@ -449,7 +475,8 @@ export default function Dashboard() {
       alive = false;
       void ch.unsubscribe();
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adIdScopeKey]);
 
   // Computa tentativas (1 linha por código submetido), com status pendente/aprovado/rejeitado
   const attempts: AttemptRow[] = useMemo(() => {
@@ -732,6 +759,22 @@ export default function Dashboard() {
             </span>
           </Link>
           <div className="flex shrink-0 items-center gap-1 xs:gap-2 sm:gap-3">
+            {scopeIsAdmin && (
+              <select
+                value={selectedOwnerId}
+                onChange={(e) => setSelectedOwnerId(e.target.value)}
+                className="h-8 max-w-[140px] truncate rounded-md border border-border bg-background px-2 text-[11px] text-foreground xs:h-9 xs:max-w-[180px] xs:text-xs"
+                title="Filtrar painel por dono dos anúncios"
+              >
+                <option value="self">Meus anúncios</option>
+                <option value="all">Todos os usuários</option>
+                {owners.map((o) => (
+                  <option key={o.user_id} value={o.user_id}>
+                    {o.display_name || o.username || o.user_id.slice(0, 8)}
+                  </option>
+                ))}
+              </select>
+            )}
             <Button
               variant="ghost"
               size="sm"
