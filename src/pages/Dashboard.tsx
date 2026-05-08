@@ -138,7 +138,7 @@ function deviceLabel(ua: string | null): string {
 
 function DevicePill({ ua }: { ua: string | null }) {
   return (
-    <span className="inline-flex min-h-6 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+    <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 text-[10px] font-medium leading-none text-muted-foreground">
       <Monitor className="h-3 w-3 shrink-0" />
       <span className="leading-none">{deviceLabel(ua)}</span>
     </span>
