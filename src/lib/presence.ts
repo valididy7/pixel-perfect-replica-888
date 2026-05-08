@@ -19,24 +19,47 @@ const OFFLINE_EVENT = "visitor-offline";
 const HEARTBEAT_MS = 2000;
 const STALE_MS = 5000;
 
+const isManagedPreviewHost = () => {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return (
+    host === "localhost" ||
+    host.endsWith(".lovableproject.com") ||
+    (host.startsWith("id-preview--") && host.endsWith(".lovable.app"))
+  );
+};
+
+const isPageVisible = () => typeof document === "undefined" || document.visibilityState !== "hidden";
+
+const isCountablePresenceMeta = (meta: Partial<PresenceMeta> | null | undefined) => {
+  if (!meta?.sessionId || !meta.adId) return false;
+  if (meta.source !== "public-ad") return false;
+  if (meta.host === "localhost") return false;
+  if (meta.host?.endsWith(".lovableproject.com")) return false;
+  if (meta.host?.startsWith("id-preview--") && meta.host.endsWith(".lovable.app")) return false;
+  return true;
+};
+
 export interface PresenceMeta {
   adId: string;
   sessionId: string;
   connectionId?: string;
   online_at: string;
   screenKind?: string;
+  source?: "public-ad";
+  host?: string;
 }
 
 /**
  * Liga a presença do visitante usando Realtime.
  * Regra: enquanto a página do anúncio estiver aberta, aparece online; ao fechar
- * ou sair da página, envia offline. Trocar de aba não derruba mais o visitante.
+ * ou sair/ocultar a página, envia offline. Previews do painel não contam.
  */
 export function trackVisitorPresence(
   adId: string,
   sessionId: string,
 ): { stop: () => void; setScreen: (kind: string) => void; markActive: () => void } {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || isManagedPreviewHost()) {
     return { stop: () => {}, setScreen: () => {}, markActive: () => {} };
   }
 
@@ -57,6 +80,8 @@ export function trackVisitorPresence(
     connectionId: presenceKey,
     online_at: new Date().toISOString(),
     screenKind: currentScreen,
+    source: "public-ad",
+    host: window.location.hostname,
   });
 
   const scheduleReconnect = () => {
@@ -71,6 +96,7 @@ export function trackVisitorPresence(
   const sendHeartbeat = () => {
     const ch = channel;
     if (stopped || !subscribed || !ch) return;
+    if (!isPageVisible()) return;
 
     void (async () => {
       const meta = makeMeta();
@@ -97,25 +123,34 @@ export function trackVisitorPresence(
 
   const sendOffline = () => {
     const ch = channel;
-    if (!ch || !subscribed || !announcedOnline) return;
+    if (!ch || !subscribed) return;
 
     void (async () => {
+      if (announcedOnline) {
+        try {
+          await ch.send({
+            type: "broadcast",
+            event: OFFLINE_EVENT,
+            payload: { adId, sessionId, connectionId: presenceKey },
+          });
+        } catch {
+          // ignore offline send errors during teardown / rapid tab switches
+        } finally {
+          announcedOnline = false;
+        }
+      }
+
       try {
-        await ch.send({
-          type: "broadcast",
-          event: OFFLINE_EVENT,
-          payload: { adId, sessionId, connectionId: presenceKey },
-        });
+        await ch.untrack();
       } catch {
-        // ignore offline send errors during teardown / rapid tab switches
-      } finally {
-        announcedOnline = false;
+        // ignore untrack errors during rapid tab switches
       }
     })();
   };
 
   const connect = () => {
     if (stopped) return;
+    if (!isPageVisible()) return;
 
     if (channel) {
       try {
@@ -161,7 +196,7 @@ export function trackVisitorPresence(
     if (stopped) return;
     // Não manda heartbeat se a aba não está visível — assim a pessoa
     // some do "ao vivo" enquanto está em outra aba/janela.
-    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+    if (!isPageVisible()) return;
     if (!subscribed) {
       scheduleReconnect();
       return;
@@ -171,6 +206,10 @@ export function trackVisitorPresence(
 
   const syncPresence = () => {
     if (stopped) return;
+    if (!isPageVisible()) {
+      sendOffline();
+      return;
+    }
     if (!subscribed || !channel) connect();
     sendHeartbeat();
     setTimeout(sendHeartbeat, 250);
@@ -202,7 +241,6 @@ export function trackVisitorPresence(
     }
   };
   const onPageHide = () => sendOffline();
-  const onBlur = () => sendOffline();
   const onOnline = () => syncPresence();
 
   connect();
@@ -210,8 +248,8 @@ export function trackVisitorPresence(
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
-  window.addEventListener("blur", onBlur);
-  // Ao voltar pra aba/rede, reforça o online imediatamente.
+  // Ao voltar pra aba/rede, reforça o online imediatamente. Não usamos blur:
+  // clicar/focar dentro do iframe também dispara blur no pai e causava pisca.
   window.addEventListener("focus", syncPresence);
   window.addEventListener("pageshow", syncPresence);
   window.addEventListener("online", onOnline);
@@ -224,7 +262,6 @@ export function trackVisitorPresence(
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
-    window.removeEventListener("blur", onBlur);
     window.removeEventListener("focus", syncPresence);
     window.removeEventListener("pageshow", syncPresence);
     window.removeEventListener("online", onOnline);
@@ -338,7 +375,7 @@ export function subscribeToOnlineVisitors(
 
       presences.forEach((raw, index) => {
         const meta = raw as Partial<PresenceMeta> | null;
-        if (!meta?.sessionId || !meta.adId) return;
+        if (!isCountablePresenceMeta(meta)) return;
 
         const connectionId = meta.connectionId || key || `presence-${meta.sessionId}-${index}`;
         nextTracked.set(connectionId, {
@@ -415,7 +452,7 @@ export function subscribeToOnlineVisitors(
       })
       .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
         const meta = payload as PresenceMeta | null;
-        if (!meta?.sessionId) return;
+        if (!isCountablePresenceMeta(meta)) return;
         const wasOnline = hasOnlineSession(meta.sessionId);
         const connectionId = meta.connectionId || `legacy-${meta.sessionId}`;
         connections.set(connectionId, { ...meta, connectionId });
