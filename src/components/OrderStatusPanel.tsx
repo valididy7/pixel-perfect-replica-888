@@ -269,6 +269,7 @@ export function OrderStatusPanel({ adId }: Props) {
         <header className="flex items-center gap-2">
           <Package className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">Configuração do produto (igual pra todos)</h3>
+          {productLoading && <Loader2 className="ml-auto h-4 w-4 animate-spin text-muted-foreground" />}
         </header>
 
         <div className="space-y-3">
@@ -346,12 +347,17 @@ export function OrderStatusPanel({ adId }: Props) {
       </div>
 
       {/* ===== AO VIVO ===== */}
-      <LiveSessionsPanel
-        adId={adId}
-        pendingSessionIds={pendingSessionIds}
-        hasAddressIds={hasAddressIds}
-        onFocusDispatch={focusSessionCard}
-      />
+      <details className="rounded-lg border border-border bg-card p-3 sm:p-4">
+        <summary className="cursor-pointer text-sm font-semibold">Ao vivo e motoristas</summary>
+        <div className="mt-3">
+          <LiveSessionsPanel
+            adId={adId}
+            pendingSessionIds={pendingSessionIds}
+            hasAddressIds={hasAddressIds}
+            onFocusDispatch={focusSessionCard}
+          />
+        </div>
+      </details>
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
       {pendingSessions.length > 0 && (
