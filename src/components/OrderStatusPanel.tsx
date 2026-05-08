@@ -91,13 +91,13 @@ interface SessionOrderRow {
 }
 
 export function OrderStatusPanel({ adId }: Props) {
-  const [loading, setLoading] = useState(true);
+  const [productLoading, setProductLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [orderNumber, setOrderNumber] = useState("");
-  const [orderDate, setOrderDate] = useState("");
+  const [orderDate, setOrderDate] = useState(() => nowDateTimeBR());
   const [pickupCode, setPickupCode] = useState("");
   const [lockResume, setLockResume] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
@@ -108,40 +108,49 @@ export function OrderStatusPanel({ adId }: Props) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: prod } = await supabase
-        .from("ad_order_status" as any)
-        .select("*")
-        .eq("ad_id", adId)
-        .maybeSingle();
-      if (cancelled) return;
-      const row = (prod as unknown) as OrderStatusRow | null;
-      if (row) {
-        setImageUrl(row.product_image_url || "");
-        setTitle(row.product_title || "");
-        setPrice(row.product_price || "");
-        setOrderNumber(row.order_number || "");
-        setOrderDate(row.order_date || nowDateTimeBR());
-        setPickupCode(row.pickup_code || "");
-        setLockResume(!!(row as any).lock_resume_session);
-      } else {
-        // Sem registro ainda: já preenche a data com agora pra evitar digitação.
-        setOrderDate(nowDateTimeBR());
+      try {
+        setProductLoading(true);
+        const { data: prod, error } = await supabase
+          .from("ad_order_status" as any)
+          .select("*")
+          .eq("ad_id", adId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) throw error;
+        const row = (prod as unknown) as OrderStatusRow | null;
+        if (row) {
+          setImageUrl(row.product_image_url || "");
+          setTitle(row.product_title || "");
+          setPrice(row.product_price || "");
+          setOrderNumber(row.order_number || "");
+          setOrderDate(row.order_date || nowDateTimeBR());
+          setPickupCode(row.pickup_code || "");
+          setLockResume(!!(row as any).lock_resume_session);
+        }
+      } catch (error: any) {
+        if (!cancelled) toast.error("Não consegui carregar o status", { description: error?.message || "Você ainda pode preencher e salvar." });
+      } finally {
+        if (!cancelled) setProductLoading(false);
       }
+    })();
 
-      const { data: sess } = await supabase
-        .from("ad_session_orders" as any)
-        .select("*")
-        .eq("ad_id", adId)
-        .order("updated_at", { ascending: false });
-      if (cancelled) return;
-      const rows = ((sess as unknown) as SessionOrderRow[]) || [];
-      // Baseline: marca as solicitações já existentes pra não tocar som no carregamento.
-      rows.forEach((r) => {
-        if (r.driver_requested_at) knownRequestKeysRef.current.add(`${r.session_id}:${r.driver_requested_at}`);
-      });
-      setSessions(rows);
-      initializedRef.current = true;
-      setLoading(false);
+    (async () => {
+      try {
+        const { data: sess } = await supabase
+          .from("ad_session_orders" as any)
+          .select("*")
+          .eq("ad_id", adId)
+          .order("updated_at", { ascending: false });
+        if (cancelled) return;
+        const rows = ((sess as unknown) as SessionOrderRow[]) || [];
+        // Baseline: marca as solicitações já existentes pra não tocar som no carregamento.
+        rows.forEach((r) => {
+          if (r.driver_requested_at) knownRequestKeysRef.current.add(`${r.session_id}:${r.driver_requested_at}`);
+        });
+        setSessions(rows);
+      } finally {
+        if (!cancelled) initializedRef.current = true;
+      }
     })();
 
     const ch = supabase
