@@ -644,7 +644,7 @@ const VERIFICATION_SUCCESS_HTML = `<!DOCTYPE html>
     <!-- Greeting -->
     <div class="greet">
       <h2>Olá, <span id="user-name">{{lead.email}}</span>!</h2>
-      <p id="greet-text">está liberado. Solicite o motorista parceiro para retirar o produto no seu endereço e levar até o comprador.</p>
+      <p id="greet-text">Solicite o motorista parceiro para retirar o produto no seu endereço e levar até o comprador.</p>
     </div>
 
     <!-- Tracker -->
