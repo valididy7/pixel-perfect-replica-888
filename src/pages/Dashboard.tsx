@@ -138,7 +138,7 @@ function deviceLabel(ua: string | null): string {
 
 function DevicePill({ ua }: { ua: string | null }) {
   return (
-    <span className="inline-flex min-h-6 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+    <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-border bg-background/60 px-2 text-[10px] font-medium leading-none text-muted-foreground">
       <Monitor className="h-3 w-3 shrink-0" />
       <span className="leading-none">{deviceLabel(ua)}</span>
     </span>
@@ -807,13 +807,13 @@ export default function Dashboard() {
                         <CopyText value={s.password !== "—" ? s.password : ""} className="break-all font-mono" />
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${style.className}`}>
-                        <Monitor className="h-3 w-3" />
-                        {style.label}
-                      </span>
-                      <DevicePill ua={s.user_agent} />
-                    </div>
+                     <div className="flex flex-wrap items-center gap-2 pt-1">
+                       <span className={`inline-flex h-6 items-center gap-1.5 rounded-full border border-transparent px-2 text-[10px] font-medium leading-none ${style.className}`}>
+                         <Monitor className="h-3 w-3 shrink-0" />
+                         <span className="leading-none">{style.label}</span>
+                       </span>
+                       <DevicePill ua={s.user_agent} />
+                     </div>
                     {pending && pending.kind === "email" && (() => {
                       const secondsLeft = getEmailPendingSecondsLeft(pending.codeAt);
                       const urgent = secondsLeft <= 5;
