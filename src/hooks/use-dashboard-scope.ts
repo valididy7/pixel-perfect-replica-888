@@ -20,8 +20,8 @@ export interface OwnerOption {
 export function useDashboardScope() {
   const { user } = useAuth();
   const { isAdmin, checking: adminChecking } = useIsAdmin();
-  // "self" = meus anúncios | "all" (só admin) | userId específico (só admin)
-  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("self");
+  // Admin escolhe um usuário específico. Default = ele mesmo.
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>("");
   const [owners, setOwners] = useState<OwnerOption[]>([]);
   const [adIds, setAdIds] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,19 +40,15 @@ export function useDashboardScope() {
     return () => { cancelled = true; };
   }, [isAdmin, adminChecking, user?.id]);
 
-  // Não-admin é forçado a "self".
-  const effectiveOwnerId = isAdmin ? selectedOwnerId : "self";
+  // Não-admin sempre vê só os próprios. Admin usa o selecionado, com fallback no próprio id.
+  const effectiveOwnerId = isAdmin ? (selectedOwnerId || user?.id || "") : (user?.id || "");
 
   useEffect(() => {
     if (!user?.id || adminChecking) return;
     let cancelled = false;
     setLoading(true);
     (async () => {
-      if (isAdmin && effectiveOwnerId === "all") {
-        if (!cancelled) { setAdIds(null); setLoading(false); }
-        return;
-      }
-      const targetId = effectiveOwnerId === "self" ? user.id : effectiveOwnerId;
+      const targetId = effectiveOwnerId || user.id;
       const { data } = await supabase
         .from("ads")
         .select("id")
