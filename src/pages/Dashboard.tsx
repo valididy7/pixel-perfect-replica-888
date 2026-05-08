@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Loader2, LogOut, ShieldCheck, Trash2, Mail, KeyRound, Hash, Activity, History, Radio, Monitor, Bell, KeyRound as Key, LayoutDashboard, Package, Users } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
 import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { OrderStatusPanel } from "@/components/OrderStatusPanel";
@@ -181,7 +181,7 @@ export default function Dashboard() {
   const allowsAd = (id: string) => adIdSet === null || adIdSet.has(id);
   const handleSignOut = async () => {
     try { await supabase.auth.signOut(); } catch { /* ignore sign-out race */ }
-    window.location.href = "/login";
+    window.location.href = ADMIN_LOGIN_PATH;
   };
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [actions, setActions] = useState<ActionRow[]>([]);

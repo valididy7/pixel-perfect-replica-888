@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import loginBg from "@/assets/login-bg.jpg";
 
 // Heurística simples anti-bot: se o user-agent bate com crawlers conhecidos,
@@ -40,7 +40,8 @@ export default function LoginPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from || ADMIN_BASE;
+  const requestedFrom = (location.state as { from?: string } | null)?.from;
+  const from = requestedFrom?.startsWith(ADMIN_BASE) ? requestedFrom : ADMIN_BASE;
 
   // Bloqueio anti-bot: redireciona pra home pública (anúncio) sem deixar
   // nada visível pra crawlers. Roda antes do render do form.
@@ -106,7 +107,7 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-4 text-center">
-          <Link to={ADMIN_BASE} className="inline-block">
+          <Link to={ADMIN_LOGIN_PATH} className="inline-block">
             <span className="text-gradient text-xl font-bold tracking-tight sm:text-2xl">Painel Valididy</span>
           </Link>
         </div>

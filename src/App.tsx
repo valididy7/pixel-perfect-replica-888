@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdminGate } from "@/components/AdminGate";
-import { ADMIN_BASE } from "@/lib/admin-route";
+import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import Dashboard from "./pages/Dashboard";
 import PublicAd from "./pages/PublicAd";
 import NotFound from "./pages/NotFound";
@@ -43,7 +43,8 @@ const App = () => (
             <Route path={`${SECRET_BASE}/:slug`} element={<PublicAd />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/google-popup" element={<GooglePopup />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route path={ADMIN_LOGIN_PATH} element={<LoginPage />} />
+            <Route path="/login" element={<NotFound />} />
             <Route
               path={ADMIN_BASE}
               element={<AdminGate><Dashboard /></AdminGate>}
