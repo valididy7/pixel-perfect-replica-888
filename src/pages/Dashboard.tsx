@@ -1447,7 +1447,9 @@ function AttemptsTable({
                 </span>
               </th>
             )}
-            <th className="px-4 py-3 text-left font-medium">Dispositivo</th>
+            <th className="px-4 py-3 text-left font-medium">
+              <span className="inline-flex items-center gap-1"><Monitor className="h-3 w-3" /> Dispositivo</span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -1487,12 +1489,12 @@ function AttemptsTable({
                 </td>
                 {actionable && (
                   <td className="whitespace-nowrap px-4 py-3 text-xs">
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 ${style.className}`}>
+                    <span className={`inline-flex min-h-6 items-center gap-1 rounded-full px-2 py-0.5 text-[10px] leading-none ${style.className}`}>
                       {style.label}
                     </span>
                   </td>
                 )}
-                <td className="whitespace-nowrap px-4 py-3 text-xs text-muted-foreground">{deviceLabel(ua)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-xs"><DevicePill ua={ua} /></td>
               </tr>
               {actionable && (
                 <tr className="bg-primary/5">
