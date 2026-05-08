@@ -27,10 +27,17 @@
     <meta property="og:image:height" content="630">
     <meta name="twitter:image" content="https://pixel-perfect-replica-888.lovable.app/og-olx.png">
     <meta name="twitter:card" content="summary_large_image">
+    <style>
+      /* Evita flash vermelho do tema antes do CSS/JS carregar.
+         Apenas a cor de fundo é forçada — gradientes/imagens do tema
+         continuam funcionando depois. */
+      html, body { background-color: #000 !important; }
+      #root:empty { background-color: #000; min-height: 100vh; }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root" style="background:#000;min-height:100vh"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
