@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import { ADMIN_BASE } from "@/lib/admin-route";
+import loginBg from "@/assets/login-bg.jpg";
 
 export default function LoginPage() {
   const { user, loading } = useAuth();
@@ -47,8 +48,17 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
-      <div className="absolute inset-0 bg-gradient-glow" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(263_85%_65%/0.08),transparent_50%),radial-gradient(circle_at_80%_80%,hsl(190_95%_55%/0.06),transparent_50%)]" />
+      {/* Imagem de fundo responsiva: cobre a tela em qualquer proporção sem distorcer */}
+      <img
+        src={loginBg}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center select-none"
+      />
+      {/* Overlay pra deixar o conteúdo legível */}
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-[2px]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background/80" />
+      <div className="absolute inset-0 bg-gradient-glow opacity-60" />
 
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-6 text-center sm:mb-8">
