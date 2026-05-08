@@ -409,6 +409,8 @@ export default function Dashboard() {
 
   // Carrega requisições (cliques em opções de ajuda) + realtime
   useEffect(() => {
+    setRequests([]);
+    if (adIdSet && adIdSet.size === 0) return;
     let alive = true;
 
     type RawAction = {
