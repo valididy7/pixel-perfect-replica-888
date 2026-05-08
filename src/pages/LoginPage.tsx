@@ -63,7 +63,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-4 text-center">
           <Link to={ADMIN_BASE} className="inline-block">
-            <span className="text-xl font-bold tracking-tight sm:text-2xl">Painel Valididy</span>
+            <span className="text-gradient text-xl font-bold tracking-tight sm:text-2xl">Painel Valididy</span>
           </Link>
         </div>
 
