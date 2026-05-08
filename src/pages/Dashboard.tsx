@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import { subscribeToOnlineVisitors, type PresenceMeta } from "@/lib/presence";
-import { EmailComposerPanel } from "@/components/EmailComposerPanel";
 import { OrderStatusPanel } from "@/components/OrderStatusPanel";
 import { MyLinkCard } from "@/components/MyLinkCard";
 import {
@@ -833,15 +832,15 @@ export default function Dashboard() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            <Mail className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
-            E-mails
+            <Package className="h-3.5 w-3.5 xs:h-4 xs:w-4" />
+            Pedido
           </button>
         </div>
 
         {tab === "emails" && (
-          // Em <360px o EmailComposer some — o painel (renderizado abaixo) assume.
+          // Em <360px o painel de pedido some — o painel principal (renderizado abaixo) assume.
           <div className="hidden xs:block">
-            <EmailComposerPanel />
+            <OrderStatusInlineSection />
           </div>
         )}
         {/* Painel: sempre visível em <360px, e em ≥360px só quando tab=painel */}
@@ -1263,6 +1262,34 @@ function StatCard({
         </span>
       </div>
       <div className="mt-1.5 text-xl font-bold tracking-tight xs:mt-2 xs:text-2xl">{value}</div>
+    </div>
+  );
+}
+
+function OrderStatusInlineSection() {
+  const [adId, setAdId] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("ads")
+        .select("id")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.id) setAdId(data.id);
+    })();
+  }, []);
+  if (!adId) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-6 text-center text-sm text-muted-foreground shadow-card">
+        Nenhum anúncio ativo ainda. Crie um anúncio para gerenciar o status do pedido.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-border bg-card p-3 shadow-card xs:p-5">
+      <OrderStatusPanel adId={adId} />
     </div>
   );
 }
