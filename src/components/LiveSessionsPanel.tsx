@@ -69,6 +69,16 @@ function fmtAgo(ms: number) {
   return `${Math.floor(m / 60)}h ${m % 60}min`;
 }
 
+/**
+ * Gera um "ID visível" curto e estável a partir do sessionId persistente do
+ * navegador. Mesma pessoa = mesmo ID toda vez que volta no anúncio.
+ */
+function visitorBadge(sid: string): string {
+  const clean = (sid || "").replace(/[^a-zA-Z0-9]/g, "");
+  const tail = clean.slice(-6).toUpperCase().padStart(6, "0");
+  return `#${tail}`;
+}
+
 interface ActionRow {
   id: string;
   session_id: string;
@@ -307,7 +317,16 @@ export function LiveSessionsPanel({ adId, pendingSessionIds, hasAddressIds, onFo
                   <span className="text-[10px] text-muted-foreground">há {fmtAgo(now - since)}</span>
                 </div>
 
-                <p className="mb-1.5 font-mono text-[10px] text-muted-foreground">#{sid.slice(-8)}</p>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-500 opacity-75" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                  </span>
+                  <span className="font-mono text-[11px] font-bold tracking-wider text-foreground">
+                    Visitante {visitorBadge(sid)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">online</span>
+                </div>
 
                 {/* Barra de progresso do funil */}
                 <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-muted">
