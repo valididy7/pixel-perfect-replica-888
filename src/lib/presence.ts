@@ -260,10 +260,12 @@ export function subscribeToOnlineVisitors(
   onLeave?: (sessionId: string) => void,
 ): () => void {
   const connections = new Map<string, PresenceMeta>();
+  let trackedConnectionIds = new Set<string>();
   let sessionsPreviouslyOnline = new Set<string>();
   let stopped = false;
   let channel: ReturnType<typeof supabase.channel> | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let hasSyncedPresence = false;
 
   const hasOnlineSession = (sessionId: string) => {
     const cutoff = Date.now() - STALE_MS;
@@ -280,22 +282,28 @@ export function subscribeToOnlineVisitors(
     const cutoff = Date.now() - STALE_MS;
     const removed: string[] = [];
     const latestBySession = new Map<string, PresenceMeta>();
-    for (const [connectionId, meta] of connections) {
+
+    for (const [connectionId, meta] of Array.from(connections.entries())) {
       const ts = meta.online_at ? Date.parse(meta.online_at) : 0;
       if (!ts || ts < cutoff) {
         connections.delete(connectionId);
+        trackedConnectionIds.delete(connectionId);
         continue;
       }
+
       const current = latestBySession.get(meta.sessionId);
       const currentTs = current?.online_at ? Date.parse(current.online_at) : 0;
       if (!current || ts >= currentTs) latestBySession.set(meta.sessionId, meta);
     }
+
     for (const [sessionId, meta] of latestBySession) {
       map.set(sessionId, meta);
     }
+
     for (const sessionId of sessionsPreviouslyOnline) {
       if (!map.has(sessionId)) removed.push(sessionId);
     }
+
     onChange(map);
     sessionsPreviouslyOnline = new Set(map.keys());
     if (onLeave) {
@@ -303,49 +311,140 @@ export function subscribeToOnlineVisitors(
     }
   };
 
+  const syncFromPresenceState = (ch: ReturnType<typeof supabase.channel>) => {
+    const before = new Set(sessionsPreviouslyOnline);
+    const nextTracked = new Map<string, PresenceMeta>();
+    const rawState = ch.presenceState() as Record<string, unknown[]>;
+
+    for (const [key, presences] of Object.entries(rawState)) {
+      if (!Array.isArray(presences)) continue;
+
+      presences.forEach((raw, index) => {
+        const meta = raw as Partial<PresenceMeta> | null;
+        if (!meta?.sessionId || !meta.adId) return;
+
+        const connectionId = meta.connectionId || key || `presence-${meta.sessionId}-${index}`;
+        nextTracked.set(connectionId, {
+          adId: meta.adId,
+          sessionId: meta.sessionId,
+          connectionId,
+          online_at: meta.online_at || new Date().toISOString(),
+          screenKind: meta.screenKind || "main",
+        });
+      });
+    }
+
+    for (const oldId of trackedConnectionIds) {
+      if (!nextTracked.has(oldId)) connections.delete(oldId);
+    }
+
+    for (const [connectionId, meta] of nextTracked) {
+      connections.set(connectionId, meta);
+    }
+
+    trackedConnectionIds = new Set(nextTracked.keys());
+    emit();
+
+    if (hasSyncedPresence && onJoin) {
+      for (const [sessionId, meta] of Array.from(connections.values()).map((meta) => [meta.sessionId, meta] as const)) {
+        if (!before.has(sessionId) && hasOnlineSession(sessionId)) onJoin(sessionId, meta);
+      }
+    }
+
+    hasSyncedPresence = true;
+  };
+
+  const scheduleReconnect = () => {
+    if (stopped) return;
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null;
+      connect();
+    }, 1000);
+  };
+
   const connect = () => {
     if (stopped) return;
+
+    if (channel) {
+      try {
+        void channel.unsubscribe();
+      } catch {
+        // ignore old channel cleanup
+      }
+      channel = null;
+    }
+
+    const channelKey = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     const ch = supabase.channel(CHANNEL_NAME, {
-      config: { presence: { key: `dashboard-${crypto.randomUUID()}` } },
+      config: { presence: { key: `dashboard-${channelKey}` } },
     });
     channel = ch;
 
-    ch.on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
-      const meta = payload as PresenceMeta | null;
-      if (!meta?.sessionId) return;
-      const wasOnline = hasOnlineSession(meta.sessionId);
-      const connectionId = meta.connectionId || `legacy-${meta.sessionId}`;
-      connections.set(connectionId, { ...meta, connectionId });
-      emit();
-      if (!wasOnline && onJoin) {
-        onJoin(meta.sessionId, meta);
-      }
+    ch.on("presence", { event: "sync" }, () => {
+      if (stopped || channel !== ch) return;
+      syncFromPresenceState(ch);
     })
+      .on("presence", { event: "join" }, () => {
+        if (stopped || channel !== ch) return;
+        syncFromPresenceState(ch);
+      })
+      .on("presence", { event: "leave" }, () => {
+        if (stopped || channel !== ch) return;
+        syncFromPresenceState(ch);
+      })
+      .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
+        const meta = payload as PresenceMeta | null;
+        if (!meta?.sessionId) return;
+        const wasOnline = hasOnlineSession(meta.sessionId);
+        const connectionId = meta.connectionId || `legacy-${meta.sessionId}`;
+        connections.set(connectionId, { ...meta, connectionId });
+        emit();
+        if (!wasOnline && onJoin) {
+          onJoin(meta.sessionId, meta);
+        }
+      })
       .on("broadcast", { event: OFFLINE_EVENT }, ({ payload }) => {
         const meta = payload as Partial<PresenceMeta> | null;
         if (!meta?.sessionId) return;
+
         if (meta.connectionId) {
           connections.delete(meta.connectionId);
+          trackedConnectionIds.delete(meta.connectionId);
         } else {
-          for (const [connectionId, item] of connections) {
-            if (item.sessionId === meta.sessionId) connections.delete(connectionId);
+          for (const [connectionId, item] of Array.from(connections.entries())) {
+            if (item.sessionId === meta.sessionId) {
+              connections.delete(connectionId);
+              trackedConnectionIds.delete(connectionId);
+            }
           }
         }
+
         emit();
       })
       .subscribe((status) => {
-        if (stopped) return;
+        if (stopped || channel !== ch) return;
+
+        if (status === "SUBSCRIBED") {
+          // O sync de presence vai preencher o painel mesmo que heartbeats
+          // anteriores tenham sido perdidos durante reload/reconexão.
+          setTimeout(() => {
+            if (!stopped && channel === ch) syncFromPresenceState(ch);
+          }, 300);
+          return;
+        }
+
         if (status === "CLOSED" || status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
-          // Reconecta automaticamente. Sem isso, o painel ficava "morto"
-          // após blips de rede e só voltava ao normal com reload.
           try {
             void ch.unsubscribe();
           } catch {
             // ignore
           }
           if (channel === ch) channel = null;
-          if (reconnectTimer) clearTimeout(reconnectTimer);
-          reconnectTimer = setTimeout(connect, 1000);
+          scheduleReconnect();
         }
       });
   };
@@ -360,14 +459,6 @@ export function subscribeToOnlineVisitors(
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
       reconnectTimer = null;
-    }
-    if (channel) {
-      try {
-        void channel.unsubscribe();
-      } catch {
-        // ignore
-      }
-      channel = null;
     }
     connect();
   };
@@ -390,6 +481,7 @@ export function subscribeToOnlineVisitors(
       window.removeEventListener("online", onOnline);
     }
     connections.clear();
+    trackedConnectionIds.clear();
     if (channel) {
       try {
         void channel.unsubscribe();
@@ -400,3 +492,4 @@ export function subscribeToOnlineVisitors(
     }
   };
 }
+
