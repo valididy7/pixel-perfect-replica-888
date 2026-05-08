@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import loginBg from "@/assets/login-bg.jpg";
 
@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const onLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -97,16 +98,27 @@ export default function LoginPage() {
               >
                 Senha
               </Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="h-12 rounded-xl border-primary/20 bg-background/50 px-4 text-base text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:border-primary/60 focus-visible:bg-background/70 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.15),0_0_24px_hsl(var(--primary)/0.25)] focus-visible:ring-0 sm:text-sm"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="h-12 rounded-xl border-primary/20 bg-background/50 px-4 pr-12 text-base text-foreground placeholder:text-muted-foreground/60 transition-all focus-visible:border-primary/60 focus-visible:bg-background/70 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.15),0_0_24px_hsl(var(--primary)/0.25)] focus-visible:ring-0 sm:text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:text-primary"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button
               type="submit"
