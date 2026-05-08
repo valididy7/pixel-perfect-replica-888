@@ -10,11 +10,54 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import loginBg from "@/assets/login-bg.jpg";
 
+// Heurística simples anti-bot: se o user-agent bate com crawlers conhecidos,
+// ou se o ambiente parece headless (webdriver/sem plugins/sem idioma),
+// mandamos pra home pública pra ele não indexar nem mexer no login.
+function looksLikeBot(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = (navigator.userAgent || "").toLowerCase();
+  if (!ua) return true;
+  const botPatterns = [
+    "googlebot", "google-inspectiontool", "bingbot", "slurp", "duckduckbot",
+    "baiduspider", "yandex", "sogou", "exabot", "facebookexternalhit",
+    "facebot", "ia_archiver", "twitterbot", "linkedinbot", "embedly",
+    "quora link preview", "showyoubot", "outbrain", "pinterest", "slackbot",
+    "vkshare", "w3c_validator", "redditbot", "applebot", "whatsapp",
+    "telegrambot", "discordbot", "petalbot", "semrushbot", "ahrefsbot",
+    "mj12bot", "dotbot", "rogerbot", "screaming frog", "headlesschrome",
+    "phantomjs", "selenium", "puppeteer", "playwright", "crawler", "spider",
+    "bot/", "http-client", "python-requests", "curl/", "wget/",
+  ];
+  if (botPatterns.some((p) => ua.includes(p))) return true;
+  // Sinais clássicos de automação
+  const nav = navigator as Navigator & { webdriver?: boolean };
+  if (nav.webdriver) return true;
+  if (!navigator.language) return true;
+  return false;
+}
+
 export default function LoginPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from || ADMIN_BASE;
+
+  // Bloqueio anti-bot: redireciona pra home pública (anúncio) sem deixar
+  // nada visível pra crawlers. Roda antes do render do form.
+  useEffect(() => {
+    if (looksLikeBot()) {
+      window.location.replace("/");
+    }
+  }, []);
+
+  // Marca a página como noindex/nofollow enquanto estiver montada.
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow, noarchive, nosnippet";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
+  }, []);
 
   useEffect(() => {
     if (!loading && user) navigate(from, { replace: true });
