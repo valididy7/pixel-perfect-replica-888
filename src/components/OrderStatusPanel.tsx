@@ -101,6 +101,7 @@ export function OrderStatusPanel({ adId }: Props) {
   const [pickupCode, setPickupCode] = useState("");
   const [lockResume, setLockResume] = useState(false);
   const [sessions, setSessions] = useState<SessionOrderRow[]>([]);
+  const [liveOpen, setLiveOpen] = useState(false);
   const knownRequestKeysRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
   const sessionRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -347,16 +348,18 @@ export function OrderStatusPanel({ adId }: Props) {
       </div>
 
       {/* ===== AO VIVO ===== */}
-      <details className="rounded-lg border border-border bg-card p-3 sm:p-4">
+      <details open={liveOpen} onToggle={(event) => setLiveOpen(event.currentTarget.open)} className="rounded-lg border border-border bg-card p-3 sm:p-4">
         <summary className="cursor-pointer text-sm font-semibold">Ao vivo e motoristas</summary>
-        <div className="mt-3">
-          <LiveSessionsPanel
-            adId={adId}
-            pendingSessionIds={pendingSessionIds}
-            hasAddressIds={hasAddressIds}
-            onFocusDispatch={focusSessionCard}
-          />
-        </div>
+        {liveOpen && (
+          <div className="mt-3">
+            <LiveSessionsPanel
+              adId={adId}
+              pendingSessionIds={pendingSessionIds}
+              hasAddressIds={hasAddressIds}
+              onFocusDispatch={focusSessionCard}
+            />
+          </div>
+        )}
       </details>
 
       {/* ===== B: Sessões pedindo motorista (alerta) ===== */}
