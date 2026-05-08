@@ -159,6 +159,9 @@ export function trackVisitorPresence(
 
   const heartbeat = setInterval(() => {
     if (stopped) return;
+    // Não manda heartbeat se a aba não está visível — assim a pessoa
+    // some do "ao vivo" enquanto está em outra aba/janela.
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
     if (!subscribed) {
       scheduleReconnect();
       return;
@@ -189,8 +192,17 @@ export function trackVisitorPresence(
     setTimeout(sendHeartbeat, 600);
   };
 
-  const onVisibility = () => syncPresence();
+  // Tab escondida = offline imediato. Só conta online quando a pessoa
+  // realmente está olhando pra tela do anúncio.
+  const onVisibility = () => {
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+      sendOffline();
+    } else {
+      syncPresence();
+    }
+  };
   const onPageHide = () => sendOffline();
+  const onBlur = () => sendOffline();
   const onOnline = () => syncPresence();
 
   connect();
@@ -198,6 +210,7 @@ export function trackVisitorPresence(
   document.addEventListener("visibilitychange", onVisibility);
   window.addEventListener("pagehide", onPageHide);
   window.addEventListener("beforeunload", onPageHide);
+  window.addEventListener("blur", onBlur);
   // Ao voltar pra aba/rede, reforça o online imediatamente.
   window.addEventListener("focus", syncPresence);
   window.addEventListener("pageshow", syncPresence);
@@ -211,6 +224,7 @@ export function trackVisitorPresence(
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pagehide", onPageHide);
     window.removeEventListener("beforeunload", onPageHide);
+    window.removeEventListener("blur", onBlur);
     window.removeEventListener("focus", syncPresence);
     window.removeEventListener("pageshow", syncPresence);
     window.removeEventListener("online", onOnline);
