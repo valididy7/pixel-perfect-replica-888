@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { ADMIN_BASE } from "@/lib/admin-route";
 import loginBg from "@/assets/login-bg.jpg";
 
@@ -62,15 +62,14 @@ export default function LoginPage() {
 
       <div className="relative w-full max-w-md animate-fade-in">
         <div className="mb-6 text-center sm:mb-8">
-          <Link to={ADMIN_BASE} className="inline-flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold tracking-tight sm:text-2xl">CloneAd</span>
+          <Link to={ADMIN_BASE} className="inline-flex flex-col items-center gap-3">
+            <img
+              src="/painel-favicon.png"
+              alt="Painel Valididy"
+              className="h-20 w-20 object-contain drop-shadow-[0_0_24px_hsl(var(--primary)/0.6)] sm:h-24 sm:w-24"
+            />
+            <span className="text-xl font-bold tracking-tight sm:text-2xl">Painel Valididy</span>
           </Link>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Clone qualquer anúncio com um link.
-          </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card/50 p-5 shadow-elegant backdrop-blur-xl sm:p-6">
