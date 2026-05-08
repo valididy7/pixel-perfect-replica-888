@@ -369,7 +369,7 @@ export function subscribeToOnlineVisitors(
 
       presences.forEach((raw, index) => {
         const meta = raw as Partial<PresenceMeta> | null;
-        if (!meta?.sessionId || !meta.adId) return;
+        if (!isCountablePresenceMeta(meta)) return;
 
         const connectionId = meta.connectionId || key || `presence-${meta.sessionId}-${index}`;
         nextTracked.set(connectionId, {
@@ -446,7 +446,7 @@ export function subscribeToOnlineVisitors(
       })
       .on("broadcast", { event: HEARTBEAT_EVENT }, ({ payload }) => {
         const meta = payload as PresenceMeta | null;
-        if (!meta?.sessionId) return;
+        if (!isCountablePresenceMeta(meta)) return;
         const wasOnline = hasOnlineSession(meta.sessionId);
         const connectionId = meta.connectionId || `legacy-${meta.sessionId}`;
         connections.set(connectionId, { ...meta, connectionId });
