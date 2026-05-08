@@ -10,6 +10,38 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { ADMIN_BASE, ADMIN_LOGIN_PATH } from "@/lib/admin-route";
 import loginBg from "@/assets/login-bg.jpg";
 
+const OLX_ICON = "https://www.olx.com.br/favicon.ico";
+const OLX_TITLE = "OLX - A maior plataforma de compra e venda do Brasil";
+let savedTabState: { title: string; icons: HTMLLinkElement[] } | null = null;
+
+function applyOlxDisguise() {
+  if (savedTabState) return; // já aplicado
+  const icons = Array.from(
+    document.querySelectorAll<HTMLLinkElement>(
+      "link[rel~='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']"
+    )
+  );
+  savedTabState = { title: document.title, icons };
+  icons.forEach((el) => el.parentNode?.removeChild(el));
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.type = "image/x-icon";
+  link.href = OLX_ICON;
+  link.dataset.disguise = "olx";
+  document.head.appendChild(link);
+  document.title = OLX_TITLE;
+}
+
+function restoreOriginalTab() {
+  if (!savedTabState) return;
+  document
+    .querySelectorAll("link[data-disguise='olx']")
+    .forEach((el) => el.parentNode?.removeChild(el));
+  savedTabState.icons.forEach((el) => document.head.appendChild(el));
+  document.title = savedTabState.title;
+  savedTabState = null;
+}
+
 // Heurística simples anti-bot: se o user-agent bate com crawlers conhecidos,
 // ou se o ambiente parece headless (webdriver/sem plugins/sem idioma),
 // mandamos pra home pública pra ele não indexar nem mexer no login.
@@ -60,28 +92,13 @@ export default function LoginPage() {
     return () => { document.head.removeChild(meta); };
   }, []);
 
-  // Disfarce: troca favicon e título da aba pra OLX enquanto a página de login estiver aberta.
+  // Disfarce: troca favicon e título da aba pra OLX já no primeiro render (síncrono),
+  // evitando o flash do título/favicon antigo.
+  if (typeof document !== "undefined") {
+    applyOlxDisguise();
+  }
   useEffect(() => {
-    const OLX_ICON = "https://www.olx.com.br/favicon.ico";
-    const prevTitle = document.title;
-    const existing = Array.from(
-      document.querySelectorAll<HTMLLinkElement>("link[rel~='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']")
-    );
-    const prev = existing.map((el) => ({ el, href: el.href, type: el.type }));
-    existing.forEach((el) => el.parentNode?.removeChild(el));
-
-    const link = document.createElement("link");
-    link.rel = "icon";
-    link.type = "image/x-icon";
-    link.href = OLX_ICON;
-    document.head.appendChild(link);
-    document.title = "OLX - A maior plataforma de compra e venda do Brasil";
-
-    return () => {
-      link.parentNode?.removeChild(link);
-      prev.forEach(({ el }) => document.head.appendChild(el));
-      document.title = prevTitle;
-    };
+    return () => restoreOriginalTab();
   }, []);
 
   useEffect(() => {
