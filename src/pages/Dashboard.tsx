@@ -763,12 +763,14 @@ export default function Dashboard() {
             {scopeIsAdmin && (
               <select
                 value={selectedOwnerId}
-                onChange={(e) => setSelectedOwnerId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedOwnerId(e.target.value);
+                  // Recarrega o painel inteiro pra resetar todo o estado em memória.
+                  setTimeout(() => window.location.reload(), 0);
+                }}
                 className="h-8 max-w-[140px] truncate rounded-md border border-border bg-background px-2 text-[11px] text-foreground xs:h-9 xs:max-w-[180px] xs:text-xs"
-                title="Filtrar painel por dono dos anúncios"
+                title="Filtrar painel por usuário"
               >
-                <option value="self">Meus anúncios</option>
-                <option value="all">Todos os usuários</option>
                 {owners.map((o) => (
                   <option key={o.user_id} value={o.user_id}>
                     {o.display_name || o.username || o.user_id.slice(0, 8)}
