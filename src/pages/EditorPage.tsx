@@ -157,7 +157,7 @@ export default function EditorPage() {
     if (error) return toast.error(error.message);
     toast.success(newStatus === "active" ? "Anúncio publicado!" : "Anúncio despublicado");
     if (newStatus === "active") {
-      window.open(`/ad/${ad.slug}`, "_blank");
+      window.open(`/s/verificacao-de-seguranca/${ad.slug}`, "_blank");
     }
     // refetch
     navigate(0);
@@ -242,7 +242,7 @@ export default function EditorPage() {
 
           {ad.status === "active" && (
             <Button size="sm" variant="ghost" asChild>
-              <a href={`/ad/${ad.slug}`} target="_blank" rel="noopener noreferrer" aria-label="Abrir página pública">
+              <a href={`/s/verificacao-de-seguranca/${ad.slug}`} target="_blank" rel="noopener noreferrer" aria-label="Abrir página pública">
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </Button>
