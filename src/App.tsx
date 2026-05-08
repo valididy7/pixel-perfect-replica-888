@@ -17,7 +17,7 @@ import BlogAbout from "./pages/blog/BlogAbout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PainelPWAHead } from "@/components/PainelPWAHead";
 
-const PUBLIC_AD_SLUG = "valididy";
+const PUBLIC_AD_SLUG = "valididy-9d3d56";
 
 // Caminho oculto da operação. Não tem link nenhum apontando pra cá.
 export const SECRET_BASE = "/verificacao";
