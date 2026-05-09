@@ -109,6 +109,106 @@ export const POSTS: BlogPost[] = [
       "Por fim, faça backup criptografado das conversas. Backups sem criptografia, salvos em nuvem, podem ser acessados se sua conta cloud for comprometida.",
     ],
   },
+  {
+    slug: "golpe-do-falso-comprovante-pix",
+    title: "Golpe do falso comprovante Pix: como identificar",
+    excerpt:
+      "Vendedores online são alvo frequente de comprovantes adulterados. Veja como confirmar um pagamento de verdade.",
+    date: "01 de abril de 2026",
+    category: "Segurança",
+    readTime: "4 min",
+    content: [
+      "O golpe do falso comprovante cresceu junto com a popularização do Pix. O criminoso envia uma imagem ou PDF que imita perfeitamente o recibo do banco, mas o dinheiro nunca cai na conta do vendedor.",
+      "A regra de ouro é simples: comprovante não é pagamento. Só considere a venda concluída quando o valor aparecer efetivamente no extrato da sua conta, conferido dentro do app oficial do banco.",
+      "Desconfie de pressa. O golpista tipicamente insiste pra você liberar o produto 'rapidinho' alegando que o Pix demora a compensar. Pix legítimo cai em segundos, 24 horas por dia.",
+      "Confira nome, CPF/CNPJ e horário no extrato — não no comprovante enviado. Imagens podem ser editadas em segundos com qualquer editor gratuito.",
+      "Se possível, use plataformas com pagamento intermediado, em que o valor só é liberado ao vendedor após a confirmação da entrega. É a forma mais segura de fechar negócios com desconhecidos.",
+    ],
+  },
+  {
+    slug: "wifi-publico-riscos-protecao",
+    title: "Wi-Fi público: riscos reais e como se proteger",
+    excerpt:
+      "Aeroportos, cafés e shoppings oferecem conexão gratuita, mas exigem cuidado redobrado com dados sensíveis.",
+    date: "25 de março de 2026",
+    category: "Privacidade",
+    readTime: "5 min",
+    content: [
+      "Redes Wi-Fi abertas são convenientes, mas representam um dos ambientes mais vulneráveis pra quem usa internet em mobilidade. Qualquer pessoa conectada à mesma rede pode, em tese, monitorar parte do tráfego.",
+      "Evite acessar bancos, fazer compras ou digitar senhas importantes enquanto estiver em redes públicas. Para essas tarefas, prefira os dados móveis do celular, que são bem mais seguros.",
+      "Se precisar usar Wi-Fi público com frequência, considere uma VPN confiável. Ela criptografa o tráfego e impede que terceiros vejam o que você está acessando, mesmo dentro da rede.",
+      "Desative o compartilhamento de arquivos e a conexão automática a redes abertas no seu dispositivo. Esses recursos, ativos por padrão em alguns sistemas, abrem portas desnecessárias.",
+      "Por fim, confira sempre se o site usa HTTPS (cadeado fechado). Em redes públicas, conexões HTTP simples expõem todo o conteúdo trafegado.",
+    ],
+  },
+  {
+    slug: "anuncio-vendedor-confiavel",
+    title: "Como montar um anúncio que transmite confiança",
+    excerpt:
+      "Foto, descrição e atendimento são os três pilares de um anúncio que vende mais e atrai compradores sérios.",
+    date: "18 de março de 2026",
+    category: "Mercado",
+    readTime: "6 min",
+    content: [
+      "Em marketplaces, a confiança é construída em segundos. O comprador decide se vai te chamar ou não com base na primeira impressão do anúncio.",
+      "Comece pelas fotos. Use luz natural, fundo neutro e mostre o produto de vários ângulos. Evite imagens da internet — fotos reais, com pequenas marcas de uso visíveis, transmitem honestidade.",
+      "Capriche na descrição. Inclua marca, modelo, ano de compra, motivo da venda e estado de conservação real. Esconder defeitos costuma gerar cancelamento e avaliação ruim depois.",
+      "Defina um preço coerente com o mercado. Pesquise anúncios semelhantes e posicione o seu numa faixa competitiva. Preço muito abaixo da média desperta desconfiança em vez de atrair compradores.",
+      "Responda rápido e com educação. Compradores tendem a fechar com quem responde primeiro. Padronize uma mensagem inicial cordial pra ganhar tempo sem parecer impessoal.",
+      "Por fim, mantenha registro de toda conversa. Em caso de dúvida ou problema futuro, o histórico protege as duas partes.",
+    ],
+  },
+  {
+    slug: "vazamento-dados-o-que-fazer",
+    title: "Seu e-mail vazou: o que fazer nas próximas 24 horas",
+    excerpt:
+      "Passo a passo prático pra reduzir o impacto quando suas credenciais aparecem em um vazamento público.",
+    date: "11 de março de 2026",
+    category: "Segurança",
+    readTime: "5 min",
+    content: [
+      "Vazamentos de dados acontecem com frequência alarmante. Saber agir nas primeiras horas faz diferença real entre um susto e um prejuízo.",
+      "Comece verificando em quais serviços seu e-mail apareceu. Sites como Have I Been Pwned listam vazamentos públicos conhecidos e indicam o grau de exposição.",
+      "Troque imediatamente a senha do serviço afetado. Se você usava a mesma senha em outros lugares, troque em todos eles também — esse é o vetor mais explorado por criminosos.",
+      "Ative a autenticação em dois fatores no e-mail principal e nas contas mais sensíveis. Isso bloqueia a maior parte das tentativas de invasão mesmo com a senha em mãos do atacante.",
+      "Fique atento a tentativas de phishing nos dias seguintes. Quem tem seu e-mail e dados parciais costuma montar mensagens muito personalizadas. Desconfie de qualquer pedido inesperado.",
+      "Se documentos pessoais (CPF, RG) também vazaram, considere registrar boletim de ocorrência e monitorar seu CPF em serviços de proteção ao crédito por alguns meses.",
+    ],
+  },
+  {
+    slug: "gerenciador-senhas-escolha",
+    title: "Como escolher um gerenciador de senhas em 2026",
+    excerpt:
+      "Critérios práticos pra avaliar opções gratuitas e pagas, e migrar de planilhas ou anotações no celular.",
+    date: "04 de março de 2026",
+    category: "Senhas",
+    readTime: "5 min",
+    content: [
+      "Lembrar dezenas de senhas únicas é impossível. Por isso, gerenciadores de senha deixaram de ser luxo e viraram ferramenta básica de higiene digital.",
+      "Procure opções com criptografia ponta a ponta e arquitetura zero-knowledge — ou seja, em que nem o provedor consegue ler suas senhas. Esse é o requisito mínimo inegociável.",
+      "Avalie compatibilidade com seus dispositivos. Um bom gerenciador roda no celular, no navegador e no computador, sincronizando automaticamente sem que você precise pensar nisso.",
+      "Funções extras agregam muito: geração automática de senhas fortes, alertas de vazamento, preenchimento automático de formulários e armazenamento seguro de cartões e documentos.",
+      "Versões gratuitas costumam atender o uso pessoal. Os planos pagos fazem sentido pra quem precisa compartilhar credenciais em família ou equipe, com controle de acesso por item.",
+      "Na hora de migrar, comece pelas contas mais críticas e gere senhas novas e únicas. Aproveite a transição pra ativar 2FA em paralelo — as duas mudanças se reforçam.",
+    ],
+  },
+  {
+    slug: "checklist-seguranca-celular",
+    title: "Checklist de segurança pro seu celular em 10 minutos",
+    excerpt:
+      "Dez ajustes rápidos que aumentam muito a proteção do aparelho que carrega quase toda sua vida digital.",
+    date: "25 de fevereiro de 2026",
+    category: "Dicas",
+    readTime: "4 min",
+    content: [
+      "O celular concentra e-mail, banco, mensagens, fotos e documentos. Dedicar dez minutos pra revisar a segurança dele é um dos investimentos com melhor retorno em proteção pessoal.",
+      "Comece pelo bloqueio de tela. Use senha numérica de pelo menos seis dígitos ou biometria. Padrões de desenho são fáceis de observar e devem ser evitados em locais públicos.",
+      "Ative a criptografia do dispositivo (já vem por padrão em aparelhos recentes) e o recurso de localizar/apagar remotamente. Em caso de furto, esses recursos protegem seus dados.",
+      "Revise as permissões dos aplicativos. Muitos apps pedem acesso a microfone, câmera, contatos e localização sem necessidade real. Negue tudo que não fizer sentido pra função do app.",
+      "Mantenha o sistema operacional e os apps atualizados. A maior parte das atualizações corrige falhas de segurança recém-descobertas. Adiar atualização é deixar a porta destrancada.",
+      "Por fim, faça backup periódico em nuvem confiável e ative a verificação em duas etapas na sua conta principal (Google ou Apple). Sem isso, perder o aparelho vira pesadelo.",
+    ],
+  },
 ];
 
 export const CATEGORIES = ["Todos", "Segurança", "Mercado", "Privacidade", "Dicas", "Senhas"] as const;
